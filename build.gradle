@@ -1,0 +1,35 @@
+buildscript {
+    repositories {
+        mavenCentral()
+        google()
+    }
+}
+
+allprojects {
+    version = '1.0'
+    ext {
+        appName = "FistOfSteel"
+        gdxVersion = '1.12.1'
+    }
+    repositories {
+        mavenCentral()
+        maven { url "https://oss.sonatype.org/content/repositories/releases/" }
+    }
+}
+
+project(":desktop") {
+    apply plugin: "java-library"
+    apply plugin: "application"    
+    dependencies {
+        implementation project(":core")
+        api "com.badlogicgames.gdx:gdx-backend-lwjgl3:$gdxVersion"
+        api "com.badlogicgames.gdx:gdx-platform:$gdxVersion:natives-desktop"
+    }
+}
+
+project(":core") {
+    apply plugin: "java-library"
+    dependencies {
+        api "com.badlogicgames.gdx:gdx:$gdxVersion"
+    }
+}
