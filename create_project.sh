@@ -169,5 +169,5 @@ EOF
 # === ASSETS ===
 mkdir -p assets/sprites/hugo
 
-echo "✅ Projet créé!"
-echo "🚀 Lance: ./gradlew desktop:run"
+echo "Projet créé!"
+echo "Lance: ./gradlew desktop:run"
