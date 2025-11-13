@@ -115,7 +115,8 @@ public class MenuScreen implements Screen {
         
         if (Gdx.input.justTouched()) {
             if (newGameButton.isClicked(mouseX, mouseY)) {
-                game.setScreen(new GameManager(game));
+                // ✅ Aller vers la sélection de personnage au lieu de lancer directement
+                game.setScreen(new CharactersChoice(game));
             } else if (optionsButton.isClicked(mouseX, mouseY)) {
                 game.setScreen(new OptionsScreen(game));
             } else if (quitButton.isClicked(mouseX, mouseY)) {

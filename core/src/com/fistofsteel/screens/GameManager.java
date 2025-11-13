@@ -17,6 +17,7 @@ import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.utils.Array;
 import com.fistofsteel.FistOfSteelGame;
 import com.fistofsteel.audio.SoundManager;
+import com.fistofsteel.entities.Alexis;
 import com.fistofsteel.entities.Hugo;
 import com.fistofsteel.entities.Player;
 import com.fistofsteel.input.InputHandler;
@@ -35,9 +36,18 @@ public class GameManager implements Screen {
     
     private Music backgroundMusic;
     private SoundManager soundManager;
+    
+    // ✅ Ajout : stocker le personnage choisi
+    private String selectedCharacter;
 
     public GameManager(FistOfSteelGame game) {
+        this(game, "Hugo"); // Par défaut Hugo si pas de choix
+    }
+    
+    // ✅ Nouveau constructeur avec choix de personnage
+    public GameManager(FistOfSteelGame game, String selectedCharacter) {
         this.game = game;
+        this.selectedCharacter = selectedCharacter;
     }
 
     @Override
@@ -57,7 +67,14 @@ public class GameManager implements Screen {
 
         loadTiledMap();
         
-        player = new Hugo(inputHandler, soundManager);
+        // ✅ Instancier le bon personnage selon le choix
+        if ("Alexis".equals(selectedCharacter)) {
+            player = new Alexis(inputHandler, soundManager);
+            System.out.println("✅ Personnage sélectionné : Alexis");
+        } else {
+            player = new Hugo(inputHandler, soundManager);
+            System.out.println("✅ Personnage sélectionné : Hugo");
+        }
         
         if (collisionRects != null) {
             player.setCollisionRects(collisionRects);
