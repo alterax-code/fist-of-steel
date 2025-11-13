@@ -3,8 +3,7 @@ plugins {
     id 'application'
 }
 
-sourceCompatibility = 21
-targetCompatibility = 21
+sourceCompatibility = 17
 
 sourceSets.main.java.srcDirs = [ "src/" ]
 sourceSets.main.resources.srcDirs = ["../assets"]
@@ -25,27 +24,38 @@ dependencies {
     implementation "com.badlogicgames.gdx:gdx-platform:$gdxVersion:natives-desktop"
 }
 
+// ===== JAR Standard (petit) =====
 jar {
-    dependsOn(':core:jar')
-    
     manifest {
         attributes(
             'Main-Class': 'com.fistofsteel.DesktopLauncher'
         )
     }
-    from {
-        configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
-    }
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 }
 
-java {
-    toolchain {
-        languageVersion = JavaLanguageVersion.of(21)
+// ===== FAT JAR (tout-en-un) =====
+task fatJar(type: Jar) {
+    archiveBaseName = 'FistOfSteel'
+    archiveVersion = '1.0'
+    archiveClassifier = 'all'
+    
+    manifest {
+        attributes 'Main-Class': 'com.fistofsteel.DesktopLauncher'
     }
-}
-
-compileJava {
-    options.encoding = 'UTF-8'
-    options.incremental = true
+    
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    
+    // Inclure toutes les dépendances
+    from {
+        configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
+    }
+    
+    // Inclure les assets
+    from('../assets') {
+        into 'assets'
+    }
+    
+    // Inclure les classes du projet
+    with jar
 }

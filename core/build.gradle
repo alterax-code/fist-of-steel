@@ -1,3 +1,16 @@
-sourceCompatibility = 17
+sourceCompatibility = 21
+targetCompatibility = 21
+
 [compileJava, compileTestJava]*.options*.encoding = 'UTF-8'
+
 sourceSets.main.java.srcDirs = [ "src/" ]
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+}
+
+compileJava {
+    options.incremental = true
+}
