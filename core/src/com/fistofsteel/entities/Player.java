@@ -55,13 +55,43 @@ public abstract class Player {
     public Player(InputHandler input, SoundManager soundManager) {
         this.input = input;
         this.soundManager = soundManager;
-        hitbox = new Rectangle(x, y, Constants.PLAYER_WIDTH, Constants.PLAYER_HEIGHT);
         loadTextures();
+        // Initialiser la hitbox avec les dimensions personnalisées du personnage
+        hitbox = new Rectangle(x + getHitboxOffsetX(), y + getHitboxOffsetY(), getHitboxWidth(), getHitboxHeight());
     }
     
+    // ===== MÉTHODES ABSTRAITES POUR LES TEXTURES =====
     protected abstract void loadTextures();
     protected abstract void disposeTextures();
     protected abstract Texture getCurrentTexture();
+    protected abstract int getWalkFrameCount();
+    protected abstract int getAttackFrameCount();
+    protected abstract int getDeadFrameCount();
+    
+    // ===== MÉTHODES ABSTRAITES POUR LES HITBOX PERSONNALISÉES =====
+    /**
+     * Retourne la largeur de la hitbox de collision du personnage
+     * @return Largeur en pixels
+     */
+    protected abstract float getHitboxWidth();
+    
+    /**
+     * Retourne la hauteur de la hitbox de collision du personnage
+     * @return Hauteur en pixels
+     */
+    protected abstract float getHitboxHeight();
+    
+    /**
+     * Retourne le décalage horizontal de la hitbox par rapport au coin gauche du sprite
+     * @return Offset X en pixels
+     */
+    protected abstract float getHitboxOffsetX();
+    
+    /**
+     * Retourne le décalage vertical de la hitbox par rapport au bas du sprite
+     * @return Offset Y en pixels
+     */
+    protected abstract float getHitboxOffsetY();
     
     public void setCollisionRects(Array<Rectangle> collisions) {
         this.collisionRects = collisions;
@@ -72,11 +102,12 @@ public abstract class Player {
         updateTimers(delta);
         applyPhysics(delta);
         updateAnimation(delta);
-        hitbox.setPosition(x, y);
+        // Mise à jour de la position de la hitbox avec les offsets personnalisés
+        hitbox.setPosition(x + getHitboxOffsetX(), y + getHitboxOffsetY());
         
         debugFrameCounter++;
         if (debugFrameCounter >= 60) {
-            System.out.println("📍 Player position: (" + (int)x + ", " + (int)y + ") | onGround: " + onGround + " | State: " + currentState);
+            System.out.println("🔍 Player position: (" + (int)x + ", " + (int)y + ") | onGround: " + onGround + " | State: " + currentState);
             debugFrameCounter = 0;
         }
     }
@@ -261,7 +292,8 @@ public abstract class Player {
         for (int i = 0; i < steps; i++) {
             float newY = y + movePerStep;
             
-            hitbox.setPosition(x, newY);
+            // Mise à jour de la hitbox avec les offsets personnalisés
+            hitbox.setPosition(x + getHitboxOffsetX(), newY + getHitboxOffsetY());
             boolean collidedVertically = false;
             
             if (collisionRects != null) {
@@ -270,7 +302,8 @@ public abstract class Player {
                         collidedVertically = true;
                         
                         if (velocityY < 0) {
-                            y = collRect.y + collRect.height;
+                            // Collision avec le sol - ajuster la position Y en tenant compte de l'offset
+                            y = collRect.y + collRect.height - getHitboxOffsetY();
                             velocityY = 0;
                             onGround = true;
                             
@@ -287,7 +320,8 @@ public abstract class Player {
                             }
                         }
                         else if (velocityY > 0) {
-                            y = collRect.y - Constants.PLAYER_HEIGHT;
+                            // Collision avec le plafond - ajuster avec la hauteur de hitbox et l'offset
+                            y = collRect.y - getHitboxHeight() - getHitboxOffsetY();
                             velocityY = 0;
                         }
                         break;
@@ -312,8 +346,9 @@ public abstract class Player {
             }
         }
         
+        // Collision horizontale avec les offsets personnalisés
         float newX = x + velocityX * delta;
-        hitbox.setPosition(newX, y);
+        hitbox.setPosition(newX + getHitboxOffsetX(), y + getHitboxOffsetY());
         
         boolean collidedHorizontally = false;
         if (collisionRects != null) {
@@ -369,10 +404,6 @@ public abstract class Player {
                 break;
         }
     }
-    
-    protected abstract int getWalkFrameCount();
-    protected abstract int getAttackFrameCount();
-    protected abstract int getDeadFrameCount();
 
     public void render(SpriteBatch batch) {
         Texture currentTexture = getCurrentTexture();
@@ -425,10 +456,17 @@ public abstract class Player {
     public void setPosition(float x, float y) {
         this.x = x;
         this.y = y;
-        this.hitbox.setPosition(x, y);
+        // Mise à jour avec les offsets personnalisés
+        this.hitbox.setPosition(x + getHitboxOffsetX(), y + getHitboxOffsetY());
         
         if (collisionRects != null) {
-            Rectangle testHitbox = new Rectangle(x, y - 2, Constants.PLAYER_WIDTH, Constants.PLAYER_HEIGHT);
+            // Test de collision avec les dimensions personnalisées
+            Rectangle testHitbox = new Rectangle(
+                x + getHitboxOffsetX(), 
+                y + getHitboxOffsetY() - 2, 
+                getHitboxWidth(), 
+                getHitboxHeight()
+            );
             
             for (Rectangle collRect : collisionRects) {
                 if (testHitbox.overlaps(collRect)) {

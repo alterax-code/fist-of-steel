@@ -6,6 +6,7 @@ import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
+import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.maps.MapLayer;
 import com.badlogic.gdx.maps.MapObject;
@@ -22,6 +23,7 @@ import com.fistofsteel.entities.Hugo;
 import com.fistofsteel.entities.Player;
 import com.fistofsteel.input.InputHandler;
 import com.fistofsteel.utils.Constants;
+import com.fistofsteel.utils.HitboxDebugger;
 
 public class GameManager implements Screen {
     private FistOfSteelGame game;
@@ -37,14 +39,21 @@ public class GameManager implements Screen {
     private Music backgroundMusic;
     private SoundManager soundManager;
     
-    // ✅ Ajout : stocker le personnage choisi
+    // Stocker le personnage choisi
     private String selectedCharacter;
+    
+    // ===== GESTION DU BACKGROUND =====
+    private Texture backgroundTexture;
+    private float mapWidthInPixels;
+    private float mapHeightInPixels;
+    
+    // ===== DEBUG VISUEL DES HITBOX =====
+    private boolean debugMode = false;
 
     public GameManager(FistOfSteelGame game) {
-        this(game, "Hugo"); // Par défaut Hugo si pas de choix
+        this(game, "Hugo");
     }
     
-    // ✅ Nouveau constructeur avec choix de personnage
     public GameManager(FistOfSteelGame game, String selectedCharacter) {
         this.game = game;
         this.selectedCharacter = selectedCharacter;
@@ -66,14 +75,15 @@ public class GameManager implements Screen {
         soundManager = new SoundManager();
 
         loadTiledMap();
+        loadBackground();  // ← NOUVEAU : Charger le background
         
-        // ✅ Instancier le bon personnage selon le choix
+        // Instancier le bon personnage selon le choix
         if ("Alexis".equals(selectedCharacter)) {
             player = new Alexis(inputHandler, soundManager);
-            System.out.println("✅ Personnage sélectionné : Alexis");
+            System.out.println("✅ Personnage sélectionné : Alexis (Hitbox: 75x110)");
         } else {
             player = new Hugo(inputHandler, soundManager);
-            System.out.println("✅ Personnage sélectionné : Hugo");
+            System.out.println("✅ Personnage sélectionné : Hugo (Hitbox: 60x100)");
         }
         
         if (collisionRects != null) {
@@ -91,15 +101,52 @@ public class GameManager implements Screen {
             System.err.println("⚠️ Erreur lors du chargement de la musique : " + e.getMessage());
         }
         
+        HitboxDebugger.setDebugEnabled(debugMode);
+        if (debugMode) {
+            System.out.println("🔧 Mode debug des hitbox activé (F3 pour toggle)");
+        }
+        
         updateCamera();
         camera.update();
         batch.setProjectionMatrix(camera.combined);
+    }
+    
+    /**
+     * Charge le background en fonction des dimensions de la map Tiled
+     */
+    private void loadBackground() {
+        try {
+            // Charger la texture du background depuis assets/maps
+            backgroundTexture = new Texture(Gdx.files.internal("assets/maps/background_double.png"));
+            
+            // Option pour un meilleur rendu (si l'image est pixelisée)
+            backgroundTexture.setFilter(Texture.TextureFilter.Linear, Texture.TextureFilter.Linear);
+            
+            System.out.println("✅ Background chargé : " + mapWidthInPixels + "x" + mapHeightInPixels + " pixels");
+            System.out.println("📁 Fichier : assets/maps/background_double.png");
+            
+        } catch (Exception e) {
+            System.err.println("⚠️ Erreur lors du chargement du background : " + e.getMessage());
+            System.err.println("💡 Assurez-vous que le fichier existe : assets/maps/background_double.png");
+        }
     }
     
     private void loadTiledMap() {
         try {
             tiledMap = new TmxMapLoader().load("maps/level1_example.tmx");
             tiledMapRenderer = new OrthogonalTiledMapRenderer(tiledMap);
+            
+            // Récupérer les dimensions de la map pour le background
+            int mapWidthInTiles = tiledMap.getProperties().get("width", Integer.class);
+            int mapHeightInTiles = tiledMap.getProperties().get("height", Integer.class);
+            int tileWidth = tiledMap.getProperties().get("tilewidth", Integer.class);
+            int tileHeight = tiledMap.getProperties().get("tileheight", Integer.class);
+            
+            mapWidthInPixels = mapWidthInTiles * tileWidth;
+            mapHeightInPixels = mapHeightInTiles * tileHeight;
+            
+            System.out.println("📐 Dimensions de la map : " + mapWidthInPixels + "x" + mapHeightInPixels + " pixels");
+            
             loadCollisions();
         } catch (Exception e) {
             System.err.println("⚠️ Erreur lors du chargement de la map Tiled : " + e.getMessage());
@@ -157,6 +204,13 @@ public class GameManager implements Screen {
         Gdx.gl.glClearColor(0.1f, 0.1f, 0.15f, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
+        // Toggle debug mode avec F3
+        if (Gdx.input.isKeyJustPressed(Input.Keys.F3)) {
+            debugMode = !debugMode;
+            HitboxDebugger.setDebugEnabled(debugMode);
+            System.out.println("🔧 Debug mode: " + (debugMode ? "ON" : "OFF"));
+        }
+
         if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)) {
             game.setScreen(new MenuScreen(game));
             return;
@@ -166,20 +220,63 @@ public class GameManager implements Screen {
         updateCamera();
         camera.update();
 
+        // ===== ORDRE DE RENDU =====
+        batch.setProjectionMatrix(camera.combined);
+        batch.begin();
+        
+        // 1. D'abord le background (tout au fond)
+        renderBackground();
+        
+        batch.end();
+        
+        // 2. Ensuite la map Tiled (collisions + décors)
         if (tiledMapRenderer != null) {
             tiledMapRenderer.setView(camera);
             tiledMapRenderer.render();
         }
-
-        batch.setProjectionMatrix(camera.combined);
+        
+        // 3. Puis le joueur (au-dessus)
         batch.begin();
         player.render(batch);
         batch.end();
+        
+        // 4. Enfin le debug (tout au-dessus)
+        HitboxDebugger.renderPlayerHitbox(player, camera);
+    }
+    
+    /**
+     * Affiche le background adapté aux dimensions de la map
+     */
+    private void renderBackground() {
+        if (backgroundTexture == null) return;
+        
+        // Option 1 : Background statique qui couvre toute la map
+        batch.draw(
+            backgroundTexture,
+            0, 0,                           // Position (coin bas-gauche de la map)
+            mapWidthInPixels,               // Largeur (étirée pour couvrir la map)
+            mapHeightInPixels               // Hauteur (étirée pour couvrir la map)
+        );
+        
+        // Option 2 (commentée) : Background avec effet parallax (plus lent que la caméra)
+        // Décommenter pour activer l'effet de profondeur
+        /*
+        float parallaxFactor = 0.5f;  // 0.5 = le background bouge 2x plus lentement
+        float bgX = -camera.position.x * parallaxFactor;
+        float bgY = 0;
+        
+        batch.draw(
+            backgroundTexture,
+            bgX, bgY,
+            mapWidthInPixels,
+            mapHeightInPixels
+        );
+        */
     }
     
     private void updateCamera() {
-        float mapWidth = 60 * 64;
-        float mapHeight = 20 * 64;
+        float mapWidth = mapWidthInPixels;   // Utiliser les dimensions réelles
+        float mapHeight = mapHeightInPixels;
         
         float playerX = player.getX() + Constants.PLAYER_WIDTH / 2;
         camera.position.x = playerX;
@@ -239,6 +336,11 @@ public class GameManager implements Screen {
             tiledMapRenderer.dispose();
         }
         
+        // ===== DISPOSE DU BACKGROUND =====
+        if (backgroundTexture != null) {
+            backgroundTexture.dispose();
+        }
+        
         if (backgroundMusic != null) {
             backgroundMusic.stop();
             backgroundMusic.dispose();
@@ -247,5 +349,7 @@ public class GameManager implements Screen {
         if (soundManager != null) {
             soundManager.dispose();
         }
+        
+        HitboxDebugger.dispose();
     }
 }

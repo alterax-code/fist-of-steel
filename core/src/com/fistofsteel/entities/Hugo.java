@@ -3,7 +3,12 @@ package com.fistofsteel.entities;
 import com.badlogic.gdx.graphics.Texture;
 import com.fistofsteel.audio.SoundManager;
 import com.fistofsteel.input.InputHandler;
+import com.fistofsteel.utils.Constants;
 
+/**
+ * Hugo - Personnage agile à distance
+ * Hitbox plus petite pour faciliter l'esquive
+ */
 public class Hugo extends Player {
     private Texture idleTexture;
     private Texture jumpTexture;
@@ -93,5 +98,35 @@ public class Hugo extends Player {
     @Override
     protected int getDeadFrameCount() {
         return deadTextures.length;
+    }
+
+    // ===== HITBOX PERSONNALISÉE DE HUGO =====
+    
+    @Override
+    protected float getHitboxWidth() {
+        // Hugo a une hitbox étroite pour un personnage agile
+        // 50% de la largeur du sprite (120px)
+        return 60f;
+    }
+
+    @Override
+    protected float getHitboxHeight() {
+        // Hauteur réduite pour correspondre au corps réel
+        // ~78% de la hauteur du sprite (128px)
+        return 100f;
+    }
+
+    @Override
+    protected float getHitboxOffsetX() {
+        // Centre la hitbox horizontalement sur le sprite
+        // (120 - 60) / 2 = 30 pixels de chaque côté
+        return (Constants.PLAYER_WIDTH - getHitboxWidth()) / 2f;
+    }
+
+    @Override
+    protected float getHitboxOffsetY() {
+        // Décalage vertical léger pour éviter les collisions trop sensibles au sol
+        // La hitbox commence 10 pixels au-dessus du bas du sprite
+        return 10f;
     }
 }
