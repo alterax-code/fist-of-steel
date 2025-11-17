@@ -3,7 +3,6 @@ package com.fistofsteel.screens;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.Screen;
-import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
@@ -17,14 +16,19 @@ import com.badlogic.gdx.maps.tiled.renderers.OrthogonalTiledMapRenderer;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.utils.Array;
 import com.fistofsteel.FistOfSteelGame;
-import com.fistofsteel.audio.SoundManager;
+import com.fistofsteel.audio.AudioManager;
 import com.fistofsteel.entities.Alexis;
+import com.fistofsteel.entities.EnemyManager;
 import com.fistofsteel.entities.Hugo;
 import com.fistofsteel.entities.Player;
+import com.fistofsteel.entities.PotionManager;
 import com.fistofsteel.input.InputHandler;
 import com.fistofsteel.utils.Constants;
 import com.fistofsteel.utils.HitboxDebugger;
 
+/**
+ * GameManager - DÉMARRE LA MUSIQUE LEVEL, arrête la musique menu
+ */
 public class GameManager implements Screen {
     private FistOfSteelGame game;
     private OrthographicCamera camera;
@@ -32,102 +36,114 @@ public class GameManager implements Screen {
     private Player player;
     private InputHandler inputHandler;
     
+    // ⭐ AudioManager partagé (reçu depuis CharactersChoice)
+    private AudioManager audioManager;
+    
     private TiledMap tiledMap;
     private OrthogonalTiledMapRenderer tiledMapRenderer;
     private Array<Rectangle> collisionRects;
     
-    private Music backgroundMusic;
-    private SoundManager soundManager;
-    
-    // Stocker le personnage choisi
     private String selectedCharacter;
     
-    // ===== GESTION DU BACKGROUND =====
     private Texture backgroundTexture;
     private float mapWidthInPixels;
     private float mapHeightInPixels;
     
-    // ===== DEBUG VISUEL DES HITBOX =====
     private boolean debugMode = false;
-
-    public GameManager(FistOfSteelGame game) {
-        this(game, "Hugo");
-    }
     
-    public GameManager(FistOfSteelGame game, String selectedCharacter) {
+    private PotionManager potionManager;
+    private EnemyManager enemyManager;
+
+    // ⭐ Constructeur avec AudioManager
+    public GameManager(FistOfSteelGame game, String selectedCharacter, AudioManager audioManager) {
         this.game = game;
         this.selectedCharacter = selectedCharacter;
+        this.audioManager = audioManager;
     }
 
     @Override
     public void show() {
-        camera = new OrthographicCamera();
+        System.out.println("\n========================================");
+        System.out.println("🎮 INITIALISATION DE GAMEMANAGER");
+        System.out.println("========================================\n");
         
+        // 1. CAMÉRA
+        camera = new OrthographicCamera();
         float worldHeight = 20 * 64;
         float screenAspectRatio = (float) Gdx.graphics.getWidth() / Gdx.graphics.getHeight();
         float viewportWidth = worldHeight * screenAspectRatio;
-        
         camera.setToOrtho(false, viewportWidth, worldHeight);
+        System.out.println("✅ Caméra initialisée");
         
+        // 2. BATCH
         batch = new SpriteBatch();
-        inputHandler = new InputHandler();
+        System.out.println("✅ SpriteBatch créé");
+        
+        // 3. INPUT HANDLER (avec AudioManager)
+        inputHandler = new InputHandler(audioManager);
         Gdx.input.setInputProcessor(inputHandler);
-        soundManager = new SoundManager();
-
+        System.out.println("✅ InputHandler créé et connecté à AudioManager");
+        
+        // 4. TILED MAP (charge map + collisions)
         loadTiledMap();
-        loadBackground();  // ← NOUVEAU : Charger le background
+        loadBackground();
         
-        // Instancier le bon personnage selon le choix
+        // 5. PLAYER (créer APRÈS les collisions)
         if ("Alexis".equals(selectedCharacter)) {
-            player = new Alexis(inputHandler, soundManager);
-            System.out.println("✅ Personnage sélectionné : Alexis (Hitbox: 75x110)");
+            player = new Alexis(inputHandler);
+            System.out.println("✅ Personnage: Alexis (Hitbox: 75x110)");
         } else {
-            player = new Hugo(inputHandler, soundManager);
-            System.out.println("✅ Personnage sélectionné : Hugo (Hitbox: 60x100)");
+            player = new Hugo(inputHandler);
+            System.out.println("✅ Personnage: Hugo (Hitbox: 60x100)");
         }
         
-        if (collisionRects != null) {
+        // ⭐ IMPORTANT : Donner les collisions AVANT de positionner
+        if (collisionRects != null && collisionRects.size > 0) {
             player.setCollisionRects(collisionRects);
+            System.out.println("✅ Collisions configurées pour le joueur (" + collisionRects.size + " rectangles)");
+        } else {
+            System.err.println("⚠️ ATTENTION : Aucune collision chargée !");
         }
         
+        // ⭐ PUIS charger le spawn
         loadSpawnFromTiled();
         
-        try {
-            backgroundMusic = Gdx.audio.newMusic(Gdx.files.internal("assets/music/background_music.mp3"));
-            backgroundMusic.setLooping(true);
-            backgroundMusic.setVolume(0.5f);
-            backgroundMusic.play();
-        } catch (Exception e) {
-            System.err.println("⚠️ Erreur lors du chargement de la musique : " + e.getMessage());
+        // 6. ENEMY MANAGER
+        enemyManager = new EnemyManager(player);
+        loadEnemiesFromTiled();
+        
+        // ⭐ IMPORTANT : Donner les collisions à TOUS les ennemis
+        if (collisionRects != null) {
+            enemyManager.setCollisionRects(collisionRects);
+            System.out.println("✅ Collisions configurées pour " + enemyManager.getTotalCount() + " ennemis");
         }
         
+        // 7. POTIONS
+        potionManager = new PotionManager();
+        loadPotionsFromTiled();
+        
+        // 8. ⭐ MUSIQUE : Arrêter menu, démarrer level
+        audioManager.startLevelMusic();
+        System.out.println("🎵 GameManager : Musique level démarrée");
+        
+        // 9. DEBUG
         HitboxDebugger.setDebugEnabled(debugMode);
-        if (debugMode) {
-            System.out.println("🔧 Mode debug des hitbox activé (F3 pour toggle)");
-        }
         
+        // 10. FINALIZE
         updateCamera();
         camera.update();
         batch.setProjectionMatrix(camera.combined);
+        
+        System.out.println("\n✅ GAMEMANAGER PRÊT !\n");
     }
     
-    /**
-     * Charge le background en fonction des dimensions de la map Tiled
-     */
     private void loadBackground() {
         try {
-            // Charger la texture du background depuis assets/maps
             backgroundTexture = new Texture(Gdx.files.internal("assets/maps/background_double.png"));
-            
-            // Option pour un meilleur rendu (si l'image est pixelisée)
             backgroundTexture.setFilter(Texture.TextureFilter.Linear, Texture.TextureFilter.Linear);
-            
-            System.out.println("✅ Background chargé : " + mapWidthInPixels + "x" + mapHeightInPixels + " pixels");
-            System.out.println("📁 Fichier : assets/maps/background_double.png");
-            
+            System.out.println("✅ Background chargé: " + mapWidthInPixels + "x" + mapHeightInPixels + " pixels");
         } catch (Exception e) {
-            System.err.println("⚠️ Erreur lors du chargement du background : " + e.getMessage());
-            System.err.println("💡 Assurez-vous que le fichier existe : assets/maps/background_double.png");
+            System.err.println("⚠️ Erreur chargement background: " + e.getMessage());
         }
     }
     
@@ -136,7 +152,6 @@ public class GameManager implements Screen {
             tiledMap = new TmxMapLoader().load("maps/level1_example.tmx");
             tiledMapRenderer = new OrthogonalTiledMapRenderer(tiledMap);
             
-            // Récupérer les dimensions de la map pour le background
             int mapWidthInTiles = tiledMap.getProperties().get("width", Integer.class);
             int mapHeightInTiles = tiledMap.getProperties().get("height", Integer.class);
             int tileWidth = tiledMap.getProperties().get("tilewidth", Integer.class);
@@ -145,23 +160,25 @@ public class GameManager implements Screen {
             mapWidthInPixels = mapWidthInTiles * tileWidth;
             mapHeightInPixels = mapHeightInTiles * tileHeight;
             
-            System.out.println("📐 Dimensions de la map : " + mapWidthInPixels + "x" + mapHeightInPixels + " pixels");
+            System.out.println("✅ Map Tiled: " + mapWidthInPixels + "x" + mapHeightInPixels + " pixels");
             
             loadCollisions();
         } catch (Exception e) {
-            System.err.println("⚠️ Erreur lors du chargement de la map Tiled : " + e.getMessage());
+            System.err.println("⚠️ Erreur chargement map: " + e.getMessage());
         }
     }
     
+    /**
+     * ⭐ VERSION RECTANGLES : Charge le spawn du joueur depuis un RECTANGLE Tiled
+     */
     private void loadSpawnFromTiled() {
         if (tiledMap == null) return;
         
         MapLayer spawnLayer = tiledMap.getLayers().get("spawn");
-        if (spawnLayer == null) return;
-        
-        int mapHeightInTiles = tiledMap.getProperties().get("height", Integer.class);
-        int tileHeight = tiledMap.getProperties().get("tileheight", Integer.class);
-        float mapHeightInPixels = mapHeightInTiles * tileHeight;
+        if (spawnLayer == null) {
+            System.err.println("⚠️ Layer 'spawn' introuvable !");
+            return;
+        }
         
         for (MapObject object : spawnLayer.getObjects()) {
             String objectName = object.getName();
@@ -171,16 +188,52 @@ public class GameManager implements Screen {
                             "playerSpawn".equalsIgnoreCase(objectName);
             
             if (isSpawn) {
+                // ⭐ RECTANGLE : Tiled donne directement le coin inférieur gauche
                 float tiledX = object.getProperties().get("x", Float.class);
                 float tiledY = object.getProperties().get("y", Float.class);
                 
+                // ✅ AUCUNE CONVERSION NÉCESSAIRE pour les rectangles !
                 float libgdxX = tiledX;
-                float libgdxY = mapHeightInPixels - tiledY;
+                float libgdxY = tiledY;
+                
+                System.out.println("📍 DEBUG Spawn (Rectangle):");
+                System.out.println("   Tiled X,Y: (" + (int)tiledX + ", " + (int)tiledY + ")");
+                System.out.println("   LibGDX X,Y: (" + (int)libgdxX + ", " + (int)libgdxY + ")");
+                System.out.println("   ✅ Pas de conversion Y (rectangle = coin inférieur)");
                 
                 player.setPosition(libgdxX, libgdxY);
+                System.out.println("✅ Spawn: (" + (int)libgdxX + ", " + (int)libgdxY + ")");
+                
+                // ⭐ VÉRIFICATION : Le joueur est-il bien au sol ?
+                boolean playerGrounded = false;
+                if (collisionRects != null) {
+                    Rectangle playerHitbox = player.getHitbox();
+                    Rectangle testHitbox = new Rectangle(
+                        playerHitbox.x,
+                        playerHitbox.y - 5f,
+                        playerHitbox.width,
+                        playerHitbox.height
+                    );
+                    
+                    for (Rectangle collRect : collisionRects) {
+                        if (testHitbox.overlaps(collRect)) {
+                            playerGrounded = true;
+                            break;
+                        }
+                    }
+                    
+                    if (playerGrounded) {
+                        System.out.println("   ✅ Joueur bien positionné au sol");
+                    } else {
+                        System.err.println("   ⚠️ ATTENTION : Joueur pas au sol ! Vérifiez le spawn dans Tiled");
+                    }
+                }
+                
                 return;
             }
         }
+        
+        System.err.println("⚠️ Aucun spawn trouvé dans le layer 'spawn' !");
     }
     
     private void loadCollisions() {
@@ -196,86 +249,168 @@ public class GameManager implements Screen {
                     collisionRects.add(new Rectangle(rect));
                 }
             }
+            System.out.println("✅ Collisions: " + collisionRects.size + " rectangles");
         }
     }
-
+    
+    private void loadPotionsFromTiled() {
+        if (tiledMap == null) return;
+        
+        MapLayer potionLayer = tiledMap.getLayers().get("Potions");
+        if (potionLayer == null) {
+            System.out.println("⚠️ Layer 'Potions' non trouvé");
+            return;
+        }
+        
+        int potionCount = 0;
+        
+        for (MapObject object : potionLayer.getObjects()) {
+            float tiledX = object.getProperties().get("x", Float.class);
+            float tiledY = object.getProperties().get("y", Float.class);
+            
+            float libgdxX = tiledX;
+            float libgdxY = tiledY;
+            
+            potionManager.addPotion(libgdxX, libgdxY);
+            potionCount++;
+        }
+        
+        System.out.println("✅ Potions: " + potionCount + " chargées");
+    }
+    
+    /**
+     * ⭐ VERSION RECTANGLES : Charge les ennemis depuis des RECTANGLES Tiled
+     */
+    private void loadEnemiesFromTiled() {
+        System.out.println("\n🔎 DEBUG - Chargement des ennemis...");
+        
+        if (tiledMap == null) {
+            System.out.println("❌ tiledMap est NULL !");
+            return;
+        }
+        
+        MapLayer enemyLayer = tiledMap.getLayers().get("Enemies");
+        if (enemyLayer == null) {
+            System.out.println("⚠️ Layer 'Enemies' non trouvé");
+            return;
+        }
+        
+        System.out.println("✅ Layer 'Enemies' trouvé !");
+        System.out.println("📦 Nombre d'objets dans la couche : " + enemyLayer.getObjects().getCount());
+        
+        int enemyCount = 0;
+        
+        for (MapObject object : enemyLayer.getObjects()) {
+            System.out.println("\n🎯 Objet trouvé : " + object.getName());
+            
+            float tiledX = object.getProperties().get("x", Float.class);
+            float tiledY = object.getProperties().get("y", Float.class);
+            
+            System.out.println("   Coord Tiled (rectangle): (" + (int)tiledX + ", " + (int)tiledY + ")");
+            
+            // ⭐ RECTANGLE : Pas de conversion nécessaire !
+            float libgdxX = tiledX;
+            float libgdxY = tiledY;
+            
+            System.out.println("   Coord LibGDX : (" + (int)libgdxX + ", " + (int)libgdxY + ")");
+            System.out.println("   ✅ Pas de conversion Y (rectangle = coin inférieur)");
+            
+            String enemyType = object.getProperties().get("type", "Knight", String.class);
+            System.out.println("   Type : " + enemyType);
+            
+            Float patrolMinObj = object.getProperties().get("patrolMin", Float.class);
+            Float patrolMaxObj = object.getProperties().get("patrolMax", Float.class);
+            
+            if ("Knight".equalsIgnoreCase(enemyType)) {
+                if (patrolMinObj != null && patrolMaxObj != null) {
+                    enemyManager.addKnight(libgdxX, libgdxY, 
+                                          libgdxX + patrolMinObj, 
+                                          libgdxX + patrolMaxObj);
+                } else {
+                    enemyManager.addKnight(libgdxX, libgdxY);
+                }
+                enemyCount++;
+            } else {
+                System.out.println("   ⚠️ Type d'ennemi non reconnu : " + enemyType);
+            }
+        }
+        
+        System.out.println("\n🔧 Stabilisation des ennemis au sol...");
+        stabilizeAllEnemies();
+        
+        System.out.println("\n✅ Ennemis: " + enemyCount + " chargés\n");
+    }
+    
     @Override
     public void render(float delta) {
         Gdx.gl.glClearColor(0.1f, 0.1f, 0.15f, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
-        // Toggle debug mode avec F3
+        // DEBUG TOGGLE
         if (Gdx.input.isKeyJustPressed(Input.Keys.F3)) {
             debugMode = !debugMode;
             HitboxDebugger.setDebugEnabled(debugMode);
             System.out.println("🔧 Debug mode: " + (debugMode ? "ON" : "OFF"));
         }
 
+        // ⭐ RETOUR MENU - Arrête musique level, redémarre musique menu
         if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)) {
-            game.setScreen(new MenuScreen(game));
+            audioManager.stopLevelMusic();
+            audioManager.startMenuMusic();
+            System.out.println("🎵 ESC : Retour au menu (musique changée)");
+            // Créer un nouveau MenuScreen avec audioManager
+            game.setScreen(new MenuScreen(game, audioManager));
             return;
         }
 
+        // UPDATE
         player.update(delta);
+        enemyManager.update(delta);
+        potionManager.update(delta);
+        
+        // Collisions potions
+        potionManager.checkCollisions(player.getHitbox());
+        potionManager.removeCollectedPotions();
+        
+        // Collisions ennemis
+        enemyManager.checkEnemyAttacks(player);
+        enemyManager.checkPlayerAttack(player);
+        enemyManager.removeDeadEnemies();
+        
         updateCamera();
         camera.update();
 
-        // ===== ORDRE DE RENDU =====
+        // RENDER
         batch.setProjectionMatrix(camera.combined);
         batch.begin();
-        
-        // 1. D'abord le background (tout au fond)
         renderBackground();
-        
         batch.end();
         
-        // 2. Ensuite la map Tiled (collisions + décors)
         if (tiledMapRenderer != null) {
             tiledMapRenderer.setView(camera);
             tiledMapRenderer.render();
         }
         
-        // 3. Puis le joueur (au-dessus)
         batch.begin();
         player.render(batch);
+        enemyManager.render(batch);
+        potionManager.render(batch);
         batch.end();
         
-        // 4. Enfin le debug (tout au-dessus)
-        HitboxDebugger.renderPlayerHitbox(player, camera);
+        // DEBUG : Hitbox du joueur et des ennemis (activé avec F3)
+        if (debugMode) {
+            HitboxDebugger.renderPlayerHitbox(player, camera);
+            enemyManager.renderDebugHitboxes(camera);
+        }
     }
     
-    /**
-     * Affiche le background adapté aux dimensions de la map
-     */
     private void renderBackground() {
         if (backgroundTexture == null) return;
-        
-        // Option 1 : Background statique qui couvre toute la map
-        batch.draw(
-            backgroundTexture,
-            0, 0,                           // Position (coin bas-gauche de la map)
-            mapWidthInPixels,               // Largeur (étirée pour couvrir la map)
-            mapHeightInPixels               // Hauteur (étirée pour couvrir la map)
-        );
-        
-        // Option 2 (commentée) : Background avec effet parallax (plus lent que la caméra)
-        // Décommenter pour activer l'effet de profondeur
-        /*
-        float parallaxFactor = 0.5f;  // 0.5 = le background bouge 2x plus lentement
-        float bgX = -camera.position.x * parallaxFactor;
-        float bgY = 0;
-        
-        batch.draw(
-            backgroundTexture,
-            bgX, bgY,
-            mapWidthInPixels,
-            mapHeightInPixels
-        );
-        */
+        batch.draw(backgroundTexture, 0, 0, mapWidthInPixels, mapHeightInPixels);
     }
     
     private void updateCamera() {
-        float mapWidth = mapWidthInPixels;   // Utiliser les dimensions réelles
+        float mapWidth = mapWidthInPixels;
         float mapHeight = mapHeightInPixels;
         
         float playerX = player.getX() + Constants.PLAYER_WIDTH / 2;
@@ -305,16 +440,12 @@ public class GameManager implements Screen {
     
     @Override 
     public void pause() {
-        if (backgroundMusic != null && backgroundMusic.isPlaying()) {
-            backgroundMusic.pause();
-        }
+        audioManager.pauseLevelMusic();
     }
     
     @Override 
     public void resume() {
-        if (backgroundMusic != null) {
-            backgroundMusic.play();
-        }
+        audioManager.resumeLevelMusic();
     }
     
     @Override 
@@ -324,32 +455,38 @@ public class GameManager implements Screen {
         }
     }
 
+    private void stabilizeAllEnemies() {
+        if (enemyManager == null) return;
+        
+        int maxAttempts = 100;
+        int stabilizationAttempts = 0;
+        
+        while (stabilizationAttempts < maxAttempts) {
+            enemyManager.update(0.016f);
+            stabilizationAttempts++;
+        }
+        
+        System.out.println("✅ Tous les ennemis stabilisés après " + stabilizationAttempts + " frames");
+    }
+
     @Override
     public void dispose() {
-        batch.dispose();
-        player.dispose();
+        System.out.println("\n🧹 Nettoyage GameManager...");
         
-        if (tiledMap != null) {
-            tiledMap.dispose();
-        }
-        if (tiledMapRenderer != null) {
-            tiledMapRenderer.dispose();
-        }
+        if (batch != null) batch.dispose();
+        if (potionManager != null) potionManager.dispose();
+        if (enemyManager != null) enemyManager.dispose();
+        if (player != null) player.dispose();
+        if (tiledMap != null) tiledMap.dispose();
+        if (tiledMapRenderer != null) tiledMapRenderer.dispose();
+        if (backgroundTexture != null) backgroundTexture.dispose();
         
-        // ===== DISPOSE DU BACKGROUND =====
-        if (backgroundTexture != null) {
-            backgroundTexture.dispose();
-        }
-        
-        if (backgroundMusic != null) {
-            backgroundMusic.stop();
-            backgroundMusic.dispose();
-        }
-        
-        if (soundManager != null) {
-            soundManager.dispose();
-        }
+        // ⭐ NE PAS disposer audioManager ici !
+        // Il est partagé entre tous les écrans et sera disposé par FistOfSteelGame
+        // audioManager.dispose(); ← NE PAS FAIRE !
         
         HitboxDebugger.dispose();
+        
+        System.out.println("✅ GameManager dispose\n");
     }
 }

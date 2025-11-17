@@ -4,10 +4,13 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.utils.Array;
-import com.fistofsteel.audio.SoundManager;
 import com.fistofsteel.input.InputHandler;
 import com.fistofsteel.utils.Constants;
 
+/**
+ * Classe Player ultra-simplifiée
+ * Gère uniquement la logique gameplay - PAS les sons
+ */
 public abstract class Player {
     protected float x, y;
     protected float velocityX, velocityY;
@@ -16,7 +19,6 @@ public abstract class Player {
 
     protected Rectangle hitbox;
     protected InputHandler input;
-    protected SoundManager soundManager;
     
     protected Array<Rectangle> collisionRects;
 
@@ -52,45 +54,22 @@ public abstract class Player {
     
     private int debugFrameCounter = 0;
 
-    public Player(InputHandler input, SoundManager soundManager) {
+    public Player(InputHandler input) {
         this.input = input;
-        this.soundManager = soundManager;
         loadTextures();
-        // Initialiser la hitbox avec les dimensions personnalisées du personnage
         hitbox = new Rectangle(x + getHitboxOffsetX(), y + getHitboxOffsetY(), getHitboxWidth(), getHitboxHeight());
     }
     
-    // ===== MÉTHODES ABSTRAITES POUR LES TEXTURES =====
+    // ===== MÉTHODES ABSTRAITES =====
     protected abstract void loadTextures();
     protected abstract void disposeTextures();
     protected abstract Texture getCurrentTexture();
     protected abstract int getWalkFrameCount();
     protected abstract int getAttackFrameCount();
     protected abstract int getDeadFrameCount();
-    
-    // ===== MÉTHODES ABSTRAITES POUR LES HITBOX PERSONNALISÉES =====
-    /**
-     * Retourne la largeur de la hitbox de collision du personnage
-     * @return Largeur en pixels
-     */
     protected abstract float getHitboxWidth();
-    
-    /**
-     * Retourne la hauteur de la hitbox de collision du personnage
-     * @return Hauteur en pixels
-     */
     protected abstract float getHitboxHeight();
-    
-    /**
-     * Retourne le décalage horizontal de la hitbox par rapport au coin gauche du sprite
-     * @return Offset X en pixels
-     */
     protected abstract float getHitboxOffsetX();
-    
-    /**
-     * Retourne le décalage vertical de la hitbox par rapport au bas du sprite
-     * @return Offset Y en pixels
-     */
     protected abstract float getHitboxOffsetY();
     
     public void setCollisionRects(Array<Rectangle> collisions) {
@@ -102,12 +81,14 @@ public abstract class Player {
         updateTimers(delta);
         applyPhysics(delta);
         updateAnimation(delta);
-        // Mise à jour de la position de la hitbox avec les offsets personnalisés
         hitbox.setPosition(x + getHitboxOffsetX(), y + getHitboxOffsetY());
+        
+        // ⭐ NOUVEAU : Résoudre les collisions après mise à jour de la hitbox
+        resolveHitboxCollisions();
         
         debugFrameCounter++;
         if (debugFrameCounter >= 60) {
-            System.out.println("🔍 Player position: (" + (int)x + ", " + (int)y + ") | onGround: " + onGround + " | State: " + currentState);
+            System.out.println("🔍 Player: (" + (int)x + ", " + (int)y + ") | Ground: " + onGround + " | State: " + currentState);
             debugFrameCounter = 0;
         }
     }
@@ -117,34 +98,27 @@ public abstract class Player {
         if (isHit) return;
         if (isAttacking) return;
         
+        // ===== MORT =====
         if (input.isDeadPressed()) {
             isDead = true;
             currentState = State.DEAD;
             deadFrame = 0;
             animationTimer = 0f;
             velocityX = 0;
-            
-            if (soundManager != null) {
-                soundManager.play("death");
-            }
-            
             return;
         }
         
+        // ===== HIT =====
         if (input.isHitPressed()) {
             isHit = true;
             hitTimer = hitDuration;
             currentState = State.HIT;
             animationTimer = 0f;
             velocityX = 0;
-            
-            if (soundManager != null) {
-                soundManager.play("hit");
-            }
-            
             return;
         }
         
+        // ===== ATTAQUE =====
         if (input.isAttackPressed()) {
             isAttacking = true;
             attackTimer = attackDuration;
@@ -152,36 +126,28 @@ public abstract class Player {
             attackFrame = 0;
             animationTimer = 0f;
             velocityX = 0;
-            
-            if (soundManager != null) {
-                soundManager.play("attack");
-            }
-            
             return;
         }
         
+        // ===== SAUT =====
         if (input.isJumpPressed() && onGround) {
             velocityY = Constants.JUMP_FORCE;
             onGround = false;
             currentState = State.JUMP;
-            
             isFastFalling = false;
             jumpProtectionTimer = jumpProtectionDuration;
-            
-            if (soundManager != null) {
-                soundManager.play("jump");
-            }
-            
             return;
         }
         
         boolean blockActive = input.isBlockPressed();
         boolean crouchPressed = input.isCrouchPressed();
         
+        // ===== BLOCK =====
         if (blockActive) {
             currentState = State.BLOCK;
             velocityX = 0;
         }
+        // ===== CROUCH / FAST FALL =====
         else if (crouchPressed) {
             if (onGround) {
                 currentState = State.CROUCH;
@@ -204,25 +170,18 @@ public abstract class Player {
                     currentState = State.CROUCH;
                     velocityX = 0;
                 } else {
-                    if (velocityY > 0) {
-                        currentState = State.JUMP;
-                    } else {
-                        currentState = State.FALL;
-                    }
+                    currentState = velocityY > 0 ? State.JUMP : State.FALL;
                 }
             }
         }
+        // ===== MOUVEMENT NORMAL =====
         else {
             if (isFastFalling) {
                 isFastFalling = false;
             }
             
             if (!onGround) {
-                if (velocityY > 0) {
-                    currentState = State.JUMP;
-                } else {
-                    currentState = State.FALL;
-                }
+                currentState = velocityY > 0 ? State.JUMP : State.FALL;
             }
             
             if (input.isLeftPressed()) {
@@ -235,13 +194,11 @@ public abstract class Player {
                 if (onGround) currentState = State.WALK;
             } else {
                 velocityX = 0;
-                if (onGround && currentState == State.WALK) {
-                    currentState = State.IDLE;
-                }
+                if (onGround) currentState = State.IDLE;
             }
         }
     }
-    
+
     protected void updateTimers(float delta) {
         if (isAttacking) {
             attackTimer -= delta;
@@ -291,8 +248,6 @@ public abstract class Player {
         
         for (int i = 0; i < steps; i++) {
             float newY = y + movePerStep;
-            
-            // Mise à jour de la hitbox avec les offsets personnalisés
             hitbox.setPosition(x + getHitboxOffsetX(), newY + getHitboxOffsetY());
             boolean collidedVertically = false;
             
@@ -302,25 +257,18 @@ public abstract class Player {
                         collidedVertically = true;
                         
                         if (velocityY < 0) {
-                            // Collision avec le sol - ajuster la position Y en tenant compte de l'offset
                             y = collRect.y + collRect.height - getHitboxOffsetY();
                             velocityY = 0;
                             onGround = true;
-                            
                             isFastFalling = false;
                             jumpProtectionTimer = 0;
                             
                             if (currentState != State.CROUCH && currentState != State.BLOCK 
                                 && currentState != State.ATTACK && currentState != State.HIT) {
-                                if (velocityX == 0) {
-                                    currentState = State.IDLE;
-                                } else {
-                                    currentState = State.WALK;
-                                }
+                                currentState = velocityX == 0 ? State.IDLE : State.WALK;
                             }
                         }
                         else if (velocityY > 0) {
-                            // Collision avec le plafond - ajuster avec la hauteur de hitbox et l'offset
                             y = collRect.y - getHitboxHeight() - getHitboxOffsetY();
                             velocityY = 0;
                         }
@@ -335,18 +283,14 @@ public abstract class Player {
                 
                 if (currentState != State.CROUCH && currentState != State.BLOCK 
                     && currentState != State.ATTACK && currentState != State.HIT) {
-                    if (velocityY > 0) {
-                        currentState = State.JUMP;
-                    } else if (velocityY < 0) {
-                        currentState = State.FALL;
-                    }
+                    currentState = velocityY > 0 ? State.JUMP : State.FALL;
                 }
             } else {
                 break;
             }
         }
         
-        // Collision horizontale avec les offsets personnalisés
+        // Collision horizontale
         float newX = x + velocityX * delta;
         hitbox.setPosition(newX + getHitboxOffsetX(), y + getHitboxOffsetY());
         
@@ -390,13 +334,6 @@ public abstract class Player {
                 }
                 break;
                 
-            case CROUCH:
-            case BLOCK:
-                walkFrame = 0;
-                attackFrame = 0;
-                animationTimer = 0f;
-                break;
-                
             default:
                 walkFrame = 0;
                 attackFrame = 0;
@@ -407,24 +344,18 @@ public abstract class Player {
 
     public void render(SpriteBatch batch) {
         Texture currentTexture = getCurrentTexture();
-        
-        if (debugFrameCounter == 0) {
-            System.out.println("🎨 Player.render() appelé - Position: (" + (int)x + ", " + (int)y + ") - Texture: " + (currentTexture != null ? "OK" : "NULL"));
-        }
 
         if (currentState == State.DEAD) {
             float rotatedWidth = Constants.PLAYER_HEIGHT;
             float rotatedHeight = Constants.PLAYER_WIDTH;
             float originX = rotatedWidth / 2f;
             float originY = rotatedHeight / 2f;
-            float drawX = x;
-            float drawY = y;
             float rotation = facingRight ? -90f : 90f;
             float scaleX = facingRight ? 1f : -1f;
             
             batch.draw(
                 currentTexture,
-                drawX, drawY,
+                x, y,
                 originX, originY,
                 rotatedWidth, rotatedHeight,
                 scaleX, 1f,
@@ -438,6 +369,70 @@ public abstract class Player {
                 batch.draw(currentTexture, x, y, Constants.PLAYER_WIDTH, Constants.PLAYER_HEIGHT);
             } else {
                 batch.draw(currentTexture, x + Constants.PLAYER_WIDTH, y, -Constants.PLAYER_WIDTH, Constants.PLAYER_HEIGHT);
+            }
+        }
+    }
+
+    /**
+     * ⭐ NOUVEAU : Repousse le joueur si sa hitbox est coincée dans un bloc de collision
+     * Calcule la distance minimale pour sortir dans chaque direction (haut, bas, gauche, droite)
+     * et repousse le joueur dans la direction la plus courte
+     */
+    protected void resolveHitboxCollisions() {
+        if (collisionRects == null || collisionRects.size == 0) return;
+        
+        // Vérifier si la hitbox est dans un bloc
+        for (Rectangle collRect : collisionRects) {
+            if (hitbox.overlaps(collRect)) {
+                // Calculer les distances de sortie dans chaque direction
+                float overlapLeft = (hitbox.x + hitbox.width) - collRect.x;
+                float overlapRight = (collRect.x + collRect.width) - hitbox.x;
+                float overlapBottom = (hitbox.y + hitbox.height) - collRect.y;
+                float overlapTop = (collRect.y + collRect.height) - hitbox.y;
+                
+                // Trouver la plus petite distance de sortie
+                float minOverlap = Math.min(
+                    Math.min(overlapLeft, overlapRight),
+                    Math.min(overlapBottom, overlapTop)
+                );
+                
+                // Repousser dans la direction la plus proche
+                if (minOverlap == overlapLeft) {
+                    // Repousser vers la gauche
+                    float pushDistance = overlapLeft + 0.1f; // +0.1f pour éviter les collisions multiples
+                    x -= pushDistance;
+                    velocityX = 0;
+                    System.out.println("⬅️ Player repoussé vers la GAUCHE de " + (int)pushDistance + "px");
+                } 
+                else if (minOverlap == overlapRight) {
+                    // Repousser vers la droite
+                    float pushDistance = overlapRight + 0.1f;
+                    x += pushDistance;
+                    velocityX = 0;
+                    System.out.println("➡️ Player repoussé vers la DROITE de " + (int)pushDistance + "px");
+                } 
+                else if (minOverlap == overlapBottom) {
+                    // Repousser vers le bas
+                    float pushDistance = overlapBottom + 0.1f;
+                    y -= pushDistance;
+                    velocityY = 0;
+                    System.out.println("⬇️ Player repoussé vers le BAS de " + (int)pushDistance + "px");
+                } 
+                else if (minOverlap == overlapTop) {
+                    // Repousser vers le haut
+                    float pushDistance = overlapTop + 0.1f;
+                    y += pushDistance;
+                    velocityY = 0;
+                    onGround = true; // Si on repousse vers le haut, c'est qu'on est sur le sol
+                    System.out.println("⬆️ Player repoussé vers le HAUT de " + (int)pushDistance + "px");
+                }
+                
+                // Mettre à jour la hitbox après le déplacement
+                hitbox.setPosition(x + getHitboxOffsetX(), y + getHitboxOffsetY());
+                
+                // Vérifier s'il y a encore des collisions après le premier déplacement
+                // (nécessaire si l'entité est coincée entre plusieurs blocs)
+                break; // On ne traite qu'une collision à la fois pour éviter les comportements étranges
             }
         }
     }
@@ -456,11 +451,9 @@ public abstract class Player {
     public void setPosition(float x, float y) {
         this.x = x;
         this.y = y;
-        // Mise à jour avec les offsets personnalisés
         this.hitbox.setPosition(x + getHitboxOffsetX(), y + getHitboxOffsetY());
         
         if (collisionRects != null) {
-            // Test de collision avec les dimensions personnalisées
             Rectangle testHitbox = new Rectangle(
                 x + getHitboxOffsetX(), 
                 y + getHitboxOffsetY() - 2, 
@@ -473,12 +466,9 @@ public abstract class Player {
                     onGround = true;
                     velocityY = 0;
                     currentState = State.IDLE;
-                    System.out.println("✅ Spawn détecté sur collision - onGround = true");
                     break;
                 }
             }
         }
-        
-        System.out.println("✅ Position du joueur définie : (" + x + ", " + y + ") | onGround: " + onGround);
     }
 }

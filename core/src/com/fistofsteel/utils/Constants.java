@@ -15,6 +15,23 @@ public class Constants {
     public static final float PLAYER_WIDTH = 120;   
     public static final float PLAYER_HEIGHT = 128;  
 
+    // ===== HITBOX DU JOUEUR (DÉFAUT) =====
+    // Utilisées par les ennemis comme Knight
+    public static final float PLAYER_HITBOX_WIDTH = 70f;
+    public static final float PLAYER_HITBOX_HEIGHT = 105f;
+    public static final float PLAYER_HITBOX_OFFSET_X = (PLAYER_WIDTH - PLAYER_HITBOX_WIDTH) / 2f;
+    public static final float PLAYER_HITBOX_OFFSET_Y = 8f;
+
+    // ===== DIMENSIONS DES ENNEMIS =====
+    public static final float ENEMY_WIDTH = 160f;   // Plus grand que le joueur
+    public static final float ENEMY_HEIGHT = 170f;  // Plus grand que le joueur
+    
+    // ===== HITBOX DES ENNEMIS =====
+    public static final float ENEMY_HITBOX_WIDTH = 85f;
+    public static final float ENEMY_HITBOX_HEIGHT = 130f;
+    public static final float ENEMY_HITBOX_OFFSET_X = (ENEMY_WIDTH - ENEMY_HITBOX_WIDTH) / 2f;
+    public static final float ENEMY_HITBOX_OFFSET_Y = 10f;
+
     // ===== FENÊTRE / ÉCRAN =====
     public static final int WINDOW_WIDTH = 1920;
     public static final int WINDOW_HEIGHT = 1080;

@@ -1,7 +1,6 @@
 package com.fistofsteel.entities;
 
 import com.badlogic.gdx.graphics.Texture;
-import com.fistofsteel.audio.SoundManager;
 import com.fistofsteel.input.InputHandler;
 import com.fistofsteel.utils.Constants;
 
@@ -20,8 +19,8 @@ public class Alexis extends Player {
     private Texture[] attackTextures;
     private Texture[] deadTextures;
 
-    public Alexis(InputHandler input, SoundManager soundManager) {
-        super(input, soundManager);
+    public Alexis(InputHandler input) {
+        super(input);
     }
 
     @Override
@@ -106,29 +105,21 @@ public class Alexis extends Player {
     
     @Override
     protected float getHitboxWidth() {
-        // Alexis a une hitbox plus large que Hugo car c'est un combattant de mêlée
-        // ~62.5% de la largeur du sprite (120px)
         return 75f;
     }
 
     @Override
     protected float getHitboxHeight() {
-        // Hitbox plus haute pour un personnage plus imposant
-        // ~86% de la hauteur du sprite (128px)
         return 110f;
     }
 
     @Override
     protected float getHitboxOffsetX() {
-        // Centre la hitbox horizontalement sur le sprite
-        // (120 - 75) / 2 = 22.5 pixels de chaque côté
         return (Constants.PLAYER_WIDTH - getHitboxWidth()) / 2f;
     }
 
     @Override
     protected float getHitboxOffsetY() {
-        // Décalage vertical plus faible qu'Hugo (plus proche du sol)
-        // La hitbox commence 5 pixels au-dessus du bas du sprite
         return 5f;
     }
 }

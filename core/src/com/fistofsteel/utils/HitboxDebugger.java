@@ -5,10 +5,11 @@ import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Rectangle;
 import com.fistofsteel.entities.Player;
+import com.fistofsteel.entities.Enemy;
 
 /**
  * Utilitaire pour visualiser les hitbox pendant le développement
- * À activer/désactiver avec une constante de debug
+ * À activer/désactiver avec F3
  */
 public class HitboxDebugger {
     
@@ -27,17 +28,13 @@ public class HitboxDebugger {
     
     /**
      * Affiche la hitbox d'un joueur avec la caméra du jeu
-     * À appeler après batch.end() et avant batch.begin()
-     * 
-     * @param player Le joueur dont on veut afficher la hitbox
-     * @param camera La caméra orthographique du jeu
+     * Rouge = hitbox, Bleu = sprite complet, Vert = centre
      */
     public static void renderPlayerHitbox(Player player, OrthographicCamera camera) {
         if (!DEBUG_ENABLED || shapeRenderer == null) return;
         
         Rectangle hitbox = player.getHitbox();
         
-        // IMPORTANT : Utiliser la matrice de projection de la caméra
         shapeRenderer.setProjectionMatrix(camera.combined);
         shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
         
@@ -45,7 +42,7 @@ public class HitboxDebugger {
         shapeRenderer.setColor(Color.RED);
         shapeRenderer.rect(hitbox.x, hitbox.y, hitbox.width, hitbox.height);
         
-        // Rectangle complet du sprite en bleu (pour comparaison)
+        // Rectangle complet du sprite en bleu
         shapeRenderer.setColor(Color.BLUE);
         shapeRenderer.rect(player.getX(), player.getY(), 
                           Constants.PLAYER_WIDTH, Constants.PLAYER_HEIGHT);
@@ -60,32 +57,33 @@ public class HitboxDebugger {
     }
     
     /**
-     * Affiche une hitbox quelconque avec la caméra
+     * Affiche la hitbox d'un ennemi avec la caméra du jeu
+     * Rouge = hitbox, Jaune = sprite complet, Vert = centre
      */
-    public static void renderHitbox(Rectangle hitbox, Color color, OrthographicCamera camera) {
+    public static void renderEnemyHitbox(Enemy enemy, OrthographicCamera camera) {
         if (!DEBUG_ENABLED || shapeRenderer == null) return;
+        
+        Rectangle hitbox = enemy.getHitbox();
         
         shapeRenderer.setProjectionMatrix(camera.combined);
         shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
-        shapeRenderer.setColor(color);
-        shapeRenderer.rect(hitbox.x, hitbox.y, hitbox.width, hitbox.height);
-        shapeRenderer.end();
-    }
-    
-    /**
-     * Affiche des informations textuelles sur la hitbox
-     */
-    public static String getHitboxInfo(Player player) {
-        if (!DEBUG_ENABLED) return "";
         
-        Rectangle hitbox = player.getHitbox();
-        return String.format(
-            "Hitbox: [%.0f x %.0f] at (%.0f, %.0f)\n" +
-            "Sprite: [%.0f x %.0f] at (%.0f, %.0f)",
-            hitbox.width, hitbox.height, hitbox.x, hitbox.y,
-            Constants.PLAYER_WIDTH, Constants.PLAYER_HEIGHT, 
-            player.getX(), player.getY()
-        );
+        // Hitbox en rouge
+        shapeRenderer.setColor(Color.RED);
+        shapeRenderer.rect(hitbox.x, hitbox.y, hitbox.width, hitbox.height);
+        
+        // Rectangle complet du sprite en jaune (différent du joueur)
+        shapeRenderer.setColor(Color.YELLOW);
+        shapeRenderer.rect(enemy.getX(), enemy.getY(), 
+                          Constants.ENEMY_WIDTH, Constants.ENEMY_HEIGHT);
+        
+        // Point central en vert
+        shapeRenderer.setColor(Color.GREEN);
+        float centerX = hitbox.x + hitbox.width / 2f;
+        float centerY = hitbox.y + hitbox.height / 2f;
+        drawCross(centerX, centerY, 5);
+        
+        shapeRenderer.end();
     }
     
     /**

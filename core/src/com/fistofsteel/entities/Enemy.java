@@ -1,49 +1,74 @@
 package com.fistofsteel.entities;
 
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.utils.Array;
 import com.fistofsteel.utils.Constants;
 
 /**
- * Classe abstraite Enemy - Base pour tous les ennemis
- * Inspirée de Player mais avec IA au lieu d'InputHandler
+ * Classe abstraite représentant un ennemi
+ * VERSION FINALE CORRIGÉE - Hitbox stable !
  */
 public abstract class Enemy {
+    
+    // Position et dimensions
     protected float x, y;
-    protected float velocityX, velocityY;
-    protected boolean onGround = false;
-    protected boolean facingRight = true;
-
-    protected Rectangle hitbox;
-    protected Array<Rectangle> collisionRects;
+    protected float width = Constants.ENEMY_WIDTH;
+    protected float height = Constants.ENEMY_HEIGHT;
+    protected float velocityX = 0;
+    protected float velocityY = 0;
     
-    // Stats de l'ennemi
-    protected int health;
-    protected int maxHealth;
-    protected int damage;
-    protected float detectionRange;
-    protected float attackRange;
+    // Point de spawn (référence pour la patrouille au sol)
+    protected float spawnX, spawnY;
     
-    // Référence au joueur pour l'IA
+    // ⭐ NOUVELLE LOGIQUE : Position de patrouille (mise à jour quand l'ennemi perd le joueur)
+    protected float patrolCenterX;
+    protected boolean onGroundLastFrame = false;
+    
+    // Référence au joueur
     protected Player targetPlayer;
-
+    
+    // Stats
+    protected int health = 50;
+    protected int maxHealth = 50;
+    protected int damage = 10;
+    
+    // IA et déplacements
     protected enum State { 
         IDLE, PATROL, CHASE, ATTACK, HIT, DEAD 
     }
     protected State currentState = State.IDLE;
     
-    // Timers
-    protected float attackTimer = 0f;
-    protected float attackCooldown = 1.5f;
-    protected float hitTimer = 0f;
-    protected float hitDuration = 0.3f;
-    protected boolean isDead = false;
-    protected boolean isHit = false;
-    protected boolean isAttacking = false;
+    // ⭐ ZONES DE DÉTECTION ET DISTANCES (avec hysteresis)
+    protected float detectionRange = 400f;      // Distance pour COMMENCER à poursuivre
+    protected float losePlayerRange = 600f;     // Distance pour ARRÊTER de poursuivre (plus grande !)
+    protected float attackRange = 80f;          // Distance pour attaquer
     
-    // Animation
+    // ⭐ PATROUILLE INTELLIGENTE
+    protected float patrolRange = 200f;         // Distance de patrouille de chaque côté
+    protected float edgeDetectionDistance = 20f; // Distance pour détecter un bord
+    protected float patrolSpeed = 50f;
+    protected float chaseSpeed = 75f;
+    protected boolean facingRight = true;
+    
+    // Timers
+    protected float attackTimer = 0;
+    protected float attackCooldown = 1.5f;
+    protected float hitTimer = 0;
+    protected float hitDuration = 0.3f;
+    protected float deadTimer = 0;
+    protected float deadDuration = 2.0f;
+    
+    // États
+    protected boolean isAttacking = false;
+    protected boolean isHit = false;
+    protected boolean isDead = false;
+    protected boolean isOnGround = false;
+    
+    // ⭐ Variables d'animation (pour Knight)
     protected float animationTimer = 0f;
     protected float walkFrameDuration = 0.15f;
     protected float attackFrameDuration = 0.15f;
@@ -52,161 +77,244 @@ public abstract class Enemy {
     protected int walkFrame = 0;
     protected int attackFrame = 0;
     protected int deadFrame = 0;
+    protected int hurtFrame = 0;
+    protected int idleFrame = 0;
     
-    // IA - Patrouille
-    protected float patrolMinX;
-    protected float patrolMaxX;
-    protected float patrolSpeed = 80f;
-    protected boolean patrolGoingRight = true;
-
+    // Physique (comme Player)
+    protected static final float GRAVITY = -800f;
+    protected static final float TERMINAL_VELOCITY = -500f;
+    protected static final float GROUND_FRICTION = 0.9f;
+    protected Rectangle hitbox;
+    protected Array<Rectangle> collisionRects;
+    
     public Enemy(float x, float y, Player targetPlayer) {
         this.x = x;
         this.y = y;
+        this.spawnX = x;
+        this.spawnY = y;
+        this.patrolCenterX = x;  // ⭐ Initialement au spawn
         this.targetPlayer = targetPlayer;
-        loadTextures();
+        this.currentState = State.IDLE;
+        
+        // ⚠️ IMPORTANT : Initialiser les stats AVANT la hitbox
         initStats();
-        hitbox = new Rectangle(
+        loadTextures();
+        
+        // ⭐ CORRECTION : Créer la hitbox avec les bonnes dimensions dès le départ
+        this.hitbox = new Rectangle(
             x + getHitboxOffsetX(), 
             y + getHitboxOffsetY(), 
             getHitboxWidth(), 
             getHitboxHeight()
         );
-        
-        // Zone de patrouille par défaut (300px autour du spawn)
-        patrolMinX = x - 300f;
-        patrolMaxX = x + 300f;
     }
     
-    // ===== MÉTHODES ABSTRAITES =====
+    protected abstract void initStats();
     protected abstract void loadTextures();
     protected abstract void disposeTextures();
-    protected abstract Texture getCurrentTexture();
+    
+    // ⭐ Méthodes abstraites pour Knight
     protected abstract int getWalkFrameCount();
     protected abstract int getAttackFrameCount();
     protected abstract int getDeadFrameCount();
-    
-    /**
-     * Initialise les stats de l'ennemi (HP, dégâts, portées)
-     */
-    protected abstract void initStats();
-    
-    // ===== HITBOX ABSTRAITES =====
     protected abstract float getHitboxWidth();
     protected abstract float getHitboxHeight();
     protected abstract float getHitboxOffsetX();
     protected abstract float getHitboxOffsetY();
     
-    public void setCollisionRects(Array<Rectangle> collisions) {
-        this.collisionRects = collisions;
+    // ⭐ NOUVEAU : Méthodes pour hitbox directionnelle (optionnel)
+    // Surcharger ces méthodes dans les sous-classes qui veulent une hitbox directionnelle
+    protected boolean useDirectionalHitbox() {
+        return false; // Par défaut, hitbox normale
     }
     
-    public void setPatrolZone(float minX, float maxX) {
-        this.patrolMinX = minX;
-        this.patrolMaxX = maxX;
+    protected float getDirectionalHitboxWidth() {
+        return getHitboxWidth(); // Par défaut, même largeur
     }
     
-    public void update(float delta) {
-        if (isDead) {
-            updateDeadAnimation(delta);
-            return;
-        }
-        
-        updateTimers(delta);
-        updateAI(delta);
-        applyPhysics(delta);
-        updateAnimation(delta);
-        
-        hitbox.setPosition(x + getHitboxOffsetX(), y + getHitboxOffsetY());
+    protected float getDirectionalHitboxOffsetX() {
+        return getHitboxOffsetX(); // Par défaut, même offset
+    }
+    
+    public void setCollisionRects(Array<Rectangle> collisionRects) {
+        this.collisionRects = collisionRects;
+    }
+    
+    public void setPatrolZone(float min, float max) {
+        // ⭐ Nouvelle logique : définit la distance de patrouille
+        this.patrolRange = Math.max(Math.abs(min), Math.abs(max));
+        System.out.println("⚙️ Zone de patrouille : ±" + (int)patrolRange + " pixels");
     }
     
     /**
-     * IA de l'ennemi - À surcharger pour des comportements spécifiques
+     * ⭐ IA AMÉLIORÉE : Patrouille intelligente sur plateformes
      */
     protected void updateAI(float delta) {
+        // Si hit ou en attaque, ne pas bouger
         if (isHit || isAttacking) {
             velocityX = 0;
             return;
         }
         
-        float distanceToPlayer = Math.abs(targetPlayer.getX() - x);
+        // Calculer distances au joueur
+        float distanceToPlayerX = Math.abs(targetPlayer.getX() - x);
+        float distanceToPlayerY = Math.abs(targetPlayer.getY() - y);
         
-        // Détection du joueur
-        if (distanceToPlayer <= detectionRange) {
-            // En portée d'attaque ?
-            if (distanceToPlayer <= attackRange && attackTimer <= 0) {
+        // ⭐ RÈGLE 1 : Si DÉJÀ en CHASE, continuer jusqu'à perdre le joueur
+        if (currentState == State.CHASE) {
+            boolean stillInRange = distanceToPlayerX <= losePlayerRange && distanceToPlayerY <= 300f;
+            
+            if (stillInRange) {
+                if (canHitPlayer() && attackTimer <= 0) {
+                    attack();
+                } else {
+                    chase();
+                }
+                return;
+            } else {
+                // ⭐ JOUEUR PERDU : Mettre à jour le centre de patrouille ICI
+                System.out.println("🔄 Joueur perdu ! Nouvelle zone de patrouille à x=" + (int)x);
+                patrolCenterX = x;
+                currentState = State.IDLE;
+                velocityX = 0;
+            }
+        }
+        
+        // ⭐ RÈGLE 2 : Détecter le joueur
+        boolean playerDetected = distanceToPlayerX <= detectionRange && distanceToPlayerY <= 200f;
+        
+        if (playerDetected) {
+            if (canHitPlayer() && attackTimer <= 0) {
                 attack();
             } else {
-                // Poursuite
                 chase();
             }
-        } else {
-            // Patrouille
-            patrol();
+            return;
         }
+        
+        // ⭐ RÈGLE 3 : Patrouiller intelligemment
+        patrolWithEdgeDetection();
     }
     
     /**
-     * Comportement de patrouille
+     * ⭐ NOUVELLE MÉTHODE : Patrouille avec détection de bord de plateforme
      */
-    protected void patrol() {
+    protected void patrolWithEdgeDetection() {
         currentState = State.PATROL;
         
-        if (patrolGoingRight) {
-            velocityX = patrolSpeed;
-            facingRight = true;
-            
-            if (x >= patrolMaxX) {
-                patrolGoingRight = false;
-            }
+        // Vérifier si on est au bord d'une plateforme ou d'un mur
+        boolean edgeAhead = isEdgeAhead();
+        boolean wallAhead = isWallAhead();
+        
+        // Calculer la distance depuis le centre de patrouille
+        float distanceFromCenter = x - patrolCenterX;
+        
+        // ⭐ Faire demi-tour si :
+        // 1. On détecte un bord devant
+        // 2. On détecte un mur devant
+        // 3. On est trop loin du centre de patrouille
+        if (edgeAhead || wallAhead || Math.abs(distanceFromCenter) > patrolRange) {
+            facingRight = !facingRight;
+            velocityX = facingRight ? patrolSpeed : -patrolSpeed;
         } else {
-            velocityX = -patrolSpeed;
-            facingRight = false;
-            
-            if (x <= patrolMinX) {
-                patrolGoingRight = true;
-            }
+            // Continuer dans la direction actuelle
+            velocityX = facingRight ? patrolSpeed : -patrolSpeed;
         }
     }
     
     /**
-     * Comportement de poursuite
+     * ⭐ Détecte si il y a un bord (pas de sol) devant l'ennemi
      */
+    protected boolean isEdgeAhead() {
+        if (collisionRects == null || !isOnGround) return false;
+        
+        // Point de test devant l'ennemi (au niveau des pieds)
+        float testX = facingRight 
+            ? x + getHitboxWidth() + edgeDetectionDistance 
+            : x - edgeDetectionDistance;
+        
+        float testY = y + getHitboxOffsetY() - 5f; // Juste sous les pieds
+        
+        // Créer un petit rectangle de test
+        Rectangle testRect = new Rectangle(testX - 5f, testY - 10f, 10f, 10f);
+        
+        // Vérifier si ce point touche une plateforme
+        for (Rectangle rect : collisionRects) {
+            if (testRect.overlaps(rect)) {
+                return false; // Il y a du sol, pas de bord
+            }
+        }
+        
+        return true; // Pas de sol = bord détecté
+    }
+    
+    /**
+     * ⭐ Détecte si il y a un mur devant l'ennemi
+     */
+    protected boolean isWallAhead() {
+        if (collisionRects == null) return false;
+        
+        // Point de test devant l'ennemi (à hauteur du corps)
+        float testX = facingRight 
+            ? x + getHitboxWidth() + edgeDetectionDistance 
+            : x - edgeDetectionDistance;
+        
+        float testY = y + getHitboxHeight() / 2f;
+        
+        // Créer un petit rectangle de test vertical
+        Rectangle testRect = new Rectangle(testX - 5f, testY - 20f, 10f, 40f);
+        
+        // Vérifier si on touche un mur
+        for (Rectangle rect : collisionRects) {
+            if (testRect.overlaps(rect)) {
+                return true; // Mur détecté
+            }
+        }
+        
+        return false;
+    }
+    
     protected void chase() {
         currentState = State.CHASE;
         
-        float playerX = targetPlayer.getX();
+        float directionX = targetPlayer.getX() - x;
         
-        if (playerX > x) {
-            velocityX = patrolSpeed * 1.5f; // 50% plus rapide en chasse
+        if (directionX > 0) {
+            velocityX = chaseSpeed;
             facingRight = true;
         } else {
-            velocityX = -patrolSpeed * 1.5f;
+            velocityX = -chaseSpeed;
             facingRight = false;
         }
     }
     
-    /**
-     * Déclenche une attaque
-     */
     protected void attack() {
-        isAttacking = true;
-        attackTimer = attackCooldown;
         currentState = State.ATTACK;
-        attackFrame = 0;
-        animationTimer = 0f;
+        isAttacking = true;
         velocityX = 0;
+        
+        if (canHitPlayer()) {
+            System.out.println("💥 Attaque du Knight !");
+        }
+        
+        attackTimer = attackCooldown;
     }
     
-    /**
-     * L'ennemi prend des dégâts
-     */
+    protected boolean canHitPlayer() {
+        Rectangle playerHitbox = targetPlayer.getHitbox();
+        float distance = Math.abs(playerHitbox.x - hitbox.x);
+        float verticalDistance = Math.abs(playerHitbox.y - hitbox.y);
+        
+        return distance <= attackRange && verticalDistance <= 80f;
+    }
+    
     public void takeDamage(int damage) {
         if (isDead || isHit) return;
         
         health -= damage;
+        System.out.println("💥 Knight touché ! HP: " + health + "/" + maxHealth);
         
         if (health <= 0) {
-            health = 0;
             die();
         } else {
             isHit = true;
@@ -216,204 +324,291 @@ public abstract class Enemy {
         }
     }
     
-    /**
-     * L'ennemi meurt
-     */
     protected void die() {
         isDead = true;
         currentState = State.DEAD;
-        deadFrame = 0;
-        animationTimer = 0f;
         velocityX = 0;
-        velocityY = 0;
+        deadTimer = deadDuration;
+        System.out.println("💀 Knight mort !");
     }
     
-    protected void updateTimers(float delta) {
+    public void update(float delta) {
+        if (isDead) {
+            deadTimer -= delta;
+            updateAnimation(delta);
+            return;
+        }
+        
+        // Timers
         if (attackTimer > 0) {
             attackTimer -= delta;
-            if (attackTimer <= 0 && isAttacking) {
+            if (attackTimer <= 0) {
                 isAttacking = false;
-                currentState = State.IDLE;
             }
         }
         
-        if (hitTimer > 0) {
+        if (isHit) {
             hitTimer -= delta;
-            if (hitTimer <= 0 && isHit) {
+            if (hitTimer <= 0) {
                 isHit = false;
-                currentState = State.IDLE;
             }
         }
+        
+        // IA
+        updateAI(delta);
+        
+        // Physique
+        applyPhysics(delta);
+        
+        // Animation
+        updateAnimation(delta);
+        
+        // ⭐ Hitbox suit la position
+        updateHitbox();
     }
     
+    /**
+     * ⭐ PHYSIQUE CORRIGÉE - Gestion propre de la hitbox
+     */
     protected void applyPhysics(float delta) {
-        if (isDead) return;
+        if (collisionRects == null) return;
         
         // Gravité
-        velocityY -= Constants.GRAVITY * delta;
-        
-        if (velocityY < -Constants.MAX_FALL_SPEED) {
-            velocityY = -Constants.MAX_FALL_SPEED;
-        }
-        
-        // Mouvement vertical
-        float newY = y + velocityY * delta;
-        hitbox.setPosition(x + getHitboxOffsetX(), newY + getHitboxOffsetY());
-        
-        boolean collidedVertically = false;
-        if (collisionRects != null) {
-            for (Rectangle collRect : collisionRects) {
-                if (hitbox.overlaps(collRect)) {
-                    collidedVertically = true;
-                    
-                    if (velocityY < 0) {
-                        // Sol
-                        y = collRect.y + collRect.height - getHitboxOffsetY();
-                        velocityY = 0;
-                        onGround = true;
-                    } else if (velocityY > 0) {
-                        // Plafond
-                        y = collRect.y - getHitboxHeight() - getHitboxOffsetY();
-                        velocityY = 0;
-                    }
-                    break;
-                }
+        if (!isOnGround) {
+            velocityY += GRAVITY * delta;
+            if (velocityY < TERMINAL_VELOCITY) {
+                velocityY = TERMINAL_VELOCITY;
             }
         }
         
-        if (!collidedVertically) {
-            y = newY;
-            onGround = false;
-        }
-        
-        // Mouvement horizontal
-        float newX = x + velocityX * delta;
-        hitbox.setPosition(newX + getHitboxOffsetX(), y + getHitboxOffsetY());
-        
-        boolean collidedHorizontally = false;
-        if (collisionRects != null) {
-            for (Rectangle collRect : collisionRects) {
-                if (hitbox.overlaps(collRect)) {
-                    collidedHorizontally = true;
-                    
-                    // Inverse la direction de patrouille si collision
-                    if (currentState == State.PATROL) {
-                        patrolGoingRight = !patrolGoingRight;
-                    }
-                    break;
-                }
+        // Friction au sol
+        if (isOnGround && currentState != State.CHASE && currentState != State.PATROL) {
+            velocityX *= GROUND_FRICTION;
+            if (Math.abs(velocityX) < 1f) {
+                velocityX = 0;
             }
         }
         
-        if (!collidedHorizontally) {
-            x = newX;
-        }
-    }
-    
-    protected void updateAnimation(float delta) {
-        animationTimer += delta;
+        // ⭐ Subdivision du mouvement
+        int subdivisions = 4;
+        float subDelta = delta / subdivisions;
         
-        switch (currentState) {
-            case PATROL:
-            case CHASE:
-                if (animationTimer >= walkFrameDuration) {
-                    walkFrame = (walkFrame + 1) % getWalkFrameCount();
-                    animationTimer = 0f;
-                }
-                break;
-                
-            case ATTACK:
-                if (animationTimer >= attackFrameDuration) {
-                    attackFrame = (attackFrame + 1) % getAttackFrameCount();
-                    animationTimer = 0f;
-                }
-                break;
-                
-            case DEAD:
-                if (animationTimer >= deadFrameDuration && deadFrame < getDeadFrameCount() - 1) {
-                    deadFrame++;
-                    animationTimer = 0f;
-                }
-                break;
-                
-            default:
-                walkFrame = 0;
-                attackFrame = 0;
-                animationTimer = 0f;
-                break;
-        }
-    }
-    
-    protected void updateDeadAnimation(float delta) {
-        animationTimer += delta;
-        if (animationTimer >= deadFrameDuration && deadFrame < getDeadFrameCount() - 1) {
-            deadFrame++;
-            animationTimer = 0f;
-        }
-    }
-    
-    public void render(SpriteBatch batch) {
-        Texture currentTexture = getCurrentTexture();
-        
-        if (currentTexture == null) return;
-        
-        if (currentState == State.DEAD) {
-            // Rotation pour la mort (comme Player)
-            float rotatedWidth = Constants.PLAYER_HEIGHT;
-            float rotatedHeight = Constants.PLAYER_WIDTH;
-            float originX = rotatedWidth / 2f;
-            float originY = rotatedHeight / 2f;
-            float rotation = facingRight ? -90f : 90f;
-            float scaleX = facingRight ? 1f : -1f;
+        for (int i = 0; i < subdivisions; i++) {
+            // ⭐ MOUVEMENT HORIZONTAL
+            float nextX = x + velocityX * subDelta;
             
-            batch.draw(
-                currentTexture,
-                x, y,
-                originX, originY,
-                rotatedWidth, rotatedHeight,
-                scaleX, 1f,
-                rotation,
-                0, 0,
-                currentTexture.getWidth(), currentTexture.getHeight(),
-                false, false
+            // Créer une hitbox temporaire pour tester
+            Rectangle testHitbox;
+            if (useDirectionalHitbox()) {
+                testHitbox = new Rectangle(
+                    nextX + getDirectionalHitboxOffsetX(),
+                    y + getHitboxOffsetY(),
+                    getDirectionalHitboxWidth(),
+                    getHitboxHeight()
+                );
+            } else {
+                testHitbox = new Rectangle(
+                    nextX + getHitboxOffsetX(),
+                    y + getHitboxOffsetY(),
+                    getHitboxWidth(),
+                    getHitboxHeight()
+                );
+            }
+            
+            boolean collisionX = false;
+            for (Rectangle rect : collisionRects) {
+                if (testHitbox.overlaps(rect)) {
+                    collisionX = true;
+                    velocityX = 0;
+                    
+                    // ⭐ En patrouille, faire demi-tour au mur
+                    if (currentState == State.PATROL) {
+                        facingRight = !facingRight;
+                        velocityX = facingRight ? patrolSpeed : -patrolSpeed;
+                    }
+                    break;
+                }
+            }
+            
+            if (!collisionX) {
+                x = nextX;
+            }
+            
+            // ⭐ MOUVEMENT VERTICAL
+            float nextY = y + velocityY * subDelta;
+            
+            // Créer une hitbox temporaire pour tester
+            if (useDirectionalHitbox()) {
+                testHitbox.set(
+                    x + getDirectionalHitboxOffsetX(),
+                    nextY + getHitboxOffsetY(),
+                    getDirectionalHitboxWidth(),
+                    getHitboxHeight()
+                );
+            } else {
+                testHitbox.set(
+                    x + getHitboxOffsetX(),
+                    nextY + getHitboxOffsetY(),
+                    getHitboxWidth(),
+                    getHitboxHeight()
+                );
+            }
+            
+            isOnGround = false;
+            for (Rectangle rect : collisionRects) {
+                if (testHitbox.overlaps(rect)) {
+                    if (velocityY < 0) {
+                        // Atterrissage
+                        isOnGround = true;
+                        y = rect.y + rect.height - getHitboxOffsetY();
+                    } else {
+                        // Tête qui cogne
+                        y = rect.y - getHitboxHeight() - getHitboxOffsetY();
+                    }
+                    velocityY = 0;
+                    break;
+                }
+            }
+            
+            if (!isOnGround) {
+                y = nextY;
+            }
+        }
+    }
+    
+    protected abstract void updateAnimation(float delta);
+    
+    /**
+     * ⭐ Mise à jour de la hitbox - position ET taille (pour hitbox directionnelle)
+     */
+    protected void updateHitbox() {
+        if (useDirectionalHitbox()) {
+            // Hitbox directionnelle : largeur et offset changent selon la direction
+            hitbox.set(
+                x + getDirectionalHitboxOffsetX(),
+                y + getHitboxOffsetY(),
+                getDirectionalHitboxWidth(),
+                getHitboxHeight()
             );
         } else {
-            if (facingRight) {
-                batch.draw(currentTexture, x, y, Constants.PLAYER_WIDTH, Constants.PLAYER_HEIGHT);
-            } else {
-                batch.draw(currentTexture, x + Constants.PLAYER_WIDTH, y, -Constants.PLAYER_WIDTH, Constants.PLAYER_HEIGHT);
+            // Hitbox normale : seulement la position change
+            hitbox.setPosition(x + getHitboxOffsetX(), y + getHitboxOffsetY());
+        }
+        
+        // ⭐ NOUVEAU : Résoudre les collisions après mise à jour de la hitbox
+        resolveHitboxCollisions();
+    }
+    
+    /**
+     * ⭐ NOUVEAU : Repousse l'entité si sa hitbox est coincée dans un bloc de collision
+     * Calcule la distance minimale pour sortir dans chaque direction (haut, bas, gauche, droite)
+     * et repousse l'entité dans la direction la plus courte
+     */
+    protected void resolveHitboxCollisions() {
+        if (collisionRects == null || collisionRects.size == 0) return;
+        
+        // Vérifier si la hitbox est dans un bloc
+        for (Rectangle collRect : collisionRects) {
+            if (hitbox.overlaps(collRect)) {
+                // Calculer les distances de sortie dans chaque direction
+                float overlapLeft = (hitbox.x + hitbox.width) - collRect.x;
+                float overlapRight = (collRect.x + collRect.width) - hitbox.x;
+                float overlapBottom = (hitbox.y + hitbox.height) - collRect.y;
+                float overlapTop = (collRect.y + collRect.height) - hitbox.y;
+                
+                // Trouver la plus petite distance de sortie
+                float minOverlap = Math.min(
+                    Math.min(overlapLeft, overlapRight),
+                    Math.min(overlapBottom, overlapTop)
+                );
+                
+                // Repousser dans la direction la plus proche
+                if (minOverlap == overlapLeft) {
+                    // Repousser vers la gauche
+                    float pushDistance = overlapLeft + 0.1f; // +0.1f pour éviter les collisions multiples
+                    x -= pushDistance;
+                    velocityX = 0;
+                    System.out.println("⬅️ Knight repoussé vers la GAUCHE de " + (int)pushDistance + "px");
+                } 
+                else if (minOverlap == overlapRight) {
+                    // Repousser vers la droite
+                    float pushDistance = overlapRight + 0.1f;
+                    x += pushDistance;
+                    velocityX = 0;
+                    System.out.println("➡️ Knight repoussé vers la DROITE de " + (int)pushDistance + "px");
+                } 
+                else if (minOverlap == overlapBottom) {
+                    // Repousser vers le bas
+                    float pushDistance = overlapBottom + 0.1f;
+                    y -= pushDistance;
+                    velocityY = 0;
+                    System.out.println("⬇️ Knight repoussé vers le BAS de " + (int)pushDistance + "px");
+                } 
+                else if (minOverlap == overlapTop) {
+                    // Repousser vers le haut
+                    float pushDistance = overlapTop + 0.1f;
+                    y += pushDistance;
+                    velocityY = 0;
+                    isOnGround = true; // Si on repousse vers le haut, c'est qu'on est sur le sol
+                    System.out.println("⬆️ Knight repoussé vers le HAUT de " + (int)pushDistance + "px");
+                }
+                
+                // Mettre à jour la hitbox après le déplacement
+                if (useDirectionalHitbox()) {
+                    hitbox.set(
+                        x + getDirectionalHitboxOffsetX(),
+                        y + getHitboxOffsetY(),
+                        getDirectionalHitboxWidth(),
+                        getHitboxHeight()
+                    );
+                } else {
+                    hitbox.setPosition(x + getHitboxOffsetX(), y + getHitboxOffsetY());
+                }
+                
+                // Vérifier s'il y a encore des collisions après le premier déplacement
+                // (nécessaire si l'entité est coincée entre plusieurs blocs)
+                break; // On ne traite qu'une collision à la fois pour éviter les comportements étranges
             }
         }
+    }
+    
+    public abstract void render(SpriteBatch batch);
+    
+    public void renderDebug(ShapeRenderer shapeRenderer) {
+        shapeRenderer.setColor(Color.RED);
+        shapeRenderer.rect(hitbox.x, hitbox.y, hitbox.width, hitbox.height);
+        
+        // Zone de détection
+        shapeRenderer.setColor(new Color(1, 1, 0, 0.3f));
+        shapeRenderer.circle(x + width/2, y + height/2, detectionRange);
+        
+        // Zone de perte du joueur
+        shapeRenderer.setColor(new Color(1, 0.5f, 0, 0.2f));
+        shapeRenderer.circle(x + width/2, y + height/2, losePlayerRange);
     }
     
     public void dispose() {
         disposeTextures();
     }
     
-    // ===== GETTERS =====
-    public State getCurrentState() { return currentState; }
-    public boolean isAttacking() { return isAttacking; }
-    public boolean isDead() { return isDead; }
+    // Getters
     public float getX() { return x; }
     public float getY() { return y; }
     public Rectangle getHitbox() { return hitbox; }
+    public boolean isDead() { return isDead && deadTimer <= 0; }
+    public State getCurrentState() { return currentState; }
     public int getHealth() { return health; }
     public int getMaxHealth() { return maxHealth; }
     public int getDamage() { return damage; }
     
-    /**
-     * Vérifie si l'attaque de l'ennemi touche le joueur
-     */
-    public boolean canHitPlayer() {
-        if (!isAttacking) return false;
-        
-        // Zone d'attaque devant l'ennemi
-        float attackWidth = attackRange;
-        float attackHeight = getHitboxHeight();
-        float attackX = facingRight ? x + getHitboxWidth() : x - attackWidth;
-        float attackY = y;
-        
-        Rectangle attackBox = new Rectangle(attackX, attackY, attackWidth, attackHeight);
-        return attackBox.overlaps(targetPlayer.getHitbox());
+    // ⭐ NOUVELLES MÉTHODES pour stabilisation au sol
+    public boolean getIsOnGround() {  // Renommé pour éviter conflit avec variable isOnGround
+        return isOnGround;
+    }
+    
+    public void setPosition(float x, float y) {
+        this.x = x;
+        this.y = y;
+        updateHitbox();
     }
 }

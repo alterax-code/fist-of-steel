@@ -11,7 +11,11 @@ import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.utils.Align;
 import com.fistofsteel.FistOfSteelGame;
+import com.fistofsteel.audio.AudioManager;
 
+/**
+ * MenuScreen - DÉMARRE LA MUSIQUE MENU (seulement si elle ne joue pas déjà)
+ */
 public class MenuScreen implements Screen {
     private FistOfSteelGame game;
     private SpriteBatch batch;
@@ -20,6 +24,9 @@ public class MenuScreen implements Screen {
     private BitmapFont titleFont;
     
     private Texture backgroundTexture;
+    
+    // ⭐ AudioManager partagé (passé en paramètre)
+    private AudioManager audioManager;
     
     private MenuButton newGameButton;
     private MenuButton optionsButton;
@@ -31,8 +38,10 @@ public class MenuScreen implements Screen {
     private static final String TITLE = "FIST OF STEEL";
     private static final String SUBTITLE = "Marvin's Vengeance";
     
-    public MenuScreen(FistOfSteelGame game) {
+    // ⭐ CONSTRUCTEUR MODIFIÉ : reçoit l'AudioManager
+    public MenuScreen(FistOfSteelGame game, AudioManager audioManager) {
         this.game = game;
+        this.audioManager = audioManager;
     }
     
     @Override
@@ -48,16 +57,27 @@ public class MenuScreen implements Screen {
         titleFont.getData().setScale(4f);
         titleFont.setColor(new Color(1f, 0.2f, 0.2f, 1f));
         
+        // Chargement du background
         try {
             backgroundTexture = new Texture(Gdx.files.internal("assets/menu/menu_background.png"));
+            backgroundTexture.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
+            System.out.println("✅ Background menu chargé : " + backgroundTexture.getWidth() + "x" + backgroundTexture.getHeight());
         } catch (Exception e) {
-            System.out.println("⚠️ Pas d'image de fond, utilisation d'un fond uni");
+            System.out.println("⚠️ Pas d'image de fond menu : " + e.getMessage());
         }
         
         screenWidth = Gdx.graphics.getWidth();
         screenHeight = Gdx.graphics.getHeight();
         
         createButtons();
+        
+        // ⭐ DÉMARRER LA MUSIQUE MENU SEULEMENT SI ELLE NE JOUE PAS DÉJÀ
+        if (!audioManager.isMenuMusicPlaying()) {
+            audioManager.startMenuMusic();
+            System.out.println("🎵 MenuScreen : Musique menu démarrée");
+        } else {
+            System.out.println("🎵 MenuScreen : Musique menu déjà en cours");
+        }
     }
     
     private void createButtons() {
@@ -83,10 +103,13 @@ public class MenuScreen implements Screen {
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
         
         batch.begin();
+        
+        // Affichage du background
         if (backgroundTexture != null) {
             batch.draw(backgroundTexture, 0, 0, screenWidth, screenHeight);
         }
         
+        // Titre et sous-titre
         float titleY = screenHeight * 0.88f;
         float subtitleY = screenHeight * 0.80f;
         titleFont.draw(batch, TITLE, 0, titleY, screenWidth, Align.center, false);
@@ -115,10 +138,11 @@ public class MenuScreen implements Screen {
         
         if (Gdx.input.justTouched()) {
             if (newGameButton.isClicked(mouseX, mouseY)) {
-                // ✅ Aller vers la sélection de personnage au lieu de lancer directement
-                game.setScreen(new CharactersChoice(game));
+                // ⭐ La musique menu CONTINUE dans CharactersChoice
+                game.setScreen(new CharactersChoice(game, audioManager));
             } else if (optionsButton.isClicked(mouseX, mouseY)) {
-                game.setScreen(new OptionsScreen(game));
+                // ⭐ La musique menu CONTINUE dans OptionsScreen
+                game.setScreen(new OptionsScreen(game, audioManager));
             } else if (quitButton.isClicked(mouseX, mouseY)) {
                 Gdx.app.exit();
             }
@@ -145,6 +169,7 @@ public class MenuScreen implements Screen {
         if (backgroundTexture != null) {
             backgroundTexture.dispose();
         }
+        // ⭐ NE PAS disposer audioManager, il est géré par FistOfSteelGame
     }
     
     private static class MenuButton {

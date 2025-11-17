@@ -5,13 +5,18 @@ import com.badlogic.gdx.Input;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
+import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.utils.Align;
 import com.fistofsteel.FistOfSteelGame;
+import com.fistofsteel.audio.AudioManager;
 
+/**
+ * CharactersChoice - LA MUSIQUE MENU CONTINUE, puis s'arrête au lancement du jeu
+ */
 public class CharactersChoice implements Screen {
 
     private final FistOfSteelGame game;
@@ -20,6 +25,12 @@ public class CharactersChoice implements Screen {
     private ShapeRenderer shapeRenderer;
     private BitmapFont font;
     private BitmapFont titleFont;
+    
+    // ⭐ IMAGE DE FOND
+    private Texture backgroundTexture;
+    
+    // ⭐ Référence à l'AudioManager (partagé)
+    private AudioManager audioManager;
 
     private float screenWidth;
     private float screenHeight;
@@ -30,8 +41,9 @@ public class CharactersChoice implements Screen {
 
     private String selectedCharacter = null; // "Hugo" ou "Alexis"
 
-    public CharactersChoice(FistOfSteelGame game) {
+    public CharactersChoice(FistOfSteelGame game, AudioManager audioManager) {
         this.game = game;
+        this.audioManager = audioManager;
     }
 
     @Override
@@ -46,11 +58,23 @@ public class CharactersChoice implements Screen {
         titleFont = new BitmapFont();
         titleFont.getData().setScale(3f);
         titleFont.setColor(new Color(1f, 0.8f, 0.2f, 1f));
+        
+        // ⭐ CHARGER L'IMAGE DE FOND
+        try {
+            backgroundTexture = new Texture(Gdx.files.internal("assets/menu/character_selection_background.png"));
+            backgroundTexture.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
+            System.out.println("✅ Background sélection personnages chargé : " + backgroundTexture.getWidth() + "x" + backgroundTexture.getHeight());
+        } catch (Exception e) {
+            System.out.println("⚠️ Pas d'image de fond pour la sélection : " + e.getMessage());
+        }
 
         screenWidth = Gdx.graphics.getWidth();
         screenHeight = Gdx.graphics.getHeight();
 
         createElements();
+        
+        // ⭐ NE PAS toucher à la musique - elle continue depuis MenuScreen
+        System.out.println("🎵 CharactersChoice : Musique menu continue");
     }
 
     private void createElements() {
@@ -62,7 +86,6 @@ public class CharactersChoice implements Screen {
         float yRow = screenHeight * 0.55f;
         float gap = 50f;
 
-        // ✅ Correction : positionnement des boutons
         hugoButton   = new SimpleButton("HUGO",   centerX - charBtnWidth - gap/2f, yRow, charBtnWidth, charBtnHeight);
         alexisButton = new SimpleButton("ALEXIS", centerX + gap/2f, yRow, charBtnWidth, charBtnHeight);
 
@@ -71,7 +94,12 @@ public class CharactersChoice implements Screen {
 
     @Override
     public void render(float delta) {
-        Gdx.gl.glClearColor(0.10f, 0.10f, 0.15f, 1f);
+        // Fond noir si on a une image
+        if (backgroundTexture != null) {
+            Gdx.gl.glClearColor(0, 0, 0, 1);
+        } else {
+            Gdx.gl.glClearColor(0.10f, 0.10f, 0.15f, 1f);
+        }
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
         int mouseX = Gdx.input.getX();
@@ -79,7 +107,8 @@ public class CharactersChoice implements Screen {
 
         // Raccourci
         if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)) {
-            game.setScreen(new MenuScreen(game));
+            // ⭐ Retour au menu - la musique continue - PASSER audioManager
+            game.setScreen(new MenuScreen(game, audioManager));
             return;
         }
 
@@ -87,16 +116,17 @@ public class CharactersChoice implements Screen {
         if (Gdx.input.justTouched()) {
             if (hugoButton.isClicked(mouseX, mouseY)) {
                 selectedCharacter = "Hugo";
-                // ✅ Lancer le jeu avec Hugo
-                game.setScreen(new GameManager(game, "Hugo"));
+                // ⭐ LANCER LE JEU - La musique menu s'arrêtera, la musique level démarrera
+                game.setScreen(new GameManager(game, "Hugo", audioManager));
                 return;
             } else if (alexisButton.isClicked(mouseX, mouseY)) {
                 selectedCharacter = "Alexis";
-                // ✅ Lancer le jeu avec Alexis
-                game.setScreen(new GameManager(game, "Alexis"));
+                // ⭐ LANCER LE JEU - La musique menu s'arrêtera, la musique level démarrera
+                game.setScreen(new GameManager(game, "Alexis", audioManager));
                 return;
             } else if (backButton.isClicked(mouseX, mouseY)) {
-                game.setScreen(new MenuScreen(game));
+                // ⭐ Retour au menu - la musique continue - PASSER audioManager
+                game.setScreen(new MenuScreen(game, audioManager));
                 return;
             }
         }
@@ -106,8 +136,15 @@ public class CharactersChoice implements Screen {
         alexisButton.update(mouseX, mouseY);
         backButton.update(mouseX, mouseY);
 
-        // Dessin UI - Titres
+        // ⭐ DESSIN - Commence par le background
         batch.begin();
+        
+        // Dessiner l'image de fond
+        if (backgroundTexture != null) {
+            batch.draw(backgroundTexture, 0, 0, screenWidth, screenHeight);
+        }
+        
+        // Titre
         titleFont.draw(batch, "CHOOSE YOUR FIGHTER", 0, screenHeight * 0.86f, screenWidth, Align.center, false);
 
         if (selectedCharacter == null) {
@@ -165,6 +202,11 @@ public class CharactersChoice implements Screen {
         shapeRenderer.dispose();
         font.dispose();
         titleFont.dispose();
+        // ⭐ DISPOSE DE L'IMAGE
+        if (backgroundTexture != null) {
+            backgroundTexture.dispose();
+        }
+        // ⭐ NE PAS disposer audioManager, il est passé au GameManager
     }
 
     // ====== Bouton simple ======

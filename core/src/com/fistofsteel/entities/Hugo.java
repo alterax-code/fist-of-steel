@@ -1,7 +1,6 @@
 package com.fistofsteel.entities;
 
 import com.badlogic.gdx.graphics.Texture;
-import com.fistofsteel.audio.SoundManager;
 import com.fistofsteel.input.InputHandler;
 import com.fistofsteel.utils.Constants;
 
@@ -20,8 +19,8 @@ public class Hugo extends Player {
     private Texture[] attackTextures;
     private Texture[] deadTextures;
 
-    public Hugo(InputHandler input, SoundManager soundManager) {
-        super(input, soundManager);
+    public Hugo(InputHandler input) {
+        super(input);
     }
 
     @Override
@@ -104,29 +103,21 @@ public class Hugo extends Player {
     
     @Override
     protected float getHitboxWidth() {
-        // Hugo a une hitbox étroite pour un personnage agile
-        // 50% de la largeur du sprite (120px)
         return 60f;
     }
 
     @Override
     protected float getHitboxHeight() {
-        // Hauteur réduite pour correspondre au corps réel
-        // ~78% de la hauteur du sprite (128px)
         return 100f;
     }
 
     @Override
     protected float getHitboxOffsetX() {
-        // Centre la hitbox horizontalement sur le sprite
-        // (120 - 60) / 2 = 30 pixels de chaque côté
         return (Constants.PLAYER_WIDTH - getHitboxWidth()) / 2f;
     }
 
     @Override
     protected float getHitboxOffsetY() {
-        // Décalage vertical léger pour éviter les collisions trop sensibles au sol
-        // La hitbox commence 10 pixels au-dessus du bas du sprite
         return 10f;
     }
 }

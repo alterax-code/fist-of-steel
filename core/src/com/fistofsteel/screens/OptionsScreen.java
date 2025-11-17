@@ -11,13 +11,20 @@ import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.utils.Align;
 import com.fistofsteel.FistOfSteelGame;
+import com.fistofsteel.audio.AudioManager;
 
+/**
+ * OptionsScreen - LA MUSIQUE MENU CONTINUE
+ */
 public class OptionsScreen implements Screen {
     private FistOfSteelGame game;
     private SpriteBatch batch;
     private ShapeRenderer shapeRenderer;
     private BitmapFont font;
     private BitmapFont titleFont;
+    
+    // ⭐ Référence à l'AudioManager (partagé)
+    private AudioManager audioManager;
     
     private VolumeSlider musicSlider;
     private VolumeSlider sfxSlider;
@@ -31,8 +38,9 @@ public class OptionsScreen implements Screen {
     private float screenWidth;
     private float screenHeight;
     
-    public OptionsScreen(FistOfSteelGame game) {
+    public OptionsScreen(FistOfSteelGame game, AudioManager audioManager) {
         this.game = game;
+        this.audioManager = audioManager;
     }
     
     @Override
@@ -52,6 +60,9 @@ public class OptionsScreen implements Screen {
         screenHeight = Gdx.graphics.getHeight();
         
         createElements();
+        
+        // ⭐ NE PAS toucher à la musique - elle continue depuis MenuScreen
+        System.out.println("🎵 OptionsScreen : Musique menu continue");
     }
     
     private void createElements() {
@@ -63,8 +74,8 @@ public class OptionsScreen implements Screen {
         float sliderY1 = screenHeight * 0.65f;
         float sliderY2 = screenHeight * 0.51f;
         
-        musicSlider = new VolumeSlider("MUSIC VOLUME", sliderX, sliderY1, sliderWidth, 0.5f);
-        sfxSlider = new VolumeSlider("SFX VOLUME", sliderX, sliderY2, sliderWidth, 1.0f);
+        musicSlider = new VolumeSlider("MUSIC VOLUME", sliderX, sliderY1, sliderWidth, audioManager.getMusicVolume());
+        sfxSlider = new VolumeSlider("SFX VOLUME", sliderX, sliderY2, sliderWidth, audioManager.getSoundVolume());
         
         float keyStartY = screenHeight * 0.37f;
         float keySpacing = screenHeight * 0.074f;
@@ -112,16 +123,21 @@ public class OptionsScreen implements Screen {
         }
         
         if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)) {
-            game.setScreen(new MenuScreen(game));
+            // ⭐ Retour au menu - la musique continue - PASSER audioManager
+            game.setScreen(new MenuScreen(game, audioManager));
             return;
         }
         
         if (Gdx.input.isTouched()) {
             if (musicSlider.isDragging || musicSlider.bounds.contains(mouseX, mouseY)) {
                 musicSlider.updateValue(mouseX);
+                // ⭐ Appliquer le volume immédiatement
+                audioManager.setMusicVolume(musicSlider.value);
             }
             if (sfxSlider.isDragging || sfxSlider.bounds.contains(mouseX, mouseY)) {
                 sfxSlider.updateValue(mouseX);
+                // ⭐ Appliquer le volume immédiatement
+                audioManager.setSoundVolume(sfxSlider.value);
             }
         } else {
             musicSlider.isDragging = false;
@@ -130,7 +146,8 @@ public class OptionsScreen implements Screen {
         
         if (Gdx.input.justTouched() && !waitingForKey) {
             if (backButton.isClicked(mouseX, mouseY)) {
-                game.setScreen(new MenuScreen(game));
+                // ⭐ Retour au menu - la musique continue - PASSER audioManager
+                game.setScreen(new MenuScreen(game, audioManager));
                 return;
             }
             
@@ -192,6 +209,7 @@ public class OptionsScreen implements Screen {
         shapeRenderer.dispose();
         font.dispose();
         titleFont.dispose();
+        // ⭐ NE PAS disposer audioManager, il est partagé
     }
     
     private static class VolumeSlider {
