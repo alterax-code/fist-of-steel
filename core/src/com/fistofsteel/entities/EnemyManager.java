@@ -2,6 +2,7 @@ package com.fistofsteel.entities;
 
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.utils.Array;
 import com.fistofsteel.utils.HitboxDebugger;
@@ -10,6 +11,10 @@ public class EnemyManager {
 
     private Array<Enemy> enemies;
     private Player player;
+    
+    // ⭐ NOUVEAU : Compteur de kills
+    private int enemiesKilled = 0;
+    private int totalEnemiesSpawned = 0;
 
     public EnemyManager(Player player) {
         this.enemies = new Array<>();
@@ -21,6 +26,7 @@ public class EnemyManager {
     public void addKnight(float x, float y) {
         Knight knight = new Knight(x, y, player);
         enemies.add(knight);
+        totalEnemiesSpawned++;
         System.out.println("⚔️ Knight ajouté à (" + (int)x + ", " + (int)y + ")");
     }
 
@@ -28,6 +34,7 @@ public class EnemyManager {
         Knight knight = new Knight(x, y, player);
         knight.setPatrolZone(patrolMin, patrolMax);
         enemies.add(knight);
+        totalEnemiesSpawned++;
         System.out.println("⚔️ Knight ajouté à (" + (int)x + ", " + (int)y + ") | Patrol: [" +
                 (int)patrolMin + " -> " + (int)patrolMax + "]");
     }
@@ -37,14 +44,16 @@ public class EnemyManager {
     public void addMage(float x, float y) {
         Mage mage = new Mage(x, y, player);
         enemies.add(mage);
-        System.out.println("👹 Mage ajouté à (" + (int)x + ", " + (int)y + ")");
+        totalEnemiesSpawned++;
+        System.out.println("🧙 Mage ajouté à (" + (int)x + ", " + (int)y + ")");
     }
 
     public void addMage(float x, float y, float patrolMin, float patrolMax) {
         Mage mage = new Mage(x, y, player);
         mage.setPatrolZone(patrolMin, patrolMax);
         enemies.add(mage);
-        System.out.println("👹 Mage ajouté à (" + (int)x + ", " + (int)y + 
+        totalEnemiesSpawned++;
+        System.out.println("🧙 Mage ajouté à (" + (int)x + ", " + (int)y + 
                 ") | Patrol: [" + (int)patrolMin + " -> " + (int)patrolMax + "]");
     }
 
@@ -53,6 +62,7 @@ public class EnemyManager {
     public void addRogue(float x, float y) {
         Rogue rogue = new Rogue(x, y, player);
         enemies.add(rogue);
+        totalEnemiesSpawned++;
         System.out.println("🗡️ Rogue ajouté à (" + (int)x + ", " + (int)y + ")");
     }
 
@@ -60,6 +70,7 @@ public class EnemyManager {
         Rogue rogue = new Rogue(x, y, player);
         rogue.setPatrolZone(patrolMin, patrolMax);
         enemies.add(rogue);
+        totalEnemiesSpawned++;
         System.out.println("🗡️ Rogue ajouté à (" + (int)x + ", " + (int)y + 
                 ") | Patrol: [" + (int)patrolMin + " -> " + (int)patrolMax + "]");
     }
@@ -71,6 +82,7 @@ public class EnemyManager {
      * public void addGoblin(float x, float y) {
      *     Goblin goblin = new Goblin(x, y, player);
      *     enemies.add(goblin);
+     *     totalEnemiesSpawned++;
      *     System.out.println("👺 Goblin ajouté à (" + (int)x + ", " + (int)y + ")");
      * }
      * 
@@ -78,6 +90,7 @@ public class EnemyManager {
      *     Goblin goblin = new Goblin(x, y, player);
      *     goblin.setPatrolZone(patrolMin, patrolMax);
      *     enemies.add(goblin);
+     *     totalEnemiesSpawned++;
      *     System.out.println("👺 Goblin ajouté à (" + (int)x + ", " + (int)y + ")");
      * }
      */
@@ -99,6 +112,15 @@ public class EnemyManager {
     public void render(SpriteBatch batch) {
         for (Enemy enemy : enemies) {
             enemy.render(batch);
+        }
+    }
+    
+    /**
+     * ⭐ NOUVEAU : Rendu des barres de vie des ennemis
+     */
+    public void renderHealthBars(ShapeRenderer shapeRenderer, OrthographicCamera camera) {
+        for (Enemy enemy : enemies) {
+            enemy.renderHealthBar(shapeRenderer, camera);
         }
     }
 
@@ -140,6 +162,7 @@ public class EnemyManager {
         for (Enemy enemy : enemies) {
             if (enemy.isDead()) {
                 toRemove.add(enemy);
+                enemiesKilled++; // ⭐ Incrémenter le compteur de kills
             }
         }
 
@@ -159,6 +182,20 @@ public class EnemyManager {
 
     public int getTotalCount() {
         return enemies.size;
+    }
+    
+    /**
+     * ⭐ NOUVEAU : Récupère le nombre d'ennemis tués
+     */
+    public int getEnemiesKilled() {
+        return enemiesKilled;
+    }
+    
+    /**
+     * ⭐ NOUVEAU : Récupère le nombre total d'ennemis spawnés
+     */
+    public int getTotalEnemiesSpawned() {
+        return totalEnemiesSpawned;
     }
 
     public void renderDebugHitboxes(OrthographicCamera camera) {

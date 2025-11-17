@@ -1,11 +1,13 @@
 package com.fistofsteel.entities;
 
 import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.utils.Array;
 import com.fistofsteel.utils.Constants;
+import com.fistofsteel.utils.HealthBar;
 
 /**
  * Classe abstraite représentant un ennemi
@@ -572,6 +574,26 @@ public abstract class Enemy {
     }
     
     public abstract void render(SpriteBatch batch);
+    
+    /**
+     * ⭐ NOUVEAU : Rendu de la barre de vie au-dessus de l'ennemi
+     */
+    public void renderHealthBar(ShapeRenderer shapeRenderer, OrthographicCamera camera) {
+        if (isDead) return; // Ne pas afficher la barre si l'ennemi est mort
+        
+        shapeRenderer.setProjectionMatrix(camera.combined);
+        shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
+        
+        // Position au-dessus de la tête de l'ennemi
+        float barX = x + width / 2f;
+        float barY = y + height + 10f; // 10 pixels au-dessus
+        float barWidth = 80f;
+        float barHeight = 8f;
+        
+        HealthBar.render(shapeRenderer, barX, barY, barWidth, barHeight, health, maxHealth);
+        
+        shapeRenderer.end();
+    }
     
     public void renderDebug(ShapeRenderer shapeRenderer) {
         shapeRenderer.setColor(Color.RED);

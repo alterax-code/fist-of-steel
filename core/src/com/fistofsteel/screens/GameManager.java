@@ -23,6 +23,7 @@ import com.fistofsteel.entities.Hugo;
 import com.fistofsteel.entities.Player;
 import com.fistofsteel.entities.WorldItemManager;
 import com.fistofsteel.input.InputHandler;
+import com.fistofsteel.ui.PlayerHUD;
 import com.fistofsteel.utils.Constants;
 import com.fistofsteel.utils.HitboxDebugger;
 
@@ -48,6 +49,9 @@ public class GameManager implements Screen {
     
     private WorldItemManager worldItemManager;
     private EnemyManager enemyManager;
+    
+    // ⭐ NOUVEAU : HUD du joueur
+    private PlayerHUD playerHUD;
 
     public GameManager(FistOfSteelGame game, String selectedCharacter, AudioManager audioManager) {
         this.game = game;
@@ -113,14 +117,18 @@ public class GameManager implements Screen {
         worldItemManager = new WorldItemManager();
         loadPotionsFromTiled();
         
-        // 8. MUSIQUE
+        // 8. ⭐ HUD
+        playerHUD = new PlayerHUD();
+        System.out.println("✅ HUD du joueur initialisé");
+        
+        // 9. MUSIQUE
         audioManager.startLevelMusic();
         System.out.println("🎵 Musique level démarrée");
         
-        // 9. DEBUG
+        // 10. DEBUG
         HitboxDebugger.setDebugEnabled(debugMode);
         
-        // 10. FINALIZE
+        // 11. FINALIZE
         updateCamera();
         camera.update();
         batch.setProjectionMatrix(camera.combined);
@@ -367,6 +375,11 @@ public class GameManager implements Screen {
             worldItemManager.checkPlayerCollisions(player);
         }
         
+        // ⭐ Update HUD
+        if (playerHUD != null) {
+            playerHUD.update(delta);
+        }
+        
         // COMBATS
         enemyManager.checkEnemyAttacks(player);
         enemyManager.checkPlayerAttack(player);
@@ -375,7 +388,7 @@ public class GameManager implements Screen {
         updateCamera();
         camera.update();
 
-        // RENDER
+        // RENDER WORLD
         batch.setProjectionMatrix(camera.combined);
         batch.begin();
         renderBackground();
@@ -396,10 +409,18 @@ public class GameManager implements Screen {
         
         batch.end();
         
+        // ⭐ BARRES DE VIE DES ENNEMIS
+        enemyManager.renderHealthBars(new com.badlogic.gdx.graphics.glutils.ShapeRenderer(), camera);
+        
         // DEBUG HITBOXES
         if (debugMode) {
             HitboxDebugger.renderPlayerHitbox(player, camera);
             enemyManager.renderDebugHitboxes(camera);
+        }
+        
+        // ⭐ RENDER HUD (par-dessus tout le reste)
+        if (playerHUD != null) {
+            playerHUD.render(batch, player, enemyManager.getEnemiesKilled(), enemyManager.getTotalEnemiesSpawned());
         }
     }
     
@@ -435,6 +456,11 @@ public class GameManager implements Screen {
         camera.setToOrtho(false, viewportWidth, worldHeight);
         updateCamera();
         camera.update();
+        
+        // ⭐ Mettre à jour la caméra du HUD
+        if (playerHUD != null) {
+            playerHUD.resize(width, height);
+        }
     }
     
     @Override 
@@ -465,6 +491,7 @@ public class GameManager implements Screen {
         if (tiledMap != null) tiledMap.dispose();
         if (tiledMapRenderer != null) tiledMapRenderer.dispose();
         if (backgroundTexture != null) backgroundTexture.dispose();
+        if (playerHUD != null) playerHUD.dispose();
         
         HitboxDebugger.dispose();
         
