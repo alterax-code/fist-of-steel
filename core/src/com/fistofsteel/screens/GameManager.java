@@ -21,7 +21,8 @@ import com.fistofsteel.entities.Alexis;
 import com.fistofsteel.entities.EnemyManager;
 import com.fistofsteel.entities.Hugo;
 import com.fistofsteel.entities.Player;
-import com.fistofsteel.entities.PotionManager;
+// 🔁 ANCIEN : import com.fistofsteel.entities.PotionManager;
+import com.fistofsteel.entities.WorldItemManager;   // ✅ NOUVEAU
 import com.fistofsteel.input.InputHandler;
 import com.fistofsteel.utils.Constants;
 import com.fistofsteel.utils.HitboxDebugger;
@@ -51,7 +52,11 @@ public class GameManager implements Screen {
     
     private boolean debugMode = false;
     
-    private PotionManager potionManager;
+    // 🔁 ANCIEN :
+    // private PotionManager potionManager;
+    // ✅ NOUVEAU :
+    private WorldItemManager worldItemManager;
+
     private EnemyManager enemyManager;
 
     // ⭐ Constructeur avec AudioManager
@@ -118,9 +123,9 @@ public class GameManager implements Screen {
             System.out.println("✅ Collisions configurées pour " + enemyManager.getTotalCount() + " ennemis");
         }
         
-        // 7. POTIONS
-        potionManager = new PotionManager();
-        loadPotionsFromTiled();
+        // 7. ITEMS (potion, armes, armures plus tard)
+        worldItemManager = new WorldItemManager();
+        loadPotionsFromTiled();   // pour l’instant : ne gère que les potions de soin
         
         // 8. ⭐ MUSIQUE : Arrêter menu, démarrer level
         audioManager.startLevelMusic();
@@ -188,11 +193,9 @@ public class GameManager implements Screen {
                             "playerSpawn".equalsIgnoreCase(objectName);
             
             if (isSpawn) {
-                // ⭐ RECTANGLE : Tiled donne directement le coin inférieur gauche
                 float tiledX = object.getProperties().get("x", Float.class);
                 float tiledY = object.getProperties().get("y", Float.class);
                 
-                // ✅ AUCUNE CONVERSION NÉCESSAIRE pour les rectangles !
                 float libgdxX = tiledX;
                 float libgdxY = tiledY;
                 
@@ -204,7 +207,6 @@ public class GameManager implements Screen {
                 player.setPosition(libgdxX, libgdxY);
                 System.out.println("✅ Spawn: (" + (int)libgdxX + ", " + (int)libgdxY + ")");
                 
-                // ⭐ VÉRIFICATION : Le joueur est-il bien au sol ?
                 boolean playerGrounded = false;
                 if (collisionRects != null) {
                     Rectangle playerHitbox = player.getHitbox();
@@ -253,8 +255,12 @@ public class GameManager implements Screen {
         }
     }
     
+    /**
+     * Charge les potions depuis le layer "Potions" de Tiled
+     * et crée des ItemPickup via WorldItemManager.
+     */
     private void loadPotionsFromTiled() {
-        if (tiledMap == null) return;
+        if (tiledMap == null || worldItemManager == null) return;
         
         MapLayer potionLayer = tiledMap.getLayers().get("Potions");
         if (potionLayer == null) {
@@ -271,11 +277,13 @@ public class GameManager implements Screen {
             float libgdxX = tiledX;
             float libgdxY = tiledY;
             
-            potionManager.addPotion(libgdxX, libgdxY);
+            // ✅ On utilise notre nouveau système d’items :
+            // pour l’instant : 1 type = potion de soin
+            worldItemManager.spawnHealPotion(libgdxX, libgdxY);
             potionCount++;
         }
         
-        System.out.println("✅ Potions: " + potionCount + " chargées");
+        System.out.println("✅ Potions: " + potionCount + " chargées via WorldItemManager");
     }
     
     /**
@@ -308,7 +316,6 @@ public class GameManager implements Screen {
             
             System.out.println("   Coord Tiled (rectangle): (" + (int)tiledX + ", " + (int)tiledY + ")");
             
-            // ⭐ RECTANGLE : Pas de conversion nécessaire !
             float libgdxX = tiledX;
             float libgdxY = tiledY;
             
@@ -358,7 +365,6 @@ public class GameManager implements Screen {
             audioManager.stopLevelMusic();
             audioManager.startMenuMusic();
             System.out.println("🎵 ESC : Retour au menu (musique changée)");
-            // Créer un nouveau MenuScreen avec audioManager
             game.setScreen(new MenuScreen(game, audioManager));
             return;
         }
@@ -366,11 +372,17 @@ public class GameManager implements Screen {
         // UPDATE
         player.update(delta);
         enemyManager.update(delta);
-        potionManager.update(delta);
-        
-        // Collisions potions
-        potionManager.checkCollisions(player.getHitbox());
-        potionManager.removeCollectedPotions();
+
+        // 🔁 ANCIEN :
+        // potionManager.update(delta);
+        // potionManager.checkCollisions(player.getHitbox());
+        // potionManager.removeCollectedPotions();
+        //
+        // ✅ NOUVEAU : le WorldItemManager gère update + collisions + suppression
+        if (worldItemManager != null) {
+            worldItemManager.update(delta);       
+            worldItemManager.checkPlayerCollisions(player);
+        }
         
         // Collisions ennemis
         enemyManager.checkEnemyAttacks(player);
@@ -394,7 +406,14 @@ public class GameManager implements Screen {
         batch.begin();
         player.render(batch);
         enemyManager.render(batch);
-        potionManager.render(batch);
+
+        // 🔁 ANCIEN :
+        // potionManager.render(batch);
+        // ✅ NOUVEAU :
+        if (worldItemManager != null) {
+            worldItemManager.render(batch);
+        }
+
         batch.end();
         
         // DEBUG : Hitbox du joueur et des ennemis (activé avec F3)
@@ -474,16 +493,13 @@ public class GameManager implements Screen {
         System.out.println("\n🧹 Nettoyage GameManager...");
         
         if (batch != null) batch.dispose();
-        if (potionManager != null) potionManager.dispose();
+        // 🔁 ANCIEN : if (potionManager != null) potionManager.dispose();
+        if (worldItemManager != null) worldItemManager.dispose();
         if (enemyManager != null) enemyManager.dispose();
         if (player != null) player.dispose();
         if (tiledMap != null) tiledMap.dispose();
         if (tiledMapRenderer != null) tiledMapRenderer.dispose();
         if (backgroundTexture != null) backgroundTexture.dispose();
-        
-        // ⭐ NE PAS disposer audioManager ici !
-        // Il est partagé entre tous les écrans et sera disposé par FistOfSteelGame
-        // audioManager.dispose(); ← NE PAS FAIRE !
         
         HitboxDebugger.dispose();
         

@@ -99,14 +99,24 @@ public class EnemyManager {
     /**
      * Verifie si un ennemi touche le joueur avec son attaque
      */
-    public void checkEnemyAttacks(Player player) {
-        for (Enemy enemy : enemies) {
-            if (enemy.canHitPlayer() && !player.isDead()) {
-                System.out.println("💥 Le joueur est touche par " + enemy.getClass().getSimpleName() + 
-                                 " (-" + enemy.getDamage() + " HP)");
-            }
+public void checkEnemyAttacks(Player player) {
+    for (Enemy enemy : enemies) {
+
+        if (enemy.canHitPlayer() && !player.isDead()) {
+
+            int damage = enemy.getDamage();
+
+            // 💥 RETIRER LA VIE ICI
+            player.applyDamage(damage);
+
+            System.out.println(
+                "💥 Le joueur est touché par " 
+                + enemy.getClass().getSimpleName() +
+                " (-" + damage + " HP) | HP restant = " + player.getHealth()
+            );
         }
     }
+}
     
     /**
      * Verifie si le joueur touche un ennemi avec son attaque

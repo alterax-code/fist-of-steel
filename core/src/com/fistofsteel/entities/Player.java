@@ -54,10 +54,19 @@ public abstract class Player {
     
     private int debugFrameCounter = 0;
 
+    protected int maxHealth = 100;
+    protected int health = maxHealth;
+
+    protected int armor = 0;        // si tu veux gérer l’armure ensuite
+    protected int baseAttack = 10;  // A MODIFIER CAR HUGO ET ALEXIS ONT PAS LA MEME ATTAQUE attaque de base
+    protected int attackBonus = 0;
+
     public Player(InputHandler input) {
         this.input = input;
         loadTextures();
         hitbox = new Rectangle(x + getHitboxOffsetX(), y + getHitboxOffsetY(), getHitboxWidth(), getHitboxHeight());
+        this.maxHealth = 100;
+        this.health = maxHealth;
     }
     
     // ===== MÉTHODES ABSTRAITES =====
@@ -470,5 +479,75 @@ public abstract class Player {
                 }
             }
         }
+        }
+
+        // -- PV --
+
+    public int getHealth() {
+        return health;
     }
+
+    public int getMaxHealth() {
+        return maxHealth;
+    }
+
+    public void heal(int amount) {
+        if (amount <= 0) return;
+        health += amount;
+        if (health > maxHealth) health = maxHealth;
+        System.out.println("💊 Heal +" + amount + " -> " + health + "/" + maxHealth);
+    }
+
+    public void takeDamage(int amount) {
+        if (amount <= 0) return;
+
+        // Si tu veux que l’armure réduise les dégâts
+        int effective = Math.max(0, amount - armor);
+
+        health -= effective;
+        if (health < 0) health = 0;
+
+        System.out.println("💥 Damage " + effective + " -> " + health + "/" + maxHealth);
+    }
+
+    // Pour les armes plus tard
+    public int getTotalAttack() {
+        return baseAttack + attackBonus;
+    }
+
+    public void setAttackBonus(int bonus) {
+        this.attackBonus = bonus;
+    }
+
+    public int getAttackBonus() {
+        return attackBonus;
+    }
+
+    // --- ARMURE ---
+
+public int getArmor() {
+    return armor;
+}
+
+public void setArmor(int armor) {
+    this.armor = Math.max(0, armor); // évite les valeurs négatives
+    System.out.println("🛡 Nouvelle armure : " + this.armor);
+}
+
+public void applyDamage(int amount) {
+    health -= amount;
+    if (health < 0) health = 0;
+
+    if (health == 0) {
+        die();
+    }
+}
+
+
+private void die() {
+    System.out.println("☠️ Le joueur est mort");
+}
+
+
+
 }
