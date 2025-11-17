@@ -21,7 +21,7 @@ import com.fistofsteel.entities.Alexis;
 import com.fistofsteel.entities.EnemyManager;
 import com.fistofsteel.entities.Hugo;
 import com.fistofsteel.entities.Player;
-import com.fistofsteel.entities.PotionManager;
+import com.fistofsteel.items.PotionManager;
 import com.fistofsteel.input.InputHandler;
 import com.fistofsteel.utils.Constants;
 import com.fistofsteel.utils.HitboxDebugger;
@@ -322,17 +322,36 @@ public class GameManager implements Screen {
             Float patrolMaxObj = object.getProperties().get("patrolMax", Float.class);
             
             if ("Knight".equalsIgnoreCase(enemyType)) {
+
+                // Knight avec patrouille
                 if (patrolMinObj != null && patrolMaxObj != null) {
-                    enemyManager.addKnight(libgdxX, libgdxY, 
-                                          libgdxX + patrolMinObj, 
-                                          libgdxX + patrolMaxObj);
+                    enemyManager.addKnight(libgdxX, libgdxY,
+                                        libgdxX + patrolMinObj,
+                                        libgdxX + patrolMaxObj);
                 } else {
                     enemyManager.addKnight(libgdxX, libgdxY);
                 }
+
                 enemyCount++;
+
+            } else if ("Mage".equalsIgnoreCase(enemyType)) {
+
+                // Mage avec patrouille aussi
+                if (patrolMinObj != null && patrolMaxObj != null) {
+                    enemyManager.addMage(libgdxX, libgdxY,
+                                        libgdxX + patrolMinObj,
+                                        libgdxX + patrolMaxObj);
+                } else {
+                    enemyManager.addMage(libgdxX, libgdxY);
+                }
+
+                enemyCount++;
+
             } else {
+
                 System.out.println("   ⚠️ Type d'ennemi non reconnu : " + enemyType);
             }
+
         }
         
         System.out.println("\n🔧 Stabilisation des ennemis au sol...");
