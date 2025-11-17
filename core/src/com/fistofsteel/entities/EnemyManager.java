@@ -45,8 +45,42 @@ public class EnemyManager {
         mage.setPatrolZone(patrolMin, patrolMax);
         enemies.add(mage);
         System.out.println("👹 Mage ajouté à (" + (int)x + ", " + (int)y + 
-                ") | Patrol: [" + patrolMin + " -> " + patrolMax + "]");
+                ") | Patrol: [" + (int)patrolMin + " -> " + (int)patrolMax + "]");
     }
+
+    // ----------- ROGUE -----------
+
+    public void addRogue(float x, float y) {
+        Rogue rogue = new Rogue(x, y, player);
+        enemies.add(rogue);
+        System.out.println("🗡️ Rogue ajouté à (" + (int)x + ", " + (int)y + ")");
+    }
+
+    public void addRogue(float x, float y, float patrolMin, float patrolMax) {
+        Rogue rogue = new Rogue(x, y, player);
+        rogue.setPatrolZone(patrolMin, patrolMax);
+        enemies.add(rogue);
+        System.out.println("🗡️ Rogue ajouté à (" + (int)x + ", " + (int)y + 
+                ") | Patrol: [" + (int)patrolMin + " -> " + (int)patrolMax + "]");
+    }
+
+    /* ⭐ EXEMPLE : Comment ajouter un nouveau type d'ennemi
+     * 
+     * Pour ajouter un Goblin, copie ces méthodes et change le nom :
+     * 
+     * public void addGoblin(float x, float y) {
+     *     Goblin goblin = new Goblin(x, y, player);
+     *     enemies.add(goblin);
+     *     System.out.println("👺 Goblin ajouté à (" + (int)x + ", " + (int)y + ")");
+     * }
+     * 
+     * public void addGoblin(float x, float y, float patrolMin, float patrolMax) {
+     *     Goblin goblin = new Goblin(x, y, player);
+     *     goblin.setPatrolZone(patrolMin, patrolMax);
+     *     enemies.add(goblin);
+     *     System.out.println("👺 Goblin ajouté à (" + (int)x + ", " + (int)y + ")");
+     * }
+     */
 
     // ----------- COLLISIONS & UPDATE -----------
 
@@ -73,8 +107,13 @@ public class EnemyManager {
     public void checkEnemyAttacks(Player player) {
         for (Enemy enemy : enemies) {
             if (enemy.canHitPlayer() && !player.isDead()) {
+                int damage = enemy.getDamage();
+                
+                // 💥 APPLIQUE LES DÉGÂTS AU JOUEUR
+                player.applyDamage(damage);
+                
                 System.out.println("💥 Le joueur est touché par " + enemy.getClass().getSimpleName() +
-                        " (-" + enemy.getDamage() + " HP)");
+                        " (-" + damage + " HP) | HP restant = " + player.getHealth());
             }
         }
     }
@@ -98,7 +137,11 @@ public class EnemyManager {
 
     public void removeDeadEnemies() {
         Array<Enemy> toRemove = new Array<>();
-        for (Enemy enemy : enemies) if (enemy.isDead()) toRemove.add(enemy);
+        for (Enemy enemy : enemies) {
+            if (enemy.isDead()) {
+                toRemove.add(enemy);
+            }
+        }
 
         for (Enemy enemy : toRemove) {
             enemies.removeValue(enemy, true);
@@ -108,7 +151,9 @@ public class EnemyManager {
 
     public int getAliveCount() {
         int count = 0;
-        for (Enemy enemy : enemies) if (!enemy.isDead()) count++;
+        for (Enemy enemy : enemies) {
+            if (!enemy.isDead()) count++;
+        }
         return count;
     }
 

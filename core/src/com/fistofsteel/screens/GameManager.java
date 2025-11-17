@@ -21,22 +21,17 @@ import com.fistofsteel.entities.Alexis;
 import com.fistofsteel.entities.EnemyManager;
 import com.fistofsteel.entities.Hugo;
 import com.fistofsteel.entities.Player;
-import com.fistofsteel.items.PotionManager;
+import com.fistofsteel.entities.WorldItemManager;
 import com.fistofsteel.input.InputHandler;
 import com.fistofsteel.utils.Constants;
 import com.fistofsteel.utils.HitboxDebugger;
 
-/**
- * GameManager - DÉMARRE LA MUSIQUE LEVEL, arrête la musique menu
- */
 public class GameManager implements Screen {
     private FistOfSteelGame game;
     private OrthographicCamera camera;
     private SpriteBatch batch;
     private Player player;
     private InputHandler inputHandler;
-    
-    // ⭐ AudioManager partagé (reçu depuis CharactersChoice)
     private AudioManager audioManager;
     
     private TiledMap tiledMap;
@@ -51,10 +46,9 @@ public class GameManager implements Screen {
     
     private boolean debugMode = false;
     
-    private PotionManager potionManager;
+    private WorldItemManager worldItemManager;
     private EnemyManager enemyManager;
 
-    // ⭐ Constructeur avec AudioManager
     public GameManager(FistOfSteelGame game, String selectedCharacter, AudioManager audioManager) {
         this.game = game;
         this.selectedCharacter = selectedCharacter;
@@ -79,16 +73,16 @@ public class GameManager implements Screen {
         batch = new SpriteBatch();
         System.out.println("✅ SpriteBatch créé");
         
-        // 3. INPUT HANDLER (avec AudioManager)
+        // 3. INPUT HANDLER
         inputHandler = new InputHandler(audioManager);
         Gdx.input.setInputProcessor(inputHandler);
         System.out.println("✅ InputHandler créé et connecté à AudioManager");
         
-        // 4. TILED MAP (charge map + collisions)
+        // 4. TILED MAP
         loadTiledMap();
         loadBackground();
         
-        // 5. PLAYER (créer APRÈS les collisions)
+        // 5. PLAYER
         if ("Alexis".equals(selectedCharacter)) {
             player = new Alexis(inputHandler);
             System.out.println("✅ Personnage: Alexis (Hitbox: 75x110)");
@@ -97,7 +91,6 @@ public class GameManager implements Screen {
             System.out.println("✅ Personnage: Hugo (Hitbox: 60x100)");
         }
         
-        // ⭐ IMPORTANT : Donner les collisions AVANT de positionner
         if (collisionRects != null && collisionRects.size > 0) {
             player.setCollisionRects(collisionRects);
             System.out.println("✅ Collisions configurées pour le joueur (" + collisionRects.size + " rectangles)");
@@ -105,26 +98,24 @@ public class GameManager implements Screen {
             System.err.println("⚠️ ATTENTION : Aucune collision chargée !");
         }
         
-        // ⭐ PUIS charger le spawn
         loadSpawnFromTiled();
         
         // 6. ENEMY MANAGER
         enemyManager = new EnemyManager(player);
         loadEnemiesFromTiled();
         
-        // ⭐ IMPORTANT : Donner les collisions à TOUS les ennemis
         if (collisionRects != null) {
             enemyManager.setCollisionRects(collisionRects);
             System.out.println("✅ Collisions configurées pour " + enemyManager.getTotalCount() + " ennemis");
         }
         
-        // 7. POTIONS
-        potionManager = new PotionManager();
+        // 7. ITEMS
+        worldItemManager = new WorldItemManager();
         loadPotionsFromTiled();
         
-        // 8. ⭐ MUSIQUE : Arrêter menu, démarrer level
+        // 8. MUSIQUE
         audioManager.startLevelMusic();
-        System.out.println("🎵 GameManager : Musique level démarrée");
+        System.out.println("🎵 Musique level démarrée");
         
         // 9. DEBUG
         HitboxDebugger.setDebugEnabled(debugMode);
@@ -168,9 +159,23 @@ public class GameManager implements Screen {
         }
     }
     
-    /**
-     * ⭐ VERSION RECTANGLES : Charge le spawn du joueur depuis un RECTANGLE Tiled
-     */
+    private void loadCollisions() {
+        collisionRects = new Array<>();
+        if (tiledMap == null) return;
+        
+        MapLayer collisionLayer = tiledMap.getLayers().get("Collisions");
+        if (collisionLayer != null) {
+            for (MapObject object : collisionLayer.getObjects()) {
+                if (object instanceof RectangleMapObject) {
+                    RectangleMapObject rectObject = (RectangleMapObject) object;
+                    Rectangle rect = rectObject.getRectangle();
+                    collisionRects.add(new Rectangle(rect));
+                }
+            }
+            System.out.println("✅ Collisions: " + collisionRects.size + " rectangles");
+        }
+    }
+    
     private void loadSpawnFromTiled() {
         if (tiledMap == null) return;
         
@@ -188,24 +193,15 @@ public class GameManager implements Screen {
                             "playerSpawn".equalsIgnoreCase(objectName);
             
             if (isSpawn) {
-                // ⭐ RECTANGLE : Tiled donne directement le coin inférieur gauche
                 float tiledX = object.getProperties().get("x", Float.class);
                 float tiledY = object.getProperties().get("y", Float.class);
                 
-                // ✅ AUCUNE CONVERSION NÉCESSAIRE pour les rectangles !
                 float libgdxX = tiledX;
                 float libgdxY = tiledY;
-                
-                System.out.println("📍 DEBUG Spawn (Rectangle):");
-                System.out.println("   Tiled X,Y: (" + (int)tiledX + ", " + (int)tiledY + ")");
-                System.out.println("   LibGDX X,Y: (" + (int)libgdxX + ", " + (int)libgdxY + ")");
-                System.out.println("   ✅ Pas de conversion Y (rectangle = coin inférieur)");
                 
                 player.setPosition(libgdxX, libgdxY);
                 System.out.println("✅ Spawn: (" + (int)libgdxX + ", " + (int)libgdxY + ")");
                 
-                // ⭐ VÉRIFICATION : Le joueur est-il bien au sol ?
-                boolean playerGrounded = false;
                 if (collisionRects != null) {
                     Rectangle playerHitbox = player.getHitbox();
                     Rectangle testHitbox = new Rectangle(
@@ -215,6 +211,7 @@ public class GameManager implements Screen {
                         playerHitbox.height
                     );
                     
+                    boolean playerGrounded = false;
                     for (Rectangle collRect : collisionRects) {
                         if (testHitbox.overlaps(collRect)) {
                             playerGrounded = true;
@@ -236,25 +233,8 @@ public class GameManager implements Screen {
         System.err.println("⚠️ Aucun spawn trouvé dans le layer 'spawn' !");
     }
     
-    private void loadCollisions() {
-        collisionRects = new Array<>();
-        if (tiledMap == null) return;
-        
-        MapLayer collisionLayer = tiledMap.getLayers().get("Collisions");
-        if (collisionLayer != null) {
-            for (MapObject object : collisionLayer.getObjects()) {
-                if (object instanceof RectangleMapObject) {
-                    RectangleMapObject rectObject = (RectangleMapObject) object;
-                    Rectangle rect = rectObject.getRectangle();
-                    collisionRects.add(new Rectangle(rect));
-                }
-            }
-            System.out.println("✅ Collisions: " + collisionRects.size + " rectangles");
-        }
-    }
-    
     private void loadPotionsFromTiled() {
-        if (tiledMap == null) return;
+        if (tiledMap == null || worldItemManager == null) return;
         
         MapLayer potionLayer = tiledMap.getLayers().get("Potions");
         if (potionLayer == null) {
@@ -271,18 +251,15 @@ public class GameManager implements Screen {
             float libgdxX = tiledX;
             float libgdxY = tiledY;
             
-            potionManager.addPotion(libgdxX, libgdxY);
+            worldItemManager.spawnHealPotion(libgdxX, libgdxY);
             potionCount++;
         }
         
-        System.out.println("✅ Potions: " + potionCount + " chargées");
+        System.out.println("✅ Potions: " + potionCount + " chargées via WorldItemManager");
     }
     
-    /**
-     * ⭐ VERSION RECTANGLES : Charge les ennemis depuis des RECTANGLES Tiled
-     */
     private void loadEnemiesFromTiled() {
-        System.out.println("\n🔎 DEBUG - Chargement des ennemis...");
+        System.out.println("\n🔎 Chargement des ennemis...");
         
         if (tiledMap == null) {
             System.out.println("❌ tiledMap est NULL !");
@@ -301,63 +278,63 @@ public class GameManager implements Screen {
         int enemyCount = 0;
         
         for (MapObject object : enemyLayer.getObjects()) {
-            System.out.println("\n🎯 Objet trouvé : " + object.getName());
-            
             float tiledX = object.getProperties().get("x", Float.class);
             float tiledY = object.getProperties().get("y", Float.class);
             
-            System.out.println("   Coord Tiled (rectangle): (" + (int)tiledX + ", " + (int)tiledY + ")");
-            
-            // ⭐ RECTANGLE : Pas de conversion nécessaire !
             float libgdxX = tiledX;
             float libgdxY = tiledY;
             
-            System.out.println("   Coord LibGDX : (" + (int)libgdxX + ", " + (int)libgdxY + ")");
-            System.out.println("   ✅ Pas de conversion Y (rectangle = coin inférieur)");
-            
             String enemyType = object.getProperties().get("type", "Knight", String.class);
-            System.out.println("   Type : " + enemyType);
             
             Float patrolMinObj = object.getProperties().get("patrolMin", Float.class);
             Float patrolMaxObj = object.getProperties().get("patrolMax", Float.class);
             
             if ("Knight".equalsIgnoreCase(enemyType)) {
-
-                // Knight avec patrouille
                 if (patrolMinObj != null && patrolMaxObj != null) {
-                    enemyManager.addKnight(libgdxX, libgdxY,
-                                        libgdxX + patrolMinObj,
-                                        libgdxX + patrolMaxObj);
+                    enemyManager.addKnight(libgdxX, libgdxY, 
+                                          libgdxX + patrolMinObj, 
+                                          libgdxX + patrolMaxObj);
                 } else {
                     enemyManager.addKnight(libgdxX, libgdxY);
                 }
-
                 enemyCount++;
-
             } else if ("Mage".equalsIgnoreCase(enemyType)) {
-
-                // Mage avec patrouille aussi
                 if (patrolMinObj != null && patrolMaxObj != null) {
-                    enemyManager.addMage(libgdxX, libgdxY,
-                                        libgdxX + patrolMinObj,
+                    enemyManager.addMage(libgdxX, libgdxY, 
+                                        libgdxX + patrolMinObj, 
                                         libgdxX + patrolMaxObj);
                 } else {
                     enemyManager.addMage(libgdxX, libgdxY);
                 }
-
                 enemyCount++;
-
+            } else if ("Rogue".equalsIgnoreCase(enemyType)) {
+                if (patrolMinObj != null && patrolMaxObj != null) {
+                    enemyManager.addRogue(libgdxX, libgdxY, 
+                                         libgdxX + patrolMinObj, 
+                                         libgdxX + patrolMaxObj);
+                } else {
+                    enemyManager.addRogue(libgdxX, libgdxY);
+                }
+                enemyCount++;
             } else {
-
-                System.out.println("   ⚠️ Type d'ennemi non reconnu : " + enemyType);
+                System.out.println("⚠️ Type d'ennemi non reconnu : " + enemyType);
             }
-
         }
         
-        System.out.println("\n🔧 Stabilisation des ennemis au sol...");
         stabilizeAllEnemies();
         
-        System.out.println("\n✅ Ennemis: " + enemyCount + " chargés\n");
+        System.out.println("✅ Ennemis: " + enemyCount + " chargés\n");
+    }
+    
+    private void stabilizeAllEnemies() {
+        if (enemyManager == null) return;
+        
+        int maxAttempts = 100;
+        for (int i = 0; i < maxAttempts; i++) {
+            enemyManager.update(0.016f);
+        }
+        
+        System.out.println("✅ Tous les ennemis stabilisés après " + maxAttempts + " frames");
     }
     
     @Override
@@ -365,19 +342,18 @@ public class GameManager implements Screen {
         Gdx.gl.glClearColor(0.1f, 0.1f, 0.15f, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
-        // DEBUG TOGGLE
+        // DEBUG TOGGLE (F3)
         if (Gdx.input.isKeyJustPressed(Input.Keys.F3)) {
             debugMode = !debugMode;
             HitboxDebugger.setDebugEnabled(debugMode);
             System.out.println("🔧 Debug mode: " + (debugMode ? "ON" : "OFF"));
         }
 
-        // ⭐ RETOUR MENU - Arrête musique level, redémarre musique menu
+        // RETOUR MENU (ESC)
         if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)) {
             audioManager.stopLevelMusic();
             audioManager.startMenuMusic();
-            System.out.println("🎵 ESC : Retour au menu (musique changée)");
-            // Créer un nouveau MenuScreen avec audioManager
+            System.out.println("🎵 Retour au menu");
             game.setScreen(new MenuScreen(game, audioManager));
             return;
         }
@@ -385,13 +361,13 @@ public class GameManager implements Screen {
         // UPDATE
         player.update(delta);
         enemyManager.update(delta);
-        potionManager.update(delta);
         
-        // Collisions potions
-        potionManager.checkCollisions(player.getHitbox());
-        potionManager.removeCollectedPotions();
+        if (worldItemManager != null) {
+            worldItemManager.update(delta);       
+            worldItemManager.checkPlayerCollisions(player);
+        }
         
-        // Collisions ennemis
+        // COMBATS
         enemyManager.checkEnemyAttacks(player);
         enemyManager.checkPlayerAttack(player);
         enemyManager.removeDeadEnemies();
@@ -413,10 +389,14 @@ public class GameManager implements Screen {
         batch.begin();
         player.render(batch);
         enemyManager.render(batch);
-        potionManager.render(batch);
+        
+        if (worldItemManager != null) {
+            worldItemManager.render(batch);
+        }
+        
         batch.end();
         
-        // DEBUG : Hitbox du joueur et des ennemis (activé avec F3)
+        // DEBUG HITBOXES
         if (debugMode) {
             HitboxDebugger.renderPlayerHitbox(player, camera);
             enemyManager.renderDebugHitboxes(camera);
@@ -474,35 +454,17 @@ public class GameManager implements Screen {
         }
     }
 
-    private void stabilizeAllEnemies() {
-        if (enemyManager == null) return;
-        
-        int maxAttempts = 100;
-        int stabilizationAttempts = 0;
-        
-        while (stabilizationAttempts < maxAttempts) {
-            enemyManager.update(0.016f);
-            stabilizationAttempts++;
-        }
-        
-        System.out.println("✅ Tous les ennemis stabilisés après " + stabilizationAttempts + " frames");
-    }
-
     @Override
     public void dispose() {
         System.out.println("\n🧹 Nettoyage GameManager...");
         
         if (batch != null) batch.dispose();
-        if (potionManager != null) potionManager.dispose();
+        if (worldItemManager != null) worldItemManager.dispose();
         if (enemyManager != null) enemyManager.dispose();
         if (player != null) player.dispose();
         if (tiledMap != null) tiledMap.dispose();
         if (tiledMapRenderer != null) tiledMapRenderer.dispose();
         if (backgroundTexture != null) backgroundTexture.dispose();
-        
-        // ⭐ NE PAS disposer audioManager ici !
-        // Il est partagé entre tous les écrans et sera disposé par FistOfSteelGame
-        // audioManager.dispose(); ← NE PAS FAIRE !
         
         HitboxDebugger.dispose();
         

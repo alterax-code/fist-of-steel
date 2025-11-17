@@ -7,10 +7,6 @@ import com.badlogic.gdx.utils.Array;
 import com.fistofsteel.input.InputHandler;
 import com.fistofsteel.utils.Constants;
 
-/**
- * Classe Player ultra-simplifiée
- * Gère uniquement la logique gameplay - PAS les sons
- */
 public abstract class Player {
     protected float x, y;
     protected float velocityX, velocityY;
@@ -54,10 +50,19 @@ public abstract class Player {
     
     private int debugFrameCounter = 0;
 
+    // ===== STATS =====
+    protected int maxHealth = 100;
+    protected int health = maxHealth;
+    protected int armor = 0;
+    protected int baseAttack = 10;
+    protected int attackBonus = 0;
+
     public Player(InputHandler input) {
         this.input = input;
         loadTextures();
         hitbox = new Rectangle(x + getHitboxOffsetX(), y + getHitboxOffsetY(), getHitboxWidth(), getHitboxHeight());
+        this.maxHealth = 100;
+        this.health = maxHealth;
     }
     
     // ===== MÉTHODES ABSTRAITES =====
@@ -82,8 +87,6 @@ public abstract class Player {
         applyPhysics(delta);
         updateAnimation(delta);
         hitbox.setPosition(x + getHitboxOffsetX(), y + getHitboxOffsetY());
-        
-        // ⭐ NOUVEAU : Résoudre les collisions après mise à jour de la hitbox
         resolveHitboxCollisions();
         
         debugFrameCounter++;
@@ -100,11 +103,7 @@ public abstract class Player {
         
         // ===== MORT =====
         if (input.isDeadPressed()) {
-            isDead = true;
-            currentState = State.DEAD;
-            deadFrame = 0;
-            animationTimer = 0f;
-            velocityX = 0;
+            die();
             return;
         }
         
@@ -373,81 +372,136 @@ public abstract class Player {
         }
     }
 
-    /**
-     * ⭐ NOUVEAU : Repousse le joueur si sa hitbox est coincée dans un bloc de collision
-     * Calcule la distance minimale pour sortir dans chaque direction (haut, bas, gauche, droite)
-     * et repousse le joueur dans la direction la plus courte
-     */
     protected void resolveHitboxCollisions() {
         if (collisionRects == null || collisionRects.size == 0) return;
         
-        // Vérifier si la hitbox est dans un bloc
         for (Rectangle collRect : collisionRects) {
             if (hitbox.overlaps(collRect)) {
-                // Calculer les distances de sortie dans chaque direction
                 float overlapLeft = (hitbox.x + hitbox.width) - collRect.x;
                 float overlapRight = (collRect.x + collRect.width) - hitbox.x;
                 float overlapBottom = (hitbox.y + hitbox.height) - collRect.y;
                 float overlapTop = (collRect.y + collRect.height) - hitbox.y;
                 
-                // Trouver la plus petite distance de sortie
                 float minOverlap = Math.min(
                     Math.min(overlapLeft, overlapRight),
                     Math.min(overlapBottom, overlapTop)
                 );
                 
-                // Repousser dans la direction la plus proche
                 if (minOverlap == overlapLeft) {
-                    // Repousser vers la gauche
-                    float pushDistance = overlapLeft + 0.1f; // +0.1f pour éviter les collisions multiples
+                    float pushDistance = overlapLeft + 0.1f;
                     x -= pushDistance;
                     velocityX = 0;
                     System.out.println("⬅️ Player repoussé vers la GAUCHE de " + (int)pushDistance + "px");
                 } 
                 else if (minOverlap == overlapRight) {
-                    // Repousser vers la droite
                     float pushDistance = overlapRight + 0.1f;
                     x += pushDistance;
                     velocityX = 0;
                     System.out.println("➡️ Player repoussé vers la DROITE de " + (int)pushDistance + "px");
                 } 
                 else if (minOverlap == overlapBottom) {
-                    // Repousser vers le bas
                     float pushDistance = overlapBottom + 0.1f;
                     y -= pushDistance;
                     velocityY = 0;
                     System.out.println("⬇️ Player repoussé vers le BAS de " + (int)pushDistance + "px");
                 } 
                 else if (minOverlap == overlapTop) {
-                    // Repousser vers le haut
                     float pushDistance = overlapTop + 0.1f;
                     y += pushDistance;
                     velocityY = 0;
-                    onGround = true; // Si on repousse vers le haut, c'est qu'on est sur le sol
+                    onGround = true;
                     System.out.println("⬆️ Player repoussé vers le HAUT de " + (int)pushDistance + "px");
                 }
                 
-                // Mettre à jour la hitbox après le déplacement
                 hitbox.setPosition(x + getHitboxOffsetX(), y + getHitboxOffsetY());
-                
-                // Vérifier s'il y a encore des collisions après le premier déplacement
-                // (nécessaire si l'entité est coincée entre plusieurs blocs)
-                break; // On ne traite qu'une collision à la fois pour éviter les comportements étranges
+                break;
             }
         }
     }
 
-    public void dispose() {
-        disposeTextures();
+    // ===== SYSTÈME DE SANTÉ =====
+
+    /**
+     * 💥 Applique des dégâts au joueur (utilisé par les ennemis)
+     * Prend en compte l'armure et gère la mort
+     */
+    public void applyDamage(int rawDamage) {
+        if (isDead) return;
+        
+        // L'armure réduit les dégâts
+        int effectiveDamage = Math.max(0, rawDamage - armor);
+        
+        health -= effectiveDamage;
+        if (health < 0) health = 0;
+        
+        System.out.println("💥 Dégâts : " + rawDamage + " (armure -" + armor + ") = " + effectiveDamage + " | HP: " + health + "/" + maxHealth);
+        
+        if (health == 0) {
+            die();
+        }
     }
-    
+
+    /**
+     * 💊 Soigne le joueur
+     */
+    public void heal(int amount) {
+        if (amount <= 0) return;
+        health += amount;
+        if (health > maxHealth) health = maxHealth;
+        System.out.println("💊 Heal +" + amount + " -> " + health + "/" + maxHealth);
+    }
+
+    /**
+     * ☠️ Tue le joueur
+     */
+    private void die() {
+        if (isDead) return;
+        isDead = true;
+        currentState = State.DEAD;
+        deadFrame = 0;
+        animationTimer = 0f;
+        velocityX = 0;
+        velocityY = 0;
+        health = 0;
+        System.out.println("☠️ Le joueur est mort");
+    }
+
+    // ===== SYSTÈME D'ATTAQUE =====
+
+    public int getTotalAttack() {
+        return baseAttack + attackBonus;
+    }
+
+    public void setAttackBonus(int bonus) {
+        this.attackBonus = bonus;
+    }
+
+    public int getAttackBonus() {
+        return attackBonus;
+    }
+
+    // ===== SYSTÈME D'ARMURE =====
+
+    public int getArmor() {
+        return armor;
+    }
+
+    public void setArmor(int armor) {
+        this.armor = Math.max(0, armor);
+        System.out.println("🛡️ Armure : " + this.armor);
+    }
+
+    // ===== GETTERS =====
+
+    public int getHealth() { return health; }
+    public int getMaxHealth() { return maxHealth; }
     public State getCurrentState() { return currentState; }
     public boolean isAttacking() { return isAttacking; }
     public boolean isDead() { return isDead; }
     public float getX() { return x; }
     public float getY() { return y; }
     public Rectangle getHitbox() { return hitbox; }
-    
+
     public void setPosition(float x, float y) {
         this.x = x;
         this.y = y;
@@ -470,5 +524,9 @@ public abstract class Player {
                 }
             }
         }
+    }
+
+    public void dispose() {
+        disposeTextures();
     }
 }

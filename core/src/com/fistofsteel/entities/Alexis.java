@@ -105,12 +105,12 @@ public class Alexis extends Player {
     
     @Override
     protected float getHitboxWidth() {
-        return 75f;
+        return 60f;
     }
 
     @Override
     protected float getHitboxHeight() {
-        return 110f;
+        return 100f;
     }
 
     @Override
@@ -120,6 +120,6 @@ public class Alexis extends Player {
 
     @Override
     protected float getHitboxOffsetY() {
-        return 5f;
+        return 10f;
     }
 }
