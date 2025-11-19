@@ -6,8 +6,8 @@ import com.badlogic.gdx.audio.Sound;
 import java.util.HashMap;
 
 /**
- * Gestionnaire audio centralisé - VERSION 2 MUSIQUES
- * Gère séparément la musique du menu et la musique du level
+ * Gestionnaire audio centralisé - VERSION 3 MUSIQUES
+ * Gère séparément la musique du menu, la musique du level et la musique de victoire/défaite
  */
 public class AudioManager {
     
@@ -18,16 +18,17 @@ public class AudioManager {
     // Collections
     private HashMap<String, Sound> sounds;
     
-    // ⭐ DEUX MUSIQUES SÉPARÉES
+    // ⭐ TROIS MUSIQUES SÉPARÉES
     private Music menuMusic;      // Pour MenuScreen, OptionsScreen, CharactersChoice
     private Music levelMusic;     // Pour GameManager (en jeu)
+    private Music victoryMusic;   // Pour GameOverScreen et WinnerScreen
     
     // Debug
     private boolean audioSystemReady = false;
     
     public AudioManager() {
         System.out.println("\n========================================");
-        System.out.println("🔊 INITIALISATION AUDIOMANAGER");
+        System.out.println("📊 INITIALISATION AUDIOMANAGER");
         System.out.println("========================================");
         
         sounds = new HashMap<>();
@@ -79,6 +80,19 @@ public class AudioManager {
             levelMusic = null;
         }
         
+        // ===== MUSIQUE VICTOIRE/DÉFAITE =====
+        System.out.println("\n🎵 Chargement de la musique victoire...");
+        try {
+            victoryMusic = Gdx.audio.newMusic(Gdx.files.internal("assets/music/EPIC-VICTORY-FANFARE_-explosive-triumpha.ogg"));
+            victoryMusic.setLooping(true);  // ⭐ BOUCLE AUTOMATIQUE
+            victoryMusic.setVolume(musicVolume);
+            System.out.println("✅ Musique victoire chargée : EPIC-VICTORY-FANFARE_-explosive-triumpha.ogg (looping activé)");
+        } catch (Exception e) {
+            System.err.println("❌ ERREUR musique victoire : " + e.getMessage());
+            System.err.println("   Fichier attendu : assets/music/EPIC-VICTORY-FANFARE_-explosive-triumpha.ogg");
+            victoryMusic = null;
+        }
+        
         long endTime = System.currentTimeMillis();
         System.out.println("\n⏱️ Temps de chargement : " + (endTime - startTime) + "ms");
         
@@ -118,8 +132,9 @@ public class AudioManager {
      * Utilisé par : MenuScreen, OptionsScreen, CharactersChoice
      */
     public void startMenuMusic() {
-        // Arrêter la musique du level si elle joue
+        // Arrêter les autres musiques
         stopLevelMusic();
+        stopVictoryMusic();
         
         // ⭐ Ne démarrer QUE si elle n'est pas déjà en train de jouer
         if (menuMusic != null && !menuMusic.isPlaying()) {
@@ -169,8 +184,9 @@ public class AudioManager {
      * Utilisé par : GameManager
      */
     public void startLevelMusic() {
-        // Arrêter la musique du menu si elle joue
+        // Arrêter les autres musiques
         stopMenuMusic();
+        stopVictoryMusic();
         
         // ⭐ Ne démarrer QUE si elle n'est pas déjà en train de jouer
         if (levelMusic != null && !levelMusic.isPlaying()) {
@@ -208,6 +224,38 @@ public class AudioManager {
         if (levelMusic != null) {
             levelMusic.play();
             System.out.println("🎵 Musique LEVEL reprise");
+        }
+    }
+    
+    // ========================================
+    // 🏆 GESTION MUSIQUE VICTOIRE/DÉFAITE
+    // ========================================
+    
+    /**
+     * Démarre la musique de VICTOIRE/DÉFAITE
+     * Utilisé par : GameOverScreen, WinnerScreen
+     */
+    public void startVictoryMusic() {
+        // Arrêter les autres musiques
+        stopMenuMusic();
+        stopLevelMusic();
+        
+        // ⭐ Ne démarrer QUE si elle n'est pas déjà en train de jouer
+        if (victoryMusic != null && !victoryMusic.isPlaying()) {
+            victoryMusic.play();
+            System.out.println("🎵 Musique VICTOIRE démarrée");
+        } else if (victoryMusic != null && victoryMusic.isPlaying()) {
+            System.out.println("🎵 Musique VICTOIRE déjà en cours");
+        }
+    }
+    
+    /**
+     * Arrête la musique de victoire
+     */
+    public void stopVictoryMusic() {
+        if (victoryMusic != null && victoryMusic.isPlaying()) {
+            victoryMusic.stop();
+            System.out.println("🎵 Musique VICTOIRE arrêtée");
         }
     }
     
@@ -270,6 +318,9 @@ public class AudioManager {
         if (levelMusic != null) {
             levelMusic.setVolume(musicVolume);
         }
+        if (victoryMusic != null) {
+            victoryMusic.setVolume(musicVolume);
+        }
         System.out.println("🎵 Volume musique : " + (int)(musicVolume * 100) + "%");
     }
     
@@ -315,6 +366,16 @@ public class AudioManager {
             System.out.println("  ✓ Musique level disposée");
         }
         
+        // Arrêter et disposer la musique victoire
+        if (victoryMusic != null) {
+            if (victoryMusic.isPlaying()) {
+                victoryMusic.stop();
+            }
+            victoryMusic.dispose();
+            victoryMusic = null;
+            System.out.println("  ✓ Musique victoire disposée");
+        }
+        
         // Disposer tous les sons
         int soundsDisposed = 0;
         for (Sound sound : sounds.values()) {
@@ -350,6 +411,10 @@ public class AudioManager {
         return levelMusic != null && levelMusic.isPlaying();
     }
     
+    public boolean isVictoryMusicPlaying() {
+        return victoryMusic != null && victoryMusic.isPlaying();
+    }
+    
     public boolean isAudioReady() {
         return audioSystemReady;
     }
@@ -363,8 +428,10 @@ public class AudioManager {
         System.out.println("  Sons chargés : " + sounds.size());
         System.out.println("  Musique menu : " + (menuMusic != null ? "OK" : "NULL"));
         System.out.println("  Musique level : " + (levelMusic != null ? "OK" : "NULL"));
+        System.out.println("  Musique victoire : " + (victoryMusic != null ? "OK" : "NULL"));
         System.out.println("  Menu joue : " + isMenuMusicPlaying());
         System.out.println("  Level joue : " + isLevelMusicPlaying());
+        System.out.println("  Victoire joue : " + isVictoryMusicPlaying());
         System.out.println("  Volume sons : " + (int)(soundVolume * 100) + "%");
         System.out.println("  Volume musique : " + (int)(musicVolume * 100) + "%\n");
     }

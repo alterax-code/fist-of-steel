@@ -1,10 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.10" tiledversion="1.11.2" orientation="orthogonal" renderorder="right-down" width="60" height="20" tilewidth="64" tileheight="64" infinite="0" nextlayerid="8" nextobjectid="76">
+<map version="1.10" tiledversion="1.11.2" orientation="orthogonal" renderorder="right-down" width="60" height="20" tilewidth="64" tileheight="64" infinite="0" nextlayerid="11" nextobjectid="79">
  <editorsettings>
   <export target="level1_example..tmx" format="tmx"/>
  </editorsettings>
  <tileset firstgid="1" source="ground_tileset.tsx"/>
  <tileset firstgid="13" source="fdhgsjhfshgf.tsx"/>
+ <imagelayer id="8" name="Background" opacity="0.97" repeatx="1">
+  <image source="Gemini_Generated_Image_3ijzal3ijzal3ijz_2 (1).png" width="1920" height="1280"/>
+ </imagelayer>
  <layer id="2" name="Ground" width="60" height="20">
   <data encoding="csv">
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,13,0,0,0,0,0,0,0,0,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,21,12,12,12,12,12,12,12,12,12,12,
@@ -29,6 +32,9 @@
 21,21,21,21,21,21,21,21,21,21,21,21,21,21,21,21,21,21,21,21,21,21,21,21,21,21,21,21,21,21,13,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,21,21,21,21,21,21,21,21,21
 </data>
  </layer>
+ <objectgroup id="10" name="Death">
+  <object id="77" x="1984.85" y="1293.94" width="1281.82" height="66.6667"/>
+ </objectgroup>
  <objectgroup id="5" name="spawn">
   <object id="65" name="playerSpawn" x="217.538" y="768.273" width="75" height="110">
    <properties>
@@ -69,6 +75,13 @@
   <object id="50" x="3137.64" y="1.36363" width="60.7277" height="379.606"/>
   <object id="51" x="3138.01" y="448.78" width="60.1027" height="252.106"/>
  </objectgroup>
+ <objectgroup id="9" name="Exits">
+  <object id="76" x="440" y="972" width="88" height="144">
+   <properties>
+    <property name="targetLevel" value="level1_example_2"/>
+   </properties>
+  </object>
+ </objectgroup>
  <objectgroup id="6" name="Potions">
   <object id="52" name="potion" x="1236.17" y="484.5" width="64" height="64"/>
   <object id="53" name="potion" x="892" y="484" width="64" height="64"/>
@@ -81,19 +94,9 @@
    <property name="patrolMax" type="float" value="200"/>
    <property name="patrolMin" type="float" value="-200"/>
   </properties>
-  <object id="61" name="EnemySpawn" x="1189.19" y="909.886" width="160" height="130">
-   <properties>
-    <property name="type" value="Mage"/>
-   </properties>
-  </object>
-  <object id="64" name="EnemySpawn" x="3405.96" y="123.177" width="160" height="130">
+  <object id="64" name="EnemySpawn" x="605.96" y="483.177" width="160" height="130">
    <properties>
     <property name="type" value="Knight"/>
-   </properties>
-  </object>
-  <object id="75" name="EnemySpawn" x="1672" y="27" width="160" height="130">
-   <properties>
-    <property name="type" value="Rogue"/>
    </properties>
   </object>
  </objectgroup>

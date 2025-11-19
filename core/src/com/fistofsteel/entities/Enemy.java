@@ -11,7 +11,7 @@ import com.fistofsteel.utils.HealthBar;
 
 /**
  * Classe abstraite représentant un ennemi
- * VERSION FINALE CORRIGÉE - Hitbox stable !
+ * VERSION FINALE CORRIGÉE - Hitbox stable + One-hit-per-attack !
  */
 public abstract class Enemy {
     
@@ -68,6 +68,9 @@ public abstract class Enemy {
     protected boolean isHit = false;
     protected boolean isDead = false;
     protected boolean isOnGround = false;
+    
+    // ⭐ NOUVEAU : Flag pour éviter les multi-hits
+    protected boolean hasDealtDamageThisAttack = false;
     
     // ⭐ Variables d'animation (pour Knight)
     protected float animationTimer = 0f;
@@ -294,11 +297,11 @@ public abstract class Enemy {
         isAttacking = true;
         velocityX = 0;
         
-        if (canHitPlayer()) {
-            System.out.println("💥 Attaque du Knight !");
-        }
+        // ⭐ NOUVEAU : Réinitialiser le flag de dégâts pour cette nouvelle attaque
+        hasDealtDamageThisAttack = false;
         
         attackTimer = attackCooldown;
+        System.out.println("⚔️ " + getClass().getSimpleName() + " commence une attaque !");
     }
     
     protected boolean canHitPlayer() {
@@ -309,11 +312,27 @@ public abstract class Enemy {
         return distance <= attackRange && verticalDistance <= 80f;
     }
     
+    /**
+     * ⭐ NOUVEAU : Inflige les dégâts au joueur UNE SEULE FOIS par attaque
+     * Appelé par EnemyManager à chaque frame
+     */
+    public void tryDealDamage() {
+        // Conditions pour infliger des dégâts :
+        // 1. L'ennemi est en train d'attaquer
+        // 2. Le joueur est à portée
+        // 3. Les dégâts n'ont pas encore été infligés pour cette attaque
+        if (isAttacking && canHitPlayer() && !hasDealtDamageThisAttack && !targetPlayer.isDead()) {
+            targetPlayer.applyDamage(damage);
+            hasDealtDamageThisAttack = true; // ⭐ Marquer les dégâts comme infligés
+            System.out.println("💥 " + getClass().getSimpleName() + " touche le joueur ! (-" + damage + " HP)");
+        }
+    }
+    
     public void takeDamage(int damage) {
         if (isDead || isHit) return;
         
         health -= damage;
-        System.out.println("💥 Knight touché ! HP: " + health + "/" + maxHealth);
+        System.out.println("💥 " + getClass().getSimpleName() + " touché ! HP: " + health + "/" + maxHealth);
         
         if (health <= 0) {
             die();
@@ -330,7 +349,7 @@ public abstract class Enemy {
         currentState = State.DEAD;
         velocityX = 0;
         deadTimer = deadDuration;
-        System.out.println("💀 Knight mort !");
+        System.out.println("💀 " + getClass().getSimpleName() + " mort !");
     }
     
     public void update(float delta) {
@@ -345,6 +364,7 @@ public abstract class Enemy {
             attackTimer -= delta;
             if (attackTimer <= 0) {
                 isAttacking = false;
+                hasDealtDamageThisAttack = false; // ⭐ Réinitialiser pour la prochaine attaque
             }
         }
         
@@ -529,21 +549,18 @@ public abstract class Enemy {
                     float pushDistance = overlapLeft + 0.1f; // +0.1f pour éviter les collisions multiples
                     x -= pushDistance;
                     velocityX = 0;
-                    System.out.println("⬅️ Knight repoussé vers la GAUCHE de " + (int)pushDistance + "px");
                 } 
                 else if (minOverlap == overlapRight) {
                     // Repousser vers la droite
                     float pushDistance = overlapRight + 0.1f;
                     x += pushDistance;
                     velocityX = 0;
-                    System.out.println("➡️ Knight repoussé vers la DROITE de " + (int)pushDistance + "px");
                 } 
                 else if (minOverlap == overlapBottom) {
                     // Repousser vers le bas
                     float pushDistance = overlapBottom + 0.1f;
                     y -= pushDistance;
                     velocityY = 0;
-                    System.out.println("⬇️ Knight repoussé vers le BAS de " + (int)pushDistance + "px");
                 } 
                 else if (minOverlap == overlapTop) {
                     // Repousser vers le haut
@@ -551,7 +568,6 @@ public abstract class Enemy {
                     y += pushDistance;
                     velocityY = 0;
                     isOnGround = true; // Si on repousse vers le haut, c'est qu'on est sur le sol
-                    System.out.println("⬆️ Knight repoussé vers le HAUT de " + (int)pushDistance + "px");
                 }
                 
                 // Mettre à jour la hitbox après le déplacement

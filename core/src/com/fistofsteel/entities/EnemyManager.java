@@ -75,26 +75,6 @@ public class EnemyManager {
                 ") | Patrol: [" + (int)patrolMin + " -> " + (int)patrolMax + "]");
     }
 
-    /* ⭐ EXEMPLE : Comment ajouter un nouveau type d'ennemi
-     * 
-     * Pour ajouter un Goblin, copie ces méthodes et change le nom :
-     * 
-     * public void addGoblin(float x, float y) {
-     *     Goblin goblin = new Goblin(x, y, player);
-     *     enemies.add(goblin);
-     *     totalEnemiesSpawned++;
-     *     System.out.println("👺 Goblin ajouté à (" + (int)x + ", " + (int)y + ")");
-     * }
-     * 
-     * public void addGoblin(float x, float y, float patrolMin, float patrolMax) {
-     *     Goblin goblin = new Goblin(x, y, player);
-     *     goblin.setPatrolZone(patrolMin, patrolMax);
-     *     enemies.add(goblin);
-     *     totalEnemiesSpawned++;
-     *     System.out.println("👺 Goblin ajouté à (" + (int)x + ", " + (int)y + ")");
-     * }
-     */
-
     // ----------- COLLISIONS & UPDATE -----------
 
     public void setCollisionRects(Array<Rectangle> collisions) {
@@ -126,17 +106,13 @@ public class EnemyManager {
 
     // ----------- COMBATS -----------
 
+    /**
+     * ⭐ CORRIGÉ : Vérifie si les ennemis peuvent infliger des dégâts
+     * Chaque ennemi gère son propre flag "hasDealtDamageThisAttack"
+     */
     public void checkEnemyAttacks(Player player) {
         for (Enemy enemy : enemies) {
-            if (enemy.canHitPlayer() && !player.isDead()) {
-                int damage = enemy.getDamage();
-                
-                // 💥 APPLIQUE LES DÉGÂTS AU JOUEUR
-                player.applyDamage(damage);
-                
-                System.out.println("💥 Le joueur est touché par " + enemy.getClass().getSimpleName() +
-                        " (-" + damage + " HP) | HP restant = " + player.getHealth());
-            }
+            enemy.tryDealDamage(); // ⭐ Nouvelle méthode qui gère le one-hit-per-attack
         }
     }
 
