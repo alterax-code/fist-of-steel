@@ -127,6 +127,8 @@ public class GameManager implements Screen {
         // 7. ITEMS
         worldItemManager = new WorldItemManager();
         loadPotionsFromTiled();
+        loadArmorFromTiled();
+        loadWeaponsFromTiled();
         
         // 8. LEVEL EXIT MANAGER
         levelExitManager = new LevelExitManager();
@@ -303,6 +305,85 @@ public class GameManager implements Screen {
         
         System.out.println("✅ Potions: " + potionCount + " chargées via WorldItemManager");
     }
+
+// Dans GameManager, AU MÊME NIVEAU que loadPotionsFromTiled(), loadEnemiesFromTiled(), etc.
+    private void loadArmorFromTiled() {
+        if (tiledMap == null || worldItemManager == null) return;
+
+        MapLayer armorLayer = tiledMap.getLayers().get("Armor");
+        if (armorLayer == null) {
+            System.out.println("⚠️ Layer 'Armor' non trouvé");
+            return;
+        }
+
+        int armorCount = 0;
+
+        for (MapObject object : armorLayer.getObjects()) {
+            float x = object.getProperties().get("x", Float.class);
+            float y = object.getProperties().get("y", Float.class);
+
+            // Propriété dans Tiled : type = "light" ou "heavy"
+            String type = object.getProperties().get("type", String.class);
+            if (type == null) {
+                type = "light"; // valeur par défaut
+            }
+
+            if ("heavy".equalsIgnoreCase(type)) {
+                worldItemManager.spawnArmorHeavy(x, y);
+            } else {
+                worldItemManager.spawnArmorLight(x, y);
+            }
+
+            armorCount++;
+        }
+
+        System.out.println("✅ Armures: " + armorCount + " chargées via WorldItemManager");
+    }
+
+    private void loadWeaponsFromTiled() {
+        if (tiledMap == null || worldItemManager == null) return;
+
+        MapLayer weaponLayer = tiledMap.getLayers().get("Weapons");
+        if (weaponLayer == null) {
+            System.out.println("⚠️ Layer 'Weapons' non trouvé dans Tiled");
+            return;
+        }
+
+        int weaponCount = 0;
+
+        for (MapObject object : weaponLayer.getObjects()) {
+            float tiledX = object.getProperties().get("x", Float.class);
+            float tiledY = object.getProperties().get("y", Float.class);
+
+            float x = tiledX;
+            float y = tiledY;
+
+            // Propriété définie dans Tiled (ex: weaponType = "sword1")
+            String weaponType = object.getProperties().get("type", String.class);
+            if (weaponType == null) {
+                weaponType = "sword1"; // valeur par défaut
+            }
+
+            System.out.println("🔎 Weapon Tiled: type=" + weaponType + " à (" + x + ", " + y + ")");
+
+            switch (weaponType) {
+                case "sword1" -> worldItemManager.spawnSword1(x, y);
+                case "sword2" -> worldItemManager.spawnSword2(x, y);
+                case "sword3" -> worldItemManager.spawnSword3(x, y);
+                default -> System.out.println("⚠️ weaponType inconnu: " + weaponType);
+            }
+
+            weaponCount++;
+        }
+
+        System.out.println("✅ Weapons: " + weaponCount + " chargées via WorldItemManager");
+    }
+
+
+
+
+
+
     
     private void loadExitsFromTiled() {
         if (tiledMap == null || levelExitManager == null) return;
@@ -436,7 +517,7 @@ public class GameManager implements Screen {
         enemyManager.update(delta);
         
         if (worldItemManager != null) {
-            worldItemManager.update(delta);       
+            worldItemManager.update(delta, player);     
             worldItemManager.checkPlayerCollisions(player);
         }
         

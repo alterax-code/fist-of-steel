@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.10" tiledversion="1.11.2" orientation="orthogonal" renderorder="right-down" width="60" height="20" tilewidth="64" tileheight="64" infinite="0" nextlayerid="11" nextobjectid="79">
+<map version="1.10" tiledversion="1.11.2" orientation="orthogonal" renderorder="right-down" width="60" height="20" tilewidth="64" tileheight="64" infinite="0" nextlayerid="14" nextobjectid="105">
  <editorsettings>
   <export target="level1_example..tmx" format="tmx"/>
  </editorsettings>
@@ -82,12 +82,61 @@
    </properties>
   </object>
  </objectgroup>
- <objectgroup id="6" name="Potions">
-  <object id="52" name="potion" x="1236.17" y="484.5" width="64" height="64"/>
-  <object id="53" name="potion" x="892" y="484" width="64" height="64"/>
-  <object id="54" name="potion" x="656" y="860" width="64" height="64"/>
-  <object id="55" name="potion" x="1760" y="684" width="64" height="64"/>
-  <object id="56" name="potion" x="1724" y="296" width="64" height="64"/>
+ <objectgroup id="11" name="Weapons">
+  <object id="79" name="sword1" x="890.17" y="1012.5" width="64" height="64">
+   <properties>
+    <property name="type" value="sword1"/>
+   </properties>
+  </object>
+  <object id="100" name="sword2" x="1416" y="1048" width="64" height="64">
+   <properties>
+    <property name="type" value="sword2"/>
+   </properties>
+  </object>
+  <object id="101" name="sword3" x="1742" y="84" width="64" height="64">
+   <properties>
+    <property name="type" value="sword3"/>
+   </properties>
+  </object>
+  <object id="102" name="sword3" x="886" y="682" width="64" height="64">
+   <properties>
+    <property name="type" value="sword3"/>
+   </properties>
+  </object>
+  <object id="103" name="sword1" x="1003.08" y="488.25" width="64" height="64">
+   <properties>
+    <property name="type" value="sword1"/>
+   </properties>
+  </object>
+  <object id="104" name="sword2" x="1528.91" y="523.75" width="64" height="64">
+   <properties>
+    <property name="type" value="sword2"/>
+   </properties>
+  </object>
+ </objectgroup>
+ <objectgroup id="13" name="Potions">
+  <object id="92" name="potion" x="1214.17" y="486.5" width="64" height="64"/>
+  <object id="93" name="potion" x="892" y="484" width="64" height="64"/>
+  <object id="94" name="potion" x="656" y="860" width="64" height="64"/>
+  <object id="95" name="potion" x="1760" y="684" width="64" height="64"/>
+  <object id="96" name="potion" x="1724" y="296" width="64" height="64"/>
+ </objectgroup>
+ <objectgroup id="12" name="Armor">
+  <object id="86" name="armorheavy" x="1764" y="866.667" width="64" height="64">
+   <properties>
+    <property name="type" value="heavy"/>
+   </properties>
+  </object>
+  <object id="87" name="armorlight" x="3472" y="602.667" width="64" height="64">
+   <properties>
+    <property name="type" value="light"/>
+   </properties>
+  </object>
+  <object id="97" name="armorlight" x="804" y="678" width="64" height="64">
+   <properties>
+    <property name="type" value="light"/>
+   </properties>
+  </object>
  </objectgroup>
  <objectgroup id="7" name="Enemies">
   <properties>
@@ -95,6 +144,16 @@
    <property name="patrolMin" type="float" value="-200"/>
   </properties>
   <object id="64" name="EnemySpawn" x="605.96" y="483.177" width="160" height="130">
+   <properties>
+    <property name="type" value="Knight"/>
+   </properties>
+  </object>
+  <object id="98" name="EnemySpawn" x="1192" y="953" width="160" height="130">
+   <properties>
+    <property name="type" value="Knight"/>
+   </properties>
+  </object>
+  <object id="99" name="EnemySpawn" x="1694" y="427" width="160" height="130">
    <properties>
     <property name="type" value="Knight"/>
    </properties>

@@ -6,6 +6,8 @@ import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.utils.Array;
 import com.fistofsteel.input.InputHandler;
 import com.fistofsteel.utils.Constants;
+import com.fistofsteel.items.Armor;
+import com.fistofsteel.items.Weapon;
 
 public abstract class Player {
     protected float x, y;
@@ -56,6 +58,8 @@ public abstract class Player {
     protected int armor = 0;
     protected int baseAttack = 10;
     protected int attackBonus = 0;
+    private Armor equippedArmor;
+    private Weapon equippedWeapon;
 
     public Player(InputHandler input) {
         this.input = input;
@@ -425,21 +429,32 @@ public abstract class Player {
      * 💥 Applique des dégâts au joueur (utilisé par les ennemis)
      * Prend en compte l'armure et gère la mort
      */
-    public void applyDamage(int rawDamage) {
-        if (isDead) return;
-        
-        // L'armure réduit les dégâts
-        int effectiveDamage = Math.max(0, rawDamage - armor);
-        
-        health -= effectiveDamage;
-        if (health < 0) health = 0;
-        
-        System.out.println("💥 Dégâts : " + rawDamage + " (armure -" + armor + ") = " + effectiveDamage + " | HP: " + health + "/" + maxHealth);
-        
-        if (health == 0) {
-            die();
-        }
+public void applyDamage(int rawDamage) {
+    if (isDead) return;
+
+    // 👉 Conversion armure → réduction : 10 ARM = 1 dégât en moins
+    int reduction = armor / 10;
+
+    int effectiveDamage = rawDamage - reduction;
+    if (effectiveDamage < 0) {
+        effectiveDamage = 0; // ou 1 si tu veux niveau minimum de dégâts
     }
+
+    health -= effectiveDamage;
+    if (health < 0) health = 0;
+
+    System.out.println(
+        "💥 Dégâts : " + rawDamage +
+        " | Armure = " + armor +
+        " → réduction = " + reduction +
+        " | Final = " + effectiveDamage +
+        " | HP: " + health + "/" + maxHealth
+    );
+
+    if (health == 0) {
+        die();
+    }
+}
 
     /**
      * 💊 Soigne le joueur
@@ -501,6 +516,83 @@ public abstract class Player {
     public float getX() { return x; }
     public float getY() { return y; }
     public Rectangle getHitbox() { return hitbox; }
+
+    public void equipArmor(Armor newArmor) {
+        if (newArmor == null) return;
+
+        // Aucune armure équipée → on ajoute simplement le bonus
+        if (equippedArmor == null) {
+            equippedArmor = newArmor;
+            armor += newArmor.getArmorBonus();
+
+            System.out.println("🛡 Armure équipée : " 
+                    + newArmor.getDisplayName() 
+                    + " (+" + newArmor.getArmorBonus() + " DEF)");
+            return;
+        }
+
+        // On compare l’armure actuelle avec la nouvelle
+        int currentBonus = equippedArmor.getArmorBonus();
+        int newBonus = newArmor.getArmorBonus();
+
+        if (newBonus > currentBonus) {
+            // On remplace : on enlève l’ancien bonus et on applique le nouveau
+            armor = armor - currentBonus + newBonus;
+            equippedArmor = newArmor;
+
+            System.out.println(
+                "🛡 Armure améliorée : " + newArmor.getDisplayName()
+                + " (de +" + currentBonus + " à +" + newBonus + " DEF)"
+            );
+        } else {
+            // Downgrade → on ignore (cas : ramasser une légère alors qu’on a une lourde)
+            System.out.println(
+                "🛡 Armure ignorée : " + newArmor.getDisplayName()
+                + " (+" + newBonus + " DEF) car armure actuelle meilleure (+" 
+                + currentBonus + " DEF)"
+            );
+        }
+    }
+
+
+    public Armor getEquippedArmor() {
+        return equippedArmor;
+    }
+
+
+    public void equipWeapon(Weapon newWeapon) {
+    if (newWeapon == null) return;
+
+    // Si aucune arme équipée → on ajoute simplement son bonus
+    if (equippedWeapon == null) {
+        attackBonus = newWeapon.getAttackBonus();
+        equippedWeapon = newWeapon;
+        System.out.println("🗡 Arme équipée : " + newWeapon.getDisplayName() +
+                           " (+" + newWeapon.getAttackBonus() + " ATQ)");
+        return;
+    }
+
+    // Si on a déjà une arme : on remplace seulement si la nouvelle est meilleure
+    int currentBonus = equippedWeapon.getAttackBonus();
+    int newBonus = newWeapon.getAttackBonus();
+
+    if (newBonus > currentBonus) {
+        attackBonus = attackBonus - currentBonus + newBonus;
+        equippedWeapon = newWeapon;
+
+        System.out.println("🗡 Arme remplacée par : " + newWeapon.getDisplayName() +
+                           " (+" + newBonus + " ATQ)");
+    } else {
+        System.out.println("🗡 Arme ignorée : " + newWeapon.getDisplayName() +
+                           " (+" + newBonus + " ATQ) < arme actuelle (+" + currentBonus + " ATQ)");
+    }
+}
+
+
+    public Weapon getEquippedWeapon() {
+        return equippedWeapon;
+    }
+
 
     public void setPosition(float x, float y) {
         this.x = x;

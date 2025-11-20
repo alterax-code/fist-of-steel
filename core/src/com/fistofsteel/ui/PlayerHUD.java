@@ -7,6 +7,9 @@ import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.fistofsteel.entities.Player;
+import com.badlogic.gdx.graphics.Texture;
+import com.fistofsteel.items.Armor;
+import com.fistofsteel.items.Weapon;
 
 /**
  * HUD du joueur affiché en haut à gauche de l'écran
@@ -20,6 +23,10 @@ public class PlayerHUD {
     private ShapeRenderer shapeRenderer;
     private BitmapFont font;
     private OrthographicCamera hudCamera;
+
+    private Texture armorIcon;
+    private Texture weaponIcon;
+
     
     // Temps écoulé depuis le début du niveau
     private float levelTime = 0f;
@@ -30,12 +37,24 @@ public class PlayerHUD {
     private static final float HP_BAR_HEIGHT = 25f;
     private static final float INVENTORY_SLOT_SIZE = 50f;
     private static final float SPACING = 15f;
+
+    private Texture armorLightIcon;
+    private Texture armorHeavyIcon;
+    private Texture sword1Icon;
+    private Texture sword2Icon;
+    private Texture sword3Icon;
     
     public PlayerHUD() {
         shapeRenderer = new ShapeRenderer();
         font = new BitmapFont();
         font.getData().setScale(1.5f);
         font.setColor(Color.WHITE);
+
+        armorLightIcon = new Texture("assets/items/armor_light.png");
+        armorHeavyIcon = new Texture("assets/items/armor_heavy.png");
+        sword1Icon = new Texture("assets/items/sword_1.png");
+        sword2Icon = new Texture("assets/items/sword_2.png");
+        sword3Icon = new Texture("assets/items/sword_3.png");
         
         // Caméra fixe pour le HUD (ne bouge pas avec le monde)
         float screenWidth = Gdx.graphics.getWidth();
@@ -67,14 +86,34 @@ public class PlayerHUD {
         currentY -= HP_BAR_HEIGHT;
         renderHealthBar(batch, currentY, player.getHealth(), player.getMaxHealth());
         
+        Armor equippedArmor = player.getEquippedArmor();
+        Texture armorIcon = null;
+        if (equippedArmor != null) {
+            if (equippedArmor.getArmorBonus() >= 20) {
+                armorIcon = armorHeavyIcon;
+            } else {
+                armorIcon = armorLightIcon;
+            }
+        }
+        
+        Weapon equippedWeapon = player.getEquippedWeapon();
+        Texture weaponIcon = null;
+        if (equippedWeapon != null) {
+            if (equippedWeapon.getAttackBonus() >= 20) {
+                weaponIcon = sword1Icon;
+            } else {
+                weaponIcon = sword2Icon;
+            }
+        }
+
         // 2. INVENTAIRE
         currentY -= SPACING + INVENTORY_SLOT_SIZE;
-        renderInventory(currentY);
-        
+        renderInventory(batch, player, currentY);
+            
         // 3. TIMER
         currentY -= SPACING + 30f;
         renderTimer(batch, currentY);
-        
+            
         // 4. COMPTEUR DE KILLS
         currentY -= SPACING + 30f;
         renderKillCounter(batch, currentY, enemiesKilled, totalEnemies);
@@ -114,23 +153,73 @@ public class PlayerHUD {
     /**
      * Dessine l'inventaire (2 slots vides pour l'instant)
      */
-    private void renderInventory(float y) {
+    private void renderInventory(SpriteBatch batch, Player player, float y) {
+        // Dessine les slots
         shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
-        
         for (int i = 0; i < 2; i++) {
             float slotX = MARGIN + i * (INVENTORY_SLOT_SIZE + 10f);
-            
-            // Contour noir
+
             shapeRenderer.setColor(Color.BLACK);
             shapeRenderer.rect(slotX - 2, y - 2, INVENTORY_SLOT_SIZE + 4, INVENTORY_SLOT_SIZE + 4);
-            
-            // Fond gris (slot vide)
+
             shapeRenderer.setColor(new Color(0.15f, 0.15f, 0.2f, 0.9f));
             shapeRenderer.rect(slotX, y, INVENTORY_SLOT_SIZE, INVENTORY_SLOT_SIZE);
         }
-        
         shapeRenderer.end();
+
+        // Dessine les icônes
+        batch.begin();
+
+        // --- ARMURE (slot 0)
+        Armor armor = player.getEquippedArmor();
+        if (armor != null) {
+            Texture icon = null;
+            String id = armor.getId();  // "armor_light" ou "armor_heavy"
+
+            if ("armor_light".equals(id)) {
+                icon = armorLightIcon;
+            } else if ("armor_heavy".equals(id)) {
+                icon = armorHeavyIcon;
+            }
+
+            if (icon != null) {
+                float slotX = MARGIN;
+                float centerX = slotX + INVENTORY_SLOT_SIZE / 2f;
+                float centerY = y + INVENTORY_SLOT_SIZE / 2f;
+                float size = INVENTORY_SLOT_SIZE - 8f;
+
+                batch.draw(icon, centerX - size / 2f, centerY - size / 2f, size, size);
+            }
+        }
+
+        // --- ARME (slot 1)
+        Weapon weapon = player.getEquippedWeapon();
+        if (weapon != null) {
+            Texture icon = null;
+            String id = weapon.getId(); // "sword1" / "sword2" / "sword3"
+
+            if ("sword1".equals(id)) {
+                icon = sword1Icon;
+            } else if ("sword2".equals(id)) {
+                icon = sword2Icon;
+            } else if ("sword3".equals(id)) {
+                icon = sword3Icon;
+            }
+
+            if (icon != null) {
+                float slotX = MARGIN + (INVENTORY_SLOT_SIZE + 10f); // slot 1
+                float centerX = slotX + INVENTORY_SLOT_SIZE / 2f;
+                float centerY = y + INVENTORY_SLOT_SIZE / 2f;
+                float size = INVENTORY_SLOT_SIZE - 8f;
+
+                batch.draw(icon, centerX - size / 2f, centerY - size / 2f, size, size);
+            }
+        }
+
+        batch.end();
     }
+
+
     
     /**
      * Affiche le timer du niveau
@@ -196,5 +285,10 @@ public class PlayerHUD {
     public void dispose() {
         shapeRenderer.dispose();
         font.dispose();
+        if (armorLightIcon != null) armorLightIcon.dispose();
+        if (armorHeavyIcon != null) armorHeavyIcon.dispose();
+        if (sword1Icon != null) sword1Icon.dispose();
+        if (sword2Icon != null) sword2Icon.dispose();
+        if (sword3Icon != null) sword3Icon.dispose();
     }
 }

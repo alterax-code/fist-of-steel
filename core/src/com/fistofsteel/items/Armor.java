@@ -15,11 +15,10 @@ public class Armor extends Item {
     public void applyEffect(Player player) {
         if (player == null) return;
 
-        int newArmor = player.getArmor() + armorBonus;
-        player.setArmor(newArmor);
-
-        System.out.println("🛡 Armure équipée : " + displayName + " (+" + armorBonus + " DEF)");
+        // Toute la logique est dans Player.equipArmor
+        player.equipArmor(this);
     }
+
 
     public int getArmorBonus() {
         return armorBonus;
