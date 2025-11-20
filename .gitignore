@@ -1,0 +1,26 @@
+# LibGDX Build
+/build/
+/core/build/
+/desktop/build/
+/android/build/
+/html/build/
+/ios/build/
+
+# Gradle
+/.gradle/
+/gradle/
+
+# IntelliJ / IDEA
+.idea/
+out/
+
+# Eclipse
+.classpath
+.project
+.settings/
+
+# autres fichiers lourds
+*.jar
+*.zip
+*.tar
+*.class

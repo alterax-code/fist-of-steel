@@ -2,74 +2,55 @@ package com.fistofsteel.screens;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
-import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
-import com.badlogic.gdx.graphics.g2d.BitmapFont;
-import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
-import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.utils.Align;
 import com.fistofsteel.FistOfSteelGame;
 import com.fistofsteel.audio.AudioManager;
+import com.fistofsteel.ui.UIComponents.SimpleButton;
+import com.fistofsteel.ui.UIComponents.VolumeSlider;
+import com.fistofsteel.ui.UIComponents.KeyButton;
 
 /**
- * OptionsScreen - LA MUSIQUE MENU CONTINUE
+ * OptionsScreen - Hérite de BaseScreen, utilise UIComponents
  */
-public class OptionsScreen implements Screen {
-    private FistOfSteelGame game;
-    private SpriteBatch batch;
-    private ShapeRenderer shapeRenderer;
-    private BitmapFont font;
-    private BitmapFont titleFont;
-    
-    // ⭐ Référence à l'AudioManager (partagé)
-    private AudioManager audioManager;
+public class OptionsScreen extends BaseScreen {
     
     private VolumeSlider musicSlider;
     private VolumeSlider sfxSlider;
-    
     private SimpleButton backButton;
     
     private boolean waitingForKey = false;
     private String keyToRemap = "";
     private KeyButton[] keyButtons;
     
-    private float screenWidth;
-    private float screenHeight;
-    
     public OptionsScreen(FistOfSteelGame game, AudioManager audioManager) {
-        this.game = game;
-        this.audioManager = audioManager;
+        super(game, audioManager);
+    }
+    
+    @Override
+    protected String getBackgroundPath() {
+        return null; // Pas de background pour Options
+    }
+    
+    @Override
+    protected void initializeFonts() {
+        super.initializeFonts();
+        titleFont.setColor(new Color(1f, 0.2f, 0.2f, 1f));
     }
     
     @Override
     public void show() {
-        batch = new SpriteBatch();
-        shapeRenderer = new ShapeRenderer();
-        
-        font = new BitmapFont();
-        font.getData().setScale(1.8f);
-        font.setColor(Color.WHITE);
-        
-        titleFont = new BitmapFont();
-        titleFont.getData().setScale(3f);
-        titleFont.setColor(new Color(1f, 0.2f, 0.2f, 1f));
-        
-        screenWidth = Gdx.graphics.getWidth();
-        screenHeight = Gdx.graphics.getHeight();
-        
-        createElements();
-        
-        // ⭐ NE PAS toucher à la musique - elle continue depuis MenuScreen
+        super.show();
         System.out.println("🎵 OptionsScreen : Musique menu continue");
     }
     
-    private void createElements() {
+    @Override
+    protected void createElements() {
         float centerX = screenWidth / 2f;
         
-        float sliderWidth = screenWidth * 0.42f;
-        if (sliderWidth > 800) sliderWidth = 800;
+        float sliderWidth = Math.min(800f, screenWidth * 0.42f);
         float sliderX = centerX - sliderWidth / 2f;
         float sliderY1 = screenHeight * 0.65f;
         float sliderY2 = screenHeight * 0.51f;
@@ -110,8 +91,8 @@ public class OptionsScreen implements Screen {
             for (int keycode = 0; keycode < 256; keycode++) {
                 if (Gdx.input.isKeyJustPressed(keycode)) {
                     for (KeyButton kb : keyButtons) {
-                        if (kb.action.equals(keyToRemap)) {
-                            kb.keyName = Input.Keys.toString(keycode);
+                        if (kb.getAction().equals(keyToRemap)) {
+                            kb.setKeyName(Input.Keys.toString(keycode));
                             break;
                         }
                     }
@@ -123,30 +104,26 @@ public class OptionsScreen implements Screen {
         }
         
         if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)) {
-            // ⭐ Retour au menu - la musique continue - PASSER audioManager
             game.setScreen(new MenuScreen(game, audioManager));
             return;
         }
         
         if (Gdx.input.isTouched()) {
-            if (musicSlider.isDragging || musicSlider.bounds.contains(mouseX, mouseY)) {
+            if (musicSlider.isDragging() || musicSlider.getBounds().contains(mouseX, mouseY)) {
                 musicSlider.updateValue(mouseX);
-                // ⭐ Appliquer le volume immédiatement
-                audioManager.setMusicVolume(musicSlider.value);
+                audioManager.setMusicVolume(musicSlider.getValue());
             }
-            if (sfxSlider.isDragging || sfxSlider.bounds.contains(mouseX, mouseY)) {
+            if (sfxSlider.isDragging() || sfxSlider.getBounds().contains(mouseX, mouseY)) {
                 sfxSlider.updateValue(mouseX);
-                // ⭐ Appliquer le volume immédiatement
-                audioManager.setSoundVolume(sfxSlider.value);
+                audioManager.setSoundVolume(sfxSlider.getValue());
             }
         } else {
-            musicSlider.isDragging = false;
-            sfxSlider.isDragging = false;
+            musicSlider.setDragging(false);
+            sfxSlider.setDragging(false);
         }
         
         if (Gdx.input.justTouched() && !waitingForKey) {
             if (backButton.isClicked(mouseX, mouseY)) {
-                // ⭐ Retour au menu - la musique continue - PASSER audioManager
                 game.setScreen(new MenuScreen(game, audioManager));
                 return;
             }
@@ -154,7 +131,7 @@ public class OptionsScreen implements Screen {
             for (KeyButton kb : keyButtons) {
                 if (kb.isClicked(mouseX, mouseY)) {
                     waitingForKey = true;
-                    keyToRemap = kb.action;
+                    keyToRemap = kb.getAction();
                 }
             }
         }
@@ -168,7 +145,6 @@ public class OptionsScreen implements Screen {
         musicSlider.render(shapeRenderer);
         sfxSlider.render(shapeRenderer);
         backButton.render(shapeRenderer);
-        
         for (KeyButton kb : keyButtons) {
             kb.render(shapeRenderer);
         }
@@ -178,7 +154,6 @@ public class OptionsScreen implements Screen {
         musicSlider.renderText(batch, font);
         sfxSlider.renderText(batch, font);
         backButton.renderText(batch, font);
-        
         for (KeyButton kb : keyButtons) {
             kb.renderText(batch, font);
         }
@@ -190,115 +165,5 @@ public class OptionsScreen implements Screen {
             font.setColor(Color.WHITE);
         }
         batch.end();
-    }
-    
-    @Override 
-    public void resize(int width, int height) {
-        screenWidth = width;
-        screenHeight = height;
-        createElements();
-    }
-    
-    @Override public void pause() {}
-    @Override public void resume() {}
-    @Override public void hide() {}
-    
-    @Override
-    public void dispose() {
-        batch.dispose();
-        shapeRenderer.dispose();
-        font.dispose();
-        titleFont.dispose();
-        // ⭐ NE PAS disposer audioManager, il est partagé
-    }
-    
-    private static class VolumeSlider {
-        String label;
-        Rectangle bounds;
-        Rectangle cursor;
-        float value;
-        boolean isDragging = false;
-        
-        public VolumeSlider(String label, float x, float y, float width, float initialValue) {
-            this.label = label;
-            this.bounds = new Rectangle(x, y, width, 20);
-            this.value = initialValue;
-            this.cursor = new Rectangle(x + width * value - 10, y - 10, 20, 40);
-        }
-        
-        public void updateValue(int mouseX) {
-            isDragging = true;
-            value = Math.max(0f, Math.min(1f, (mouseX - bounds.x) / bounds.width));
-            cursor.x = bounds.x + bounds.width * value - 10;
-        }
-        
-        public void render(ShapeRenderer sr) {
-            sr.setColor(0.3f, 0.3f, 0.35f, 1f);
-            sr.rect(bounds.x, bounds.y, bounds.width, bounds.height);
-            
-            sr.setColor(0.8f, 0.1f, 0.1f, 1f);
-            sr.rect(bounds.x, bounds.y, bounds.width * value, bounds.height);
-            
-            sr.setColor(Color.WHITE);
-            sr.rect(cursor.x, cursor.y, cursor.width, cursor.height);
-        }
-        
-        public void renderText(SpriteBatch batch, BitmapFont font) {
-            font.draw(batch, label, bounds.x, bounds.y + 50);
-            font.draw(batch, (int)(value * 100) + "%", bounds.x + bounds.width + 20, bounds.y + 15);
-        }
-    }
-    
-    private static class SimpleButton {
-        String text;
-        Rectangle bounds;
-        
-        public SimpleButton(String text, float centerX, float centerY, float width, float height) {
-            this.text = text;
-            this.bounds = new Rectangle(centerX - width/2, centerY - height/2, width, height);
-        }
-        
-        public void render(ShapeRenderer sr) {
-            sr.setColor(0.2f, 0.2f, 0.25f, 0.9f);
-            sr.rect(bounds.x, bounds.y, bounds.width, bounds.height);
-        }
-        
-        public void renderText(SpriteBatch batch, BitmapFont font) {
-            font.draw(batch, text, bounds.x, bounds.y + bounds.height/2 + 10, bounds.width, Align.center, false);
-        }
-        
-        public boolean isClicked(int mouseX, int mouseY) {
-            return bounds.contains(mouseX, mouseY);
-        }
-    }
-    
-    private static class KeyButton {
-        String action;
-        String keyName;
-        Rectangle bounds;
-        
-        public KeyButton(String action, String keyName, float x, float y, float width) {
-            this.action = action;
-            this.keyName = keyName;
-            this.bounds = new Rectangle(x - width/2, y, width, 60);
-        }
-        
-        public void render(ShapeRenderer sr) {
-            sr.setColor(0.25f, 0.25f, 0.3f, 1f);
-            sr.rect(bounds.x, bounds.y, bounds.width, bounds.height);
-        }
-        
-        public void renderText(SpriteBatch batch, BitmapFont font) {
-            font.getData().setScale(1.5f);
-            font.draw(batch, action, bounds.x + 10, bounds.y + 45);
-            font.setColor(Color.YELLOW);
-            font.draw(batch, keyName, bounds.x + 10, bounds.y + 20);
-            font.setColor(Color.WHITE);
-            font.getData().setScale(1.8f);
-        }
-        
-        public boolean isClicked(int mouseX, int mouseY) {
-            return bounds.contains(mouseX, mouseY);
-        }
     }
 }

@@ -4,8 +4,8 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Rectangle;
-import com.fistofsteel.entities.Player;
-import com.fistofsteel.entities.Enemy;
+import com.fistofsteel.entities.player.Player;
+import com.fistofsteel.entities.enemies.Enemy;
 
 /**
  * Utilitaire pour visualiser les hitbox pendant le développement
@@ -45,7 +45,7 @@ public class HitboxDebugger {
         // Rectangle complet du sprite en bleu
         shapeRenderer.setColor(Color.BLUE);
         shapeRenderer.rect(player.getX(), player.getY(), 
-                          Constants.PLAYER_WIDTH, Constants.PLAYER_HEIGHT);
+                          EntityConstants.PLAYER_WIDTH, EntityConstants.PLAYER_HEIGHT);
         
         // Point central en vert
         shapeRenderer.setColor(Color.GREEN);
@@ -75,7 +75,7 @@ public class HitboxDebugger {
         // Rectangle complet du sprite en jaune (différent du joueur)
         shapeRenderer.setColor(Color.YELLOW);
         shapeRenderer.rect(enemy.getX(), enemy.getY(), 
-                          Constants.ENEMY_WIDTH, Constants.ENEMY_HEIGHT);
+                          EntityConstants.ENEMY_WIDTH, EntityConstants.ENEMY_HEIGHT);
         
         // Point central en vert
         shapeRenderer.setColor(Color.GREEN);

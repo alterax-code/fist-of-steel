@@ -1,11 +1,12 @@
-package com.fistofsteel.entities;
+package com.fistofsteel.entities.player;
 
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.utils.Array;
 import com.fistofsteel.input.InputHandler;
-import com.fistofsteel.utils.Constants;
+import com.fistofsteel.utils.PhysicsConstants;
+import com.fistofsteel.utils.EntityConstants;
 
 public abstract class Player {
     protected float x, y;
@@ -31,6 +32,8 @@ public abstract class Player {
     protected boolean isDead = false;
     protected boolean isHit = false;
     protected boolean isAttacking = false;
+    
+    protected boolean hasDealtDamageThisAttack = false;
     
     protected float fastFallCooldownTimer = 0f;
     protected float fastFallCooldownDuration = 0.6f;
@@ -125,12 +128,13 @@ public abstract class Player {
             attackFrame = 0;
             animationTimer = 0f;
             velocityX = 0;
+            hasDealtDamageThisAttack = false;
             return;
         }
         
         // ===== SAUT =====
         if (input.isJumpPressed() && onGround) {
-            velocityY = Constants.JUMP_FORCE;
+            velocityY = PhysicsConstants.JUMP_FORCE;
             onGround = false;
             currentState = State.JUMP;
             isFastFalling = false;
@@ -161,7 +165,7 @@ public abstract class Player {
                 
                 if (canFastFall) {
                     isFastFalling = true;
-                    velocityY = -Constants.MAX_FALL_SPEED;
+                    velocityY = -PhysicsConstants.MAX_FALL_SPEED;
                     fastFallCooldownTimer = fastFallCooldownDuration;
                     currentState = State.CROUCH;
                     velocityX = 0;
@@ -184,11 +188,11 @@ public abstract class Player {
             }
             
             if (input.isLeftPressed()) {
-                velocityX = -Constants.WALK_SPEED;
+                velocityX = -PhysicsConstants.WALK_SPEED;
                 facingRight = false;
                 if (onGround) currentState = State.WALK;
             } else if (input.isRightPressed()) {
-                velocityX = Constants.WALK_SPEED;
+                velocityX = PhysicsConstants.WALK_SPEED;
                 facingRight = true;
                 if (onGround) currentState = State.WALK;
             } else {
@@ -204,6 +208,7 @@ public abstract class Player {
             if (attackTimer <= 0) {
                 isAttacking = false;
                 currentState = State.IDLE;
+                hasDealtDamageThisAttack = false;
             }
         }
         
@@ -228,19 +233,19 @@ public abstract class Player {
         if (isDead) return;
         
         if (!isFastFalling) {
-            velocityY -= Constants.GRAVITY * delta;
+            velocityY -= PhysicsConstants.GRAVITY * delta;
         }
         
-        if (velocityY < -Constants.MAX_FALL_SPEED) {
-            velocityY = -Constants.MAX_FALL_SPEED;
+        if (velocityY < -PhysicsConstants.MAX_FALL_SPEED) {
+            velocityY = -PhysicsConstants.MAX_FALL_SPEED;
         }
         
         float totalMoveY = velocityY * delta;
         
         int steps = 1;
-        if (Math.abs(totalMoveY) > Constants.MAX_MOVE_PER_STEP) {
-            steps = (int) Math.ceil(Math.abs(totalMoveY) / Constants.MAX_MOVE_PER_STEP);
-            if (steps > Constants.MAX_PHYSICS_STEPS) steps = Constants.MAX_PHYSICS_STEPS;
+        if (Math.abs(totalMoveY) > PhysicsConstants.MAX_MOVE_PER_STEP) {
+            steps = (int) Math.ceil(Math.abs(totalMoveY) / PhysicsConstants.MAX_MOVE_PER_STEP);
+            if (steps > PhysicsConstants.MAX_PHYSICS_STEPS) steps = PhysicsConstants.MAX_PHYSICS_STEPS;
         }
         
         float movePerStep = totalMoveY / steps;
@@ -345,8 +350,8 @@ public abstract class Player {
         Texture currentTexture = getCurrentTexture();
 
         if (currentState == State.DEAD) {
-            float rotatedWidth = Constants.PLAYER_HEIGHT;
-            float rotatedHeight = Constants.PLAYER_WIDTH;
+            float rotatedWidth = EntityConstants.PLAYER_HEIGHT;
+            float rotatedHeight = EntityConstants.PLAYER_WIDTH;
             float originX = rotatedWidth / 2f;
             float originY = rotatedHeight / 2f;
             float rotation = facingRight ? -90f : 90f;
@@ -365,9 +370,9 @@ public abstract class Player {
             );
         } else {
             if (facingRight) {
-                batch.draw(currentTexture, x, y, Constants.PLAYER_WIDTH, Constants.PLAYER_HEIGHT);
+                batch.draw(currentTexture, x, y, EntityConstants.PLAYER_WIDTH, EntityConstants.PLAYER_HEIGHT);
             } else {
-                batch.draw(currentTexture, x + Constants.PLAYER_WIDTH, y, -Constants.PLAYER_WIDTH, Constants.PLAYER_HEIGHT);
+                batch.draw(currentTexture, x + EntityConstants.PLAYER_WIDTH, y, -EntityConstants.PLAYER_WIDTH, EntityConstants.PLAYER_HEIGHT);
             }
         }
     }
@@ -391,26 +396,22 @@ public abstract class Player {
                     float pushDistance = overlapLeft + 0.1f;
                     x -= pushDistance;
                     velocityX = 0;
-                    System.out.println("⬅️ Player repoussé vers la GAUCHE de " + (int)pushDistance + "px");
                 } 
                 else if (minOverlap == overlapRight) {
                     float pushDistance = overlapRight + 0.1f;
                     x += pushDistance;
                     velocityX = 0;
-                    System.out.println("➡️ Player repoussé vers la DROITE de " + (int)pushDistance + "px");
                 } 
                 else if (minOverlap == overlapBottom) {
                     float pushDistance = overlapBottom + 0.1f;
                     y -= pushDistance;
                     velocityY = 0;
-                    System.out.println("⬇️ Player repoussé vers le BAS de " + (int)pushDistance + "px");
                 } 
                 else if (minOverlap == overlapTop) {
                     float pushDistance = overlapTop + 0.1f;
                     y += pushDistance;
                     velocityY = 0;
                     onGround = true;
-                    System.out.println("⬆️ Player repoussé vers le HAUT de " + (int)pushDistance + "px");
                 }
                 
                 hitbox.setPosition(x + getHitboxOffsetX(), y + getHitboxOffsetY());
@@ -421,14 +422,9 @@ public abstract class Player {
 
     // ===== SYSTÈME DE SANTÉ =====
 
-    /**
-     * 💥 Applique des dégâts au joueur (utilisé par les ennemis)
-     * Prend en compte l'armure et gère la mort
-     */
     public void applyDamage(int rawDamage) {
         if (isDead) return;
         
-        // L'armure réduit les dégâts
         int effectiveDamage = Math.max(0, rawDamage - armor);
         
         health -= effectiveDamage;
@@ -441,9 +437,6 @@ public abstract class Player {
         }
     }
 
-    /**
-     * 💊 Soigne le joueur
-     */
     public void heal(int amount) {
         if (amount <= 0) return;
         health += amount;
@@ -451,9 +444,6 @@ public abstract class Player {
         System.out.println("💊 Heal +" + amount + " -> " + health + "/" + maxHealth);
     }
 
-    /**
-     * ☠️ Tue le joueur
-     */
     private void die() {
         if (isDead) return;
         isDead = true;
@@ -478,6 +468,18 @@ public abstract class Player {
 
     public int getAttackBonus() {
         return attackBonus;
+    }
+    
+    public boolean hasDealtDamageThisAttack() {
+        return hasDealtDamageThisAttack;
+    }
+    
+    public void markDamageDealt() {
+        hasDealtDamageThisAttack = true;
+    }
+    
+    public boolean isRangedAttacker() {
+        return false;
     }
 
     // ===== SYSTÈME D'ARMURE =====

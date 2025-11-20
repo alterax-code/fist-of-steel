@@ -1,12 +1,15 @@
-package com.fistofsteel.entities;
+package com.fistofsteel.entities.player;
 
 import com.badlogic.gdx.graphics.Texture;
+import com.fistofsteel.entities.managers.ProjectileManager;  // ✅ AJOUT
+import com.fistofsteel.entities.projectiles.HugoProjectile;  // ✅ AJOUT
 import com.fistofsteel.input.InputHandler;
-import com.fistofsteel.utils.Constants;
+import com.fistofsteel.utils.EntityConstants;
 
+// ... reste du code inchangé
 /**
  * Hugo - Personnage agile à distance
- * Hitbox plus petite pour faciliter l'esquive
+ * VERSION MISE À JOUR avec nouveaux imports
  */
 public class Hugo extends Player {
     private Texture idleTexture;
@@ -18,9 +21,16 @@ public class Hugo extends Player {
     private Texture[] walkTextures;
     private Texture[] attackTextures;
     private Texture[] deadTextures;
+    
+    private ProjectileManager projectileManager;
+    private boolean hasShot = false;
 
     public Hugo(InputHandler input) {
         super(input);
+    }
+    
+    public void setProjectileManager(ProjectileManager manager) {
+        this.projectileManager = manager;
     }
 
     @Override
@@ -99,8 +109,6 @@ public class Hugo extends Player {
         return deadTextures.length;
     }
 
-    // ===== HITBOX PERSONNALISÉE DE HUGO =====
-    
     @Override
     protected float getHitboxWidth() {
         return 60f;
@@ -113,11 +121,79 @@ public class Hugo extends Player {
 
     @Override
     protected float getHitboxOffsetX() {
-        return (Constants.PLAYER_WIDTH - getHitboxWidth()) / 2f;
+        return (EntityConstants.PLAYER_WIDTH - getHitboxWidth()) / 2f;
     }
 
     @Override
     protected float getHitboxOffsetY() {
-        return 10f;
+        return 5f;
+    }
+    
+    @Override
+    public boolean isRangedAttacker() {
+        return true;
+    }
+    
+    @Override
+    protected void handleInput(float delta) {
+        if (!isAttacking && input.isAttackPressed()) {
+            hasShot = false;
+        }
+        
+        super.handleInput(delta);
+    }
+    
+    @Override
+    protected void updateAnimation(float delta) {
+        animationTimer += delta;
+        
+        switch (currentState) {
+            case WALK:
+                if (animationTimer >= walkFrameDuration) {
+                    walkFrame = (walkFrame + 1) % getWalkFrameCount();
+                    animationTimer = 0f;
+                }
+                break;
+                
+            case ATTACK:
+                if (animationTimer >= attackFrameDuration) {
+                    attackFrame = (attackFrame + 1) % getAttackFrameCount();
+                    animationTimer = 0f;
+                    
+                    if (attackFrame == 1 && !hasShot) {
+                        shootProjectile();
+                        hasShot = true;
+                    }
+                }
+                break;
+                
+            case DEAD:
+                if (animationTimer >= deadFrameDuration && deadFrame < getDeadFrameCount() - 1) {
+                    deadFrame++;
+                    animationTimer = 0f;
+                }
+                break;
+                
+            default:
+                walkFrame = 0;
+                attackFrame = 0;
+                animationTimer = 0f;
+                break;
+        }
+    }
+    
+    private void shootProjectile() {
+        if (projectileManager == null) {
+            System.err.println("⚠️ Hugo ne peut pas tirer : ProjectileManager null !");
+            return;
+        }
+        
+        float projectileX = x + EntityConstants.PLAYER_WIDTH / 2f;
+        float projectileY = y + EntityConstants.PLAYER_HEIGHT / 2f;
+        
+        HugoProjectile projectile = new HugoProjectile(projectileX, projectileY, facingRight, getTotalAttack());
+        projectileManager.addProjectile(projectile);
+        
+        System.out.println("🔥 Hugo tire un projectile à (" + (int)projectileX + ", " + (int)projectileY + ")");
     }
 }

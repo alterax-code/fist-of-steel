@@ -1,11 +1,15 @@
-package com.fistofsteel.entities;
+package com.fistofsteel.entities.managers;  // ✅ MODIFIÉ (était com.fistofsteel.entities)
 
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.utils.Array;
+import com.fistofsteel.entities.player.Player;  // ✅ AJOUT
+import com.fistofsteel.entities.world.ItemPickup;  // ✅ AJOUT
 import com.fistofsteel.items.Item;
 import com.fistofsteel.items.Potion;
+
+// ... reste du code inchangé
 
 public class WorldItemManager {
 

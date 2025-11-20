@@ -1,10 +1,13 @@
-package com.fistofsteel.entities;
+package com.fistofsteel.entities.world;  // ✅ MODIFIÉ (était com.fistofsteel.entities)
 
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Rectangle;
+import com.fistofsteel.entities.player.Player;  // ✅ AJOUT
+
+// ... reste du code inchangé
 
 /**
  * Porte de sortie de niveau

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.10" tiledversion="1.11.2" orientation="orthogonal" renderorder="right-down" width="120" height="20" tilewidth="64" tileheight="64" infinite="0" nextlayerid="8" nextobjectid="9">
+<map version="1.10" tiledversion="1.11.2" orientation="orthogonal" renderorder="right-down" width="120" height="20" tilewidth="64" tileheight="64" infinite="0" nextlayerid="8" nextobjectid="14">
  <tileset firstgid="1" source="ground_tileset.tsx"/>
  <tileset firstgid="13" source="fdhgsjhfshgf.tsx"/>
  <imagelayer id="2" name="Background" repeatx="1">
@@ -30,7 +30,7 @@
 </data>
  </layer>
  <objectgroup id="5" name="Exits">
-  <object id="8" x="1477.5" y="621.631" width="261.265" height="306.311">
+  <object id="8" x="7269.5" y="741.631" width="261.265" height="306.311">
    <properties>
     <property name="targetLevel" value="level1_example_4"/>
    </properties>
@@ -42,6 +42,26 @@
    <property name="patrolMax" type="float" value="200"/>
    <property name="patrolMin" type="float" value="-200"/>
   </properties>
+  <object id="9" x="1656" y="496" width="416" height="352">
+   <properties>
+    <property name="type" value="Mage"/>
+   </properties>
+  </object>
+  <object id="10" x="2072" y="848">
+   <properties>
+    <property name="type" value="Mage"/>
+   </properties>
+  </object>
+  <object id="12" x="3376" y="496" width="416" height="352">
+   <properties>
+    <property name="type" value="Knight"/>
+   </properties>
+  </object>
+  <object id="13" x="5384" y="472" width="416" height="352">
+   <properties>
+    <property name="type" value="Rogue"/>
+   </properties>
+  </object>
  </objectgroup>
  <objectgroup id="3" name="Collisions">
   <object id="4" x="-62.6364" y="-0.5" width="63.25" height="1280.67"/>

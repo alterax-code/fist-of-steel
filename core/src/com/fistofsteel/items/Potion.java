@@ -1,6 +1,6 @@
 package com.fistofsteel.items;
 
-import com.fistofsteel.entities.Player;
+import com.fistofsteel.entities.player.Player;
 
 public class Potion extends Item {
 

@@ -1,5 +1,6 @@
 package com.fistofsteel.screens;
 
+// LibGDX imports
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.Screen;
@@ -7,6 +8,7 @@ import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.maps.MapLayer;
 import com.badlogic.gdx.maps.MapObject;
 import com.badlogic.gdx.maps.objects.RectangleMapObject;
@@ -15,23 +17,37 @@ import com.badlogic.gdx.maps.tiled.TmxMapLoader;
 import com.badlogic.gdx.maps.tiled.renderers.OrthogonalTiledMapRenderer;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.utils.Array;
+
+// Core game imports
 import com.fistofsteel.FistOfSteelGame;
 import com.fistofsteel.audio.AudioManager;
-import com.fistofsteel.entities.Alexis;
-import com.fistofsteel.entities.EnemyManager;
-import com.fistofsteel.entities.Hugo;
-import com.fistofsteel.entities.LevelExitManager;
-import com.fistofsteel.entities.Player;
-import com.fistofsteel.entities.WorldItemManager;
+
+// Player imports
+import com.fistofsteel.entities.player.Player;
+import com.fistofsteel.entities.player.Alexis;
+import com.fistofsteel.entities.player.Hugo;
+
+// Manager imports
+import com.fistofsteel.entities.managers.EnemyManager;
+import com.fistofsteel.entities.managers.ProjectileManager;
+import com.fistofsteel.entities.managers.WorldItemManager;
+import com.fistofsteel.entities.managers.LevelExitManager;
+
+// Input imports
 import com.fistofsteel.input.InputHandler;
+
+// UI imports
 import com.fistofsteel.ui.PlayerHUD;
-import com.fistofsteel.utils.Constants;
+
+// Utils imports
+import com.fistofsteel.utils.EntityConstants;
 import com.fistofsteel.utils.HitboxDebugger;
 
 public class GameManager implements Screen {
     private FistOfSteelGame game;
     private OrthographicCamera camera;
     private SpriteBatch batch;
+    private ShapeRenderer shapeRenderer;
     private Player player;
     private InputHandler inputHandler;
     private AudioManager audioManager;
@@ -39,7 +55,7 @@ public class GameManager implements Screen {
     private TiledMap tiledMap;
     private OrthogonalTiledMapRenderer tiledMapRenderer;
     private Array<Rectangle> collisionRects;
-    private Array<Rectangle> deathRects; // 🆕 Zones de mort instantanée
+    private Array<Rectangle> deathRects;
     
     private String selectedCharacter;
     private String currentLevel;
@@ -53,15 +69,14 @@ public class GameManager implements Screen {
     private WorldItemManager worldItemManager;
     private EnemyManager enemyManager;
     private LevelExitManager levelExitManager;
+    private ProjectileManager projectileManager;
     
     private PlayerHUD playerHUD;
 
-    // 🆕 Constructeur par défaut (niveau 1)
     public GameManager(FistOfSteelGame game, String selectedCharacter, AudioManager audioManager) {
         this(game, selectedCharacter, audioManager, "level1_example");
     }
     
-    // 🆕 Constructeur avec niveau spécifié
     public GameManager(FistOfSteelGame game, String selectedCharacter, AudioManager audioManager, String levelName) {
         this.game = game;
         this.selectedCharacter = selectedCharacter;
@@ -84,9 +99,10 @@ public class GameManager implements Screen {
         camera.setToOrtho(false, viewportWidth, worldHeight);
         System.out.println("✅ Caméra initialisée");
         
-        // 2. BATCH
+        // 2. BATCH ET SHAPE RENDERER
         batch = new SpriteBatch();
-        System.out.println("✅ SpriteBatch créé");
+        shapeRenderer = new ShapeRenderer();
+        System.out.println("✅ SpriteBatch et ShapeRenderer créés");
         
         // 3. INPUT HANDLER
         inputHandler = new InputHandler(audioManager);
@@ -100,10 +116,10 @@ public class GameManager implements Screen {
         // 5. PLAYER
         if ("Alexis".equals(selectedCharacter)) {
             player = new Alexis(inputHandler);
-            System.out.println("✅ Personnage: Alexis (Hitbox: 75x110)");
+            System.out.println("✅ Personnage: Alexis");
         } else {
             player = new Hugo(inputHandler);
-            System.out.println("✅ Personnage: Hugo (Hitbox: 60x100)");
+            System.out.println("✅ Personnage: Hugo");
         }
         
         if (collisionRects != null && collisionRects.size > 0) {
@@ -115,8 +131,19 @@ public class GameManager implements Screen {
         
         loadSpawnFromTiled();
         
-        // 6. ENEMY MANAGER
+        // 6. PROJECTILE MANAGER
+        projectileManager = new ProjectileManager(mapWidthInPixels);
+        System.out.println("✅ ProjectileManager créé");
+        
+        // ⭐ Si Hugo, connecter le ProjectileManager
+        if (player instanceof Hugo) {
+            ((Hugo) player).setProjectileManager(projectileManager);
+            System.out.println("✅ Hugo connecté au ProjectileManager");
+        }
+        
+        // 7. ENEMY MANAGER
         enemyManager = new EnemyManager(player);
+        enemyManager.setProjectileManager(projectileManager);
         loadEnemiesFromTiled();
         
         if (collisionRects != null) {
@@ -124,26 +151,26 @@ public class GameManager implements Screen {
             System.out.println("✅ Collisions configurées pour " + enemyManager.getTotalCount() + " ennemis");
         }
         
-        // 7. ITEMS
+        // 8. ITEMS
         worldItemManager = new WorldItemManager();
         loadPotionsFromTiled();
         
-        // 8. LEVEL EXIT MANAGER
+        // 9. LEVEL EXIT MANAGER
         levelExitManager = new LevelExitManager();
         loadExitsFromTiled();
         
-        // 9. HUD
+        // 10. HUD
         playerHUD = new PlayerHUD();
         System.out.println("✅ HUD du joueur initialisé");
         
-        // 10. MUSIQUE
+        // 11. MUSIQUE
         audioManager.startLevelMusic();
         System.out.println("🎵 Musique level démarrée");
         
-        // 11. DEBUG
+        // 12. DEBUG
         HitboxDebugger.setDebugEnabled(debugMode);
         
-        // 12. FINALIZE
+        // 13. FINALIZE
         updateCamera();
         camera.update();
         batch.setProjectionMatrix(camera.combined);
@@ -178,7 +205,7 @@ public class GameManager implements Screen {
             System.out.println("✅ Map Tiled: " + mapWidthInPixels + "x" + mapHeightInPixels + " pixels");
             
             loadCollisions();
-            loadDeathZones(); // 🆕 Charger les zones de mort
+            loadDeathZones();
         } catch (Exception e) {
             System.err.println("⚠️ Erreur chargement map: " + e.getMessage());
             e.printStackTrace();
@@ -202,7 +229,6 @@ public class GameManager implements Screen {
         }
     }
     
-    // 🆕 CHARGEMENT DES ZONES DE MORT
     private void loadDeathZones() {
         deathRects = new Array<>();
         if (tiledMap == null) return;
@@ -435,6 +461,14 @@ public class GameManager implements Screen {
         player.update(delta);
         enemyManager.update(delta);
         
+        // ⭐ UPDATE PROJECTILES
+        if (projectileManager != null) {
+            projectileManager.update(delta);
+            projectileManager.checkPlayerCollisions(player);
+            projectileManager.checkEnemyCollisions(enemyManager);
+            projectileManager.removeInactiveProjectiles();
+        }
+        
         if (worldItemManager != null) {
             worldItemManager.update(delta);       
             worldItemManager.checkPlayerCollisions(player);
@@ -444,7 +478,7 @@ public class GameManager implements Screen {
             playerHUD.update(delta);
         }
         
-        // 🆕 VÉRIFIER GAME OVER
+        // VÉRIFIER GAME OVER
         if (checkGameOver()) {
             game.setScreen(new GameOverScreen(game, audioManager));
             return;
@@ -454,7 +488,6 @@ public class GameManager implements Screen {
         if (levelExitManager != null) {
             levelExitManager.update(enemyManager.getEnemiesKilled(), enemyManager.getTotalEnemiesSpawned());
             
-            // VÉRIFIER SI LE JOUEUR PASSE UNE PORTE
             String nextLevel = levelExitManager.checkPlayerOnExit(player);
             if (nextLevel != null) {
                 System.out.println("🚪 Changement de niveau -> " + nextLevel);
@@ -463,7 +496,7 @@ public class GameManager implements Screen {
             }
         }
         
-        // 🆕 VÉRIFIER VICTOIRE (niveau 4 terminé)
+        // VÉRIFIER VICTOIRE
         if (checkVictory()) {
             game.setScreen(new WinnerScreen(game, audioManager));
             return;
@@ -494,6 +527,11 @@ public class GameManager implements Screen {
         player.render(batch);
         enemyManager.render(batch);
         
+        // ⭐ RENDER PROJECTILES
+        if (projectileManager != null) {
+            projectileManager.render(batch);
+        }
+        
         if (worldItemManager != null) {
             worldItemManager.render(batch);
         }
@@ -505,7 +543,9 @@ public class GameManager implements Screen {
         batch.end();
         
         // BARRES DE VIE DES ENNEMIS
-        enemyManager.renderHealthBars(new com.badlogic.gdx.graphics.glutils.ShapeRenderer(), camera);
+        if (shapeRenderer != null) {
+            enemyManager.renderHealthBars(shapeRenderer, camera);
+        }
         
         // DEBUG HITBOXES
         if (debugMode) {
@@ -519,15 +559,12 @@ public class GameManager implements Screen {
         }
     }
     
-    // 🆕 VÉRIFIER GAME OVER
     private boolean checkGameOver() {
-        // 1. Vérifier si le joueur est mort (0 PV)
         if (player.getHealth() <= 0) {
             System.out.println("💀 GAME OVER - Le joueur est mort (0 PV)");
             return true;
         }
         
-        // 2. Vérifier si le joueur touche une zone de mort
         if (deathRects != null && deathRects.size > 0) {
             Rectangle playerHitbox = player.getHitbox();
             for (Rectangle deathRect : deathRects) {
@@ -541,30 +578,27 @@ public class GameManager implements Screen {
         return false;
     }
     
-  // 🆕 VÉRIFIER VICTOIRE - AVEC LOGS DE DEBUG
-private boolean checkVictory() {
-    // Debug : afficher les infos toutes les secondes
-    if (System.currentTimeMillis() % 1000 < 16) {
-        System.out.println("🔍 Debug victoire - Niveau: " + currentLevel + 
-                          " | Ennemis vivants: " + enemyManager.getAliveCount() + 
-                          " | Total ennemis: " + enemyManager.getTotalEnemiesSpawned());
+    private boolean checkVictory() {
+        if (System.currentTimeMillis() % 1000 < 16) {
+            System.out.println("🔍 Debug victoire - Niveau: " + currentLevel + 
+                              " | Ennemis vivants: " + enemyManager.getAliveCount() + 
+                              " | Total ennemis: " + enemyManager.getTotalEnemiesSpawned());
+        }
+        
+        boolean isLevel4 = currentLevel.contains("level4") || currentLevel.contains("4");
+        boolean allEnemiesDead = enemyManager.getAliveCount() == 0;
+        boolean hasEnemies = enemyManager.getTotalEnemiesSpawned() > 0;
+        
+        if (isLevel4 && allEnemiesDead && hasEnemies) {
+            System.out.println("🎉 VICTOIRE - Tous les ennemis du niveau 4 sont vaincus !");
+            System.out.println("   📊 Stats finales:");
+            System.out.println("      - Ennemis tués: " + enemyManager.getEnemiesKilled());
+            System.out.println("      - Ennemis total: " + enemyManager.getTotalEnemiesSpawned());
+            return true;
+        }
+        
+        return false;
     }
-    
-    // Vérifier si on est au niveau 4 ET que tous les ennemis sont morts
-    boolean isLevel4 = currentLevel.contains("level4") || currentLevel.contains("4");
-    boolean allEnemiesDead = enemyManager.getAliveCount() == 0;
-    boolean hasEnemies = enemyManager.getTotalEnemiesSpawned() > 0;
-    
-    if (isLevel4 && allEnemiesDead && hasEnemies) {
-        System.out.println("🎉 VICTOIRE - Tous les ennemis du niveau 4 sont vaincus !");
-        System.out.println("   📊 Stats finales:");
-        System.out.println("      - Ennemis tués: " + enemyManager.getEnemiesKilled());
-        System.out.println("      - Ennemis total: " + enemyManager.getTotalEnemiesSpawned());
-        return true;
-    }
-    
-    return false;
-}
     
     private void loadNextLevel(String nextLevelName) {
         System.out.println("\n========================================");
@@ -590,7 +624,7 @@ private boolean checkVictory() {
         float mapWidth = mapWidthInPixels;
         float mapHeight = mapHeightInPixels;
         
-        float playerX = player.getX() + Constants.PLAYER_WIDTH / 2;
+        float playerX = player.getX() + EntityConstants.PLAYER_WIDTH / 2;
         camera.position.x = playerX;
         camera.position.y = mapHeight / 2;
         
@@ -641,6 +675,7 @@ private boolean checkVictory() {
         System.out.println("\n🧹 Nettoyage GameManager...");
         
         if (batch != null) batch.dispose();
+        if (shapeRenderer != null) shapeRenderer.dispose();
         if (worldItemManager != null) worldItemManager.dispose();
         if (enemyManager != null) enemyManager.dispose();
         if (player != null) player.dispose();
@@ -649,6 +684,7 @@ private boolean checkVictory() {
         if (backgroundTexture != null) backgroundTexture.dispose();
         if (playerHUD != null) playerHUD.dispose();
         if (levelExitManager != null) levelExitManager.dispose();
+        if (projectileManager != null) projectileManager.dispose();
         
         HitboxDebugger.dispose();
         

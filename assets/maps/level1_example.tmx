@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.10" tiledversion="1.11.2" orientation="orthogonal" renderorder="right-down" width="60" height="20" tilewidth="64" tileheight="64" infinite="0" nextlayerid="11" nextobjectid="79">
+<map version="1.10" tiledversion="1.11.2" orientation="orthogonal" renderorder="right-down" width="60" height="20" tilewidth="64" tileheight="64" infinite="0" nextlayerid="11" nextobjectid="81">
  <editorsettings>
   <export target="level1_example..tmx" format="tmx"/>
  </editorsettings>
@@ -28,7 +28,7 @@
 0,0,0,0,12,12,12,12,12,12,13,13,13,12,12,12,13,0,0,0,0,0,12,0,0,12,13,13,13,13,13,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,0,12,12,12,12,12,12,12,12,16,16,
 0,0,0,0,0,12,12,12,12,12,12,12,12,12,12,12,13,0,0,0,0,0,0,0,0,0,0,0,12,0,13,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,0,12,12,12,12,12,12,12,16,16,16,
 12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,13,12,12,12,12,12,12,12,12,12,12,12,12,12,13,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,16,16,16,16,
-21,21,21,21,21,21,21,21,21,21,21,21,21,21,21,21,21,21,21,21,21,21,21,21,21,21,21,21,21,21,13,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,16,16,16,16,16,16,16,16,16,
+21,21,21,21,21,21,21,21,21,21,21,21,21,21,21,21,21,21,21,21,21,21,21,21,21,21,21,21,21,21,13,21,21,21,21,21,21,21,12,12,12,21,21,21,21,21,21,21,21,21,21,16,16,16,16,16,16,16,16,16,
 21,21,21,21,21,21,21,21,21,21,21,21,21,21,21,21,21,21,21,21,21,21,21,21,21,21,21,21,21,21,13,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,21,21,21,21,21,21,21,21,21
 </data>
  </layer>
@@ -51,7 +51,7 @@
   <object id="20" x="1665.85" y="962.454" width="253.848" height="60.4848"/>
   <object id="25" x="1409.03" y="1.93938" width="61.6359" height="957.09"/>
   <object id="26" x="1027.12" y="639.091" width="59.8859" height="573.682"/>
-  <object id="27" x="1920.2" y="254.69" width="62.6359" height="899.045"/>
+  <object id="27" x="1920.2" y="254.69" width="62.6359" height="768.742"/>
   <object id="28" x="3834.53" y="-30.47" width="34.9468" height="1240.94"/>
   <object id="29" x="1666.08" y="770.424" width="253.848" height="60.4848"/>
   <object id="30" x="1666.41" y="578.424" width="253.848" height="60.4848"/>
@@ -76,7 +76,7 @@
   <object id="51" x="3138.01" y="448.78" width="60.1027" height="252.106"/>
  </objectgroup>
  <objectgroup id="9" name="Exits">
-  <object id="76" x="440" y="972" width="88" height="144">
+  <object id="76" x="3230.91" y="172" width="88" height="144">
    <properties>
     <property name="targetLevel" value="level1_example_2"/>
    </properties>
@@ -97,6 +97,16 @@
   <object id="64" name="EnemySpawn" x="605.96" y="483.177" width="160" height="130">
    <properties>
     <property name="type" value="Knight"/>
+   </properties>
+  </object>
+  <object id="79" name="EnemySpawn" x="1235.15" y="916.818" width="160" height="130">
+   <properties>
+    <property name="type" value="Rogue"/>
+   </properties>
+  </object>
+  <object id="80" name="EnemySpawn" x="3459.39" y="174.394" width="160" height="130">
+   <properties>
+    <property name="type" value="Rogue"/>
    </properties>
   </object>
  </objectgroup>
