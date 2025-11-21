@@ -88,7 +88,7 @@ public class GameManager implements Screen {
     public void show() {
         System.out.println("\n========================================");
         System.out.println("🎮 INITIALISATION DE GAMEMANAGER");
-        System.out.println("📍 Niveau: " + currentLevel);
+        System.out.println("📁 Niveau: " + currentLevel);
         System.out.println("========================================\n");
         
         // 1. CAMÉRA
@@ -113,12 +113,12 @@ public class GameManager implements Screen {
         loadTiledMap();
         loadBackgroundFromTiled();
         
-        // 5. PLAYER
+        // 5. PLAYER (✅ PASSE MAINTENANT L'AUDIOMANAGER)
         if ("Alexis".equals(selectedCharacter)) {
-            player = new Alexis(inputHandler);
+            player = new Alexis(inputHandler, audioManager);
             System.out.println("✅ Personnage: Alexis");
         } else {
-            player = new Hugo(inputHandler);
+            player = new Hugo(inputHandler, audioManager);
             System.out.println("✅ Personnage: Hugo");
         }
         
@@ -154,6 +154,7 @@ public class GameManager implements Screen {
         // 8. ITEMS
         worldItemManager = new WorldItemManager();
         loadPotionsFromTiled();
+        loadItemsFromTiled();
         
         // 9. LEVEL EXIT MANAGER
         levelExitManager = new LevelExitManager();
@@ -305,12 +306,15 @@ public class GameManager implements Screen {
         System.err.println("⚠️ Aucun spawn trouvé dans le layer 'spawn' !");
     }
     
+    /**
+     * Charge les potions depuis la couche Tiled "Potions"
+     */
     private void loadPotionsFromTiled() {
         if (tiledMap == null || worldItemManager == null) return;
         
         MapLayer potionLayer = tiledMap.getLayers().get("Potions");
         if (potionLayer == null) {
-            System.out.println("⚠️ Layer 'Potions' non trouvé");
+            System.out.println("ℹ️ Layer 'Potions' non trouvé");
             return;
         }
         
@@ -330,12 +334,64 @@ public class GameManager implements Screen {
         System.out.println("✅ Potions: " + potionCount + " chargées via WorldItemManager");
     }
     
+    /**
+     * ⭐ NOUVEAU : Charge les items (armures, armes) depuis la couche Tiled "Items"
+     */
+    private void loadItemsFromTiled() {
+        if (tiledMap == null || worldItemManager == null) return;
+        
+        MapLayer itemsLayer = tiledMap.getLayers().get("Items");
+        if (itemsLayer == null) {
+            System.out.println("ℹ️ Layer 'Items' non trouvé - Aucun item d'équipement");
+            return;
+        }
+        
+        int itemCount = 0;
+        
+        for (MapObject object : itemsLayer.getObjects()) {
+            float tiledX = object.getProperties().get("x", Float.class);
+            float tiledY = object.getProperties().get("y", Float.class);
+            
+            float libgdxX = tiledX;
+            float libgdxY = tiledY;
+            
+            String itemType = object.getProperties().get("type", "sword1", String.class);
+            
+            switch (itemType.toLowerCase()) {
+                case "armor_light":
+                    worldItemManager.spawnArmorLight(libgdxX, libgdxY);
+                    itemCount++;
+                    break;
+                case "armor_heavy":
+                    worldItemManager.spawnArmorHeavy(libgdxX, libgdxY);
+                    itemCount++;
+                    break;
+                case "sword1":
+                    worldItemManager.spawnSword1(libgdxX, libgdxY);
+                    itemCount++;
+                    break;
+                case "sword2":
+                    worldItemManager.spawnSword2(libgdxX, libgdxY);
+                    itemCount++;
+                    break;
+                case "sword3":
+                    worldItemManager.spawnSword3(libgdxX, libgdxY);
+                    itemCount++;
+                    break;
+                default:
+                    System.out.println("⚠️ Type d'item non reconnu : " + itemType);
+            }
+        }
+        
+        System.out.println("✅ Items d'équipement: " + itemCount + " chargés");
+    }
+    
     private void loadExitsFromTiled() {
         if (tiledMap == null || levelExitManager == null) return;
         
         MapLayer exitsLayer = tiledMap.getLayers().get("Exits");
         if (exitsLayer == null) {
-            System.out.println("⚠️ Layer 'Exits' non trouvé - Aucune porte de sortie");
+            System.out.println("ℹ️ Layer 'Exits' non trouvé - Aucune porte de sortie");
             return;
         }
         

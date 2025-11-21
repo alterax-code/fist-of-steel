@@ -1,15 +1,18 @@
-package com.fistofsteel.entities.managers;  // ✅ MODIFIÉ (était com.fistofsteel.entities)
+package com.fistofsteel.entities.managers;
 
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.utils.Array;
-import com.fistofsteel.entities.player.Player;  // ✅ AJOUT
-import com.fistofsteel.entities.world.ItemPickup;  // ✅ AJOUT
+import com.fistofsteel.entities.player.Player;
+import com.fistofsteel.entities.world.ItemPickup;
 import com.fistofsteel.items.Item;
 import com.fistofsteel.items.Potion;
-
-// ... reste du code inchangé
+import com.fistofsteel.items.LightArmor;
+import com.fistofsteel.items.HeavyArmor;
+import com.fistofsteel.items.Sword1;
+import com.fistofsteel.items.Sword2;
+import com.fistofsteel.items.Sword3;
 
 public class WorldItemManager {
 
@@ -45,17 +48,71 @@ public class WorldItemManager {
         }
     }
 
-    // Pour tester : spawn d’une potion de soin +30 PV
-public void spawnHealPotion(float x, float y) {
-    Texture tex = new Texture("assets/items/potion_frame_1.png");
-    Item item = new Potion("heal_small", "Potion de soin", 30);
+    // ===== SPAWN POTIONS =====
+    
+    public void spawnHealPotion(float x, float y) {
+        Texture tex = new Texture("assets/items/potion_frame_1.png");
+        Item item = new Potion("heal_small", "Potion de soin", 30);
 
-    ItemPickup pickup = new ItemPickup(x, y, tex, item);
-    pickups.add(pickup);
+        ItemPickup pickup = new ItemPickup(x, y, tex, item);
+        pickups.add(pickup);
 
-    System.out.println("💊 Potion spawn à (). Total pickups = " + pickups.size);
-}
+        System.out.println("💊 Potion spawn à (" + (int)x + ", " + (int)y + "). Total pickups = " + pickups.size);
+    }
 
+    // ===== SPAWN ARMURES =====
+    
+    public void spawnArmorLight(float x, float y) {
+        Texture tex = new Texture("assets/items/armor_light.png");
+        Item item = new LightArmor();
+
+        ItemPickup pickup = new ItemPickup(x, y, tex, item);
+        pickups.add(pickup);
+
+        System.out.println("🛡️ Armure légère spawn à (" + (int)x + ", " + (int)y + "). Total pickups = " + pickups.size);
+    }
+
+    public void spawnArmorHeavy(float x, float y) {
+        Texture tex = new Texture("assets/items/armor_heavy.png");
+        Item item = new HeavyArmor();
+
+        ItemPickup pickup = new ItemPickup(x, y, tex, item);
+        pickups.add(pickup);
+
+        System.out.println("🛡️ Armure lourde spawn à (" + (int)x + ", " + (int)y + "). Total pickups = " + pickups.size);
+    }
+
+    // ===== SPAWN ARMES =====
+    
+    public void spawnSword1(float x, float y) {
+        Texture tex = new Texture("assets/items/sword_1.png");
+        Item item = new Sword1();
+
+        ItemPickup pickup = new ItemPickup(x, y, tex, item);
+        pickups.add(pickup);
+
+        System.out.println("🗡️ Épée de base spawn à (" + (int)x + ", " + (int)y + "). Total pickups = " + pickups.size);
+    }
+
+    public void spawnSword2(float x, float y) {
+        Texture tex = new Texture("assets/items/sword_2.png");
+        Item item = new Sword2();
+
+        ItemPickup pickup = new ItemPickup(x, y, tex, item);
+        pickups.add(pickup);
+
+        System.out.println("🗡️ Épée tranchante spawn à (" + (int)x + ", " + (int)y + "). Total pickups = " + pickups.size);
+    }
+
+    public void spawnSword3(float x, float y) {
+        Texture tex = new Texture("assets/items/sword_3.png");
+        Item item = new Sword3();
+
+        ItemPickup pickup = new ItemPickup(x, y, tex, item);
+        pickups.add(pickup);
+
+        System.out.println("🗡️ Épée légendaire spawn à (" + (int)x + ", " + (int)y + "). Total pickups = " + pickups.size);
+    }
 
     public void dispose() {
         for (ItemPickup pickup : pickups) {

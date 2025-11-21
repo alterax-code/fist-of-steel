@@ -14,11 +14,9 @@ public class Armor extends Item {
     @Override
     public void applyEffect(Player player) {
         if (player == null) return;
-
-        int newArmor = player.getArmor() + armorBonus;
-        player.setArmor(newArmor);
-
-        System.out.println("🛡 Armure équipée : " + displayName + " (+" + armorBonus + " DEF)");
+        
+        // Utilise le système d'équipement du joueur
+        player.equipArmor(this);
     }
 
     public int getArmorBonus() {

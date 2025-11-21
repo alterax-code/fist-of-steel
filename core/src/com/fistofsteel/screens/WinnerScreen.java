@@ -11,6 +11,7 @@ import com.fistofsteel.ui.UIComponents.SimpleButton;
 
 /**
  * WinnerScreen - Hérite de BaseScreen
+ * ✅ MODIFIÉ : Boutons disposés en ligne et centrés
  */
 public class WinnerScreen extends BaseScreen {
     
@@ -48,13 +49,14 @@ public class WinnerScreen extends BaseScreen {
     @Override
     protected void createElements() {
         float centerX = screenWidth / 2f;
-        float buttonWidth = 400f;
+        float buttonWidth = 300f;
         float buttonHeight = 80f;
         float buttonY = screenHeight * 0.3f;
-        float spacing = 100f;
+        float spacing = 50f;
         
-        returnMenuButton = new SimpleButton("RETURN MENU", centerX, buttonY, buttonWidth, buttonHeight);
-        quitButton = new SimpleButton("QUIT", centerX, buttonY - spacing, buttonWidth, buttonHeight);
+        // ✅ Boutons disposés en ligne, centrés horizontalement
+        returnMenuButton = new SimpleButton("RETURN MENU", centerX - buttonWidth/2f - spacing/2f, buttonY, buttonWidth, buttonHeight);
+        quitButton = new SimpleButton("QUIT", centerX + buttonWidth/2f + spacing/2f, buttonY, buttonWidth, buttonHeight);
     }
     
     @Override

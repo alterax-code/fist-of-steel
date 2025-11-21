@@ -12,6 +12,7 @@ import com.fistofsteel.ui.UIComponents.SimpleButton;
 
 /**
  * CharactersChoice - Hérite de BaseScreen
+ * ✅ MODIFIÉ : Boutons de sélection centrés
  */
 public class CharactersChoice extends BaseScreen {
     
@@ -47,11 +48,12 @@ public class CharactersChoice extends BaseScreen {
         float centerX = screenWidth / 2f;
         float charBtnWidth = Math.min(360f, screenWidth * 0.32f);
         float charBtnHeight = 120f;
-        float yRow = screenHeight * 0.55f;
+        float yRow = screenHeight * 0.5f; // ✅ Centré verticalement
         float gap = 50f;
         
-        hugoButton = new SimpleButton("HUGO", centerX - charBtnWidth - gap/2f, yRow, charBtnWidth, charBtnHeight);
-        alexisButton = new SimpleButton("ALEXIS", centerX + gap/2f, yRow, charBtnWidth, charBtnHeight);
+        // ✅ Boutons centrés horizontalement
+        hugoButton = new SimpleButton("HUGO", centerX - charBtnWidth/2f - gap/2f, yRow, charBtnWidth, charBtnHeight);
+        alexisButton = new SimpleButton("ALEXIS", centerX + charBtnWidth/2f + gap/2f, yRow, charBtnWidth, charBtnHeight);
         backButton = new SimpleButton("BACK", centerX, screenHeight * 0.18f, 300f, 70f);
     }
     

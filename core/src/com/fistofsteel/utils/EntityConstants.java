@@ -18,7 +18,7 @@ public class EntityConstants {
     public static final float ENEMY_HEIGHT = 170f;
     
     public static final float ENEMY_HITBOX_WIDTH = 85f;
-    public static final float ENEMY_HITBOX_HEIGHT = 130f;
+    public static final float ENEMY_HITBOX_HEIGHT = 95f;
     public static final float ENEMY_HITBOX_OFFSET_X = (ENEMY_WIDTH - ENEMY_HITBOX_WIDTH) / 2f;
-    public static final float ENEMY_HITBOX_OFFSET_Y = 5f;
+    public static final float ENEMY_HITBOX_OFFSET_Y = 22f;
 }

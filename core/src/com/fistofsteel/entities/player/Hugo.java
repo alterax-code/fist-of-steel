@@ -1,15 +1,15 @@
 package com.fistofsteel.entities.player;
 
 import com.badlogic.gdx.graphics.Texture;
-import com.fistofsteel.entities.managers.ProjectileManager;  // ✅ AJOUT
-import com.fistofsteel.entities.projectiles.HugoProjectile;  // ✅ AJOUT
+import com.fistofsteel.entities.managers.ProjectileManager;
+import com.fistofsteel.entities.projectiles.HugoProjectile;
 import com.fistofsteel.input.InputHandler;
+import com.fistofsteel.audio.AudioManager;
 import com.fistofsteel.utils.EntityConstants;
 
-// ... reste du code inchangé
 /**
  * Hugo - Personnage agile à distance
- * VERSION MISE À JOUR avec nouveaux imports
+ * VERSION MISE À JOUR avec AudioManager
  */
 public class Hugo extends Player {
     private Texture idleTexture;
@@ -25,8 +25,8 @@ public class Hugo extends Player {
     private ProjectileManager projectileManager;
     private boolean hasShot = false;
 
-    public Hugo(InputHandler input) {
-        super(input);
+    public Hugo(InputHandler input, AudioManager audioManager) {
+        super(input, audioManager);
     }
     
     public void setProjectileManager(ProjectileManager manager) {

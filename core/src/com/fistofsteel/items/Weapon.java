@@ -14,12 +14,9 @@ public class Weapon extends Item {
     @Override
     public void applyEffect(Player player) {
         if (player == null) return;
-
-        // tu adapteras ces méthodes si leurs noms sont un peu différents
-        int newBonus = player.getAttackBonus() + attackBonus;
-        player.setAttackBonus(newBonus);
-
-        System.out.println("🗡 Arme équipée : " + displayName + " (+" + attackBonus + " ATK)");
+        
+        // Utilise le système d'équipement du joueur
+        player.equipWeapon(this);
     }
 
     public int getAttackBonus() {

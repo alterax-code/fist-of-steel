@@ -14,7 +14,7 @@ import com.fistofsteel.utils.HealthBar;
 
 /**
  * Classe abstraite représentant un ennemi
- * VERSION REFACTORISÉE avec animation centralisée
+ * ✅ MODIFIÉ : Cooldown d'attaque augmenté, sprites de mort agrandis et tournés
  */
 public abstract class Enemy {
     
@@ -52,9 +52,9 @@ public abstract class Enemy {
     protected float chaseSpeed = 75f;
     protected boolean facingRight = true;
     
-    // Timers
+    // Timers ✅ MODIFIÉ : Cooldown d'attaque augmenté
     protected float attackTimer = 0;
-    protected float attackCooldown = 1.5f;
+    protected float attackCooldown = 2.0f; // ✅ Augmenté de 1.5f à 2.0f
     protected float hitTimer = 0;
     protected float hitDuration = 0.3f;
     protected float deadTimer = 0;
@@ -66,10 +66,10 @@ public abstract class Enemy {
     protected boolean isOnGround = false;
     protected boolean hasDealtDamageThisAttack = false;
     
-    // Animation
+    // Animation ✅ MODIFIÉ : Durées d'animation augmentées
     protected float animationTimer = 0f;
     protected float walkFrameDuration = 0.15f;
-    protected float attackFrameDuration = 0.15f;
+    protected float attackFrameDuration = 0.2f; // ✅ Augmenté de 0.15f à 0.2f
     protected float deadFrameDuration = 0.3f;
     
     protected int walkFrame = 0;
@@ -623,6 +623,7 @@ public abstract class Enemy {
     
     /**
      * ⭐ RENDU (méthode finale)
+     * ✅ MODIFIÉ : Sprites de mort agrandis et tournés de 90° sens anti-horaire
      */
     public final void render(SpriteBatch batch) {
         Texture currentTexture = getCurrentTexture();
@@ -632,11 +633,12 @@ public abstract class Enemy {
         }
         
         if (currentState == State.DEAD) {
-            float rotatedWidth = EntityConstants.ENEMY_HEIGHT;
-            float rotatedHeight = EntityConstants.ENEMY_WIDTH;
+            // ✅ Garder les dimensions normales (pas d'inversion)
+            float rotatedWidth = EntityConstants.ENEMY_WIDTH;
+            float rotatedHeight = EntityConstants.ENEMY_HEIGHT;
             float originX = rotatedWidth / 2f;
             float originY = rotatedHeight / 2f;
-            float rotation = -90f;
+            float rotation = -90f; // ✅ Rotation de 90° sens anti-horaire
             float scaleX = facingRight ? 1f : -1f;
             
             batch.draw(

@@ -5,8 +5,11 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.utils.Array;
 import com.fistofsteel.input.InputHandler;
+import com.fistofsteel.audio.AudioManager;
 import com.fistofsteel.utils.PhysicsConstants;
 import com.fistofsteel.utils.EntityConstants;
+import com.fistofsteel.items.Armor;
+import com.fistofsteel.items.Weapon;
 
 public abstract class Player {
     protected float x, y;
@@ -16,6 +19,7 @@ public abstract class Player {
 
     protected Rectangle hitbox;
     protected InputHandler input;
+    protected AudioManager audioManager;
     
     protected Array<Rectangle> collisionRects;
 
@@ -26,7 +30,9 @@ public abstract class Player {
     protected State currentState = State.IDLE;
     
     protected float attackTimer = 0f;
-    protected float attackDuration = 0.3f;
+    protected float attackDuration = 0.4f; // ✅ Augmenté de 0.3f à 0.4f
+    protected float attackCooldownTimer = 0f; // ✅ NOUVEAU : Cooldown après l'attaque
+    protected float attackCooldown = 0.6f; // ✅ NOUVEAU : 0.6s de cooldown
     protected float hitTimer = 0f;
     protected float hitDuration = 0.2f;
     protected boolean isDead = false;
@@ -44,7 +50,7 @@ public abstract class Player {
     
     protected float animationTimer = 0f;
     protected float walkFrameDuration = 0.15f;
-    protected float attackFrameDuration = 0.15f;
+    protected float attackFrameDuration = 0.2f; // ✅ Augmenté de 0.15f à 0.2f
     protected float deadFrameDuration = 0.3f;
     
     protected int walkFrame = 0;
@@ -59,9 +65,14 @@ public abstract class Player {
     protected int armor = 0;
     protected int baseAttack = 10;
     protected int attackBonus = 0;
+    
+    // ===== SYSTÈME D'ÉQUIPEMENT =====
+    protected Armor equippedArmor = null;
+    protected Weapon equippedWeapon = null;
 
-    public Player(InputHandler input) {
+    public Player(InputHandler input, AudioManager audioManager) {
         this.input = input;
+        this.audioManager = audioManager;
         loadTextures();
         hitbox = new Rectangle(x + getHitboxOffsetX(), y + getHitboxOffsetY(), getHitboxWidth(), getHitboxHeight());
         this.maxHealth = 100;
@@ -112,18 +123,15 @@ public abstract class Player {
         
         // ===== HIT =====
         if (input.isHitPressed()) {
-            isHit = true;
-            hitTimer = hitDuration;
-            currentState = State.HIT;
-            animationTimer = 0f;
-            velocityX = 0;
+            triggerHitState();
             return;
         }
         
-        // ===== ATTAQUE =====
-        if (input.isAttackPressed()) {
+        // ===== ATTAQUE ✅ MODIFIÉ : Vérification du cooldown =====
+        if (input.isAttackPressed() && attackCooldownTimer <= 0) {
             isAttacking = true;
             attackTimer = attackDuration;
+            attackCooldownTimer = attackCooldown; // ✅ Démarrer le cooldown
             currentState = State.ATTACK;
             attackFrame = 0;
             animationTimer = 0f;
@@ -210,6 +218,11 @@ public abstract class Player {
                 currentState = State.IDLE;
                 hasDealtDamageThisAttack = false;
             }
+        }
+        
+        // ✅ NOUVEAU : Décrémenter le cooldown d'attaque
+        if (attackCooldownTimer > 0) {
+            attackCooldownTimer -= delta;
         }
         
         if (isHit) {
@@ -423,7 +436,7 @@ public abstract class Player {
     // ===== SYSTÈME DE SANTÉ =====
 
     public void applyDamage(int rawDamage) {
-        if (isDead) return;
+        if (isDead || isHit) return;
         
         int effectiveDamage = Math.max(0, rawDamage - armor);
         
@@ -434,6 +447,20 @@ public abstract class Player {
         
         if (health == 0) {
             die();
+        } else {
+            triggerHitState();
+        }
+    }
+
+    protected void triggerHitState() {
+        isHit = true;
+        hitTimer = hitDuration;
+        currentState = State.HIT;
+        animationTimer = 0f;
+        velocityX = 0;
+        
+        if (audioManager != null) {
+            audioManager.playSound("hit");
         }
     }
 
@@ -453,6 +480,11 @@ public abstract class Player {
         velocityX = 0;
         velocityY = 0;
         health = 0;
+        
+        if (audioManager != null) {
+            audioManager.playSound("death");
+        }
+        
         System.out.println("☠️ Le joueur est mort");
     }
 
@@ -491,6 +523,44 @@ public abstract class Player {
     public void setArmor(int armor) {
         this.armor = Math.max(0, armor);
         System.out.println("🛡️ Armure : " + this.armor);
+    }
+    
+    // ===== SYSTÈME D'ÉQUIPEMENT =====
+    
+    public void equipArmor(Armor newArmor) {
+        if (newArmor == null) return;
+        
+        if (equippedArmor != null) {
+            armor -= equippedArmor.getArmorBonus();
+            System.out.println("🛡️ Armure retirée : " + equippedArmor.getDisplayName() + " (-" + equippedArmor.getArmorBonus() + " DEF)");
+        }
+        
+        equippedArmor = newArmor;
+        armor += newArmor.getArmorBonus();
+        
+        System.out.println("🛡️ Armure équipée : " + newArmor.getDisplayName() + " (+" + newArmor.getArmorBonus() + " DEF) | Total DEF: " + armor);
+    }
+    
+    public void equipWeapon(Weapon newWeapon) {
+        if (newWeapon == null) return;
+        
+        if (equippedWeapon != null) {
+            attackBonus -= equippedWeapon.getAttackBonus();
+            System.out.println("🗡️ Arme retirée : " + equippedWeapon.getDisplayName() + " (-" + equippedWeapon.getAttackBonus() + " ATK)");
+        }
+        
+        equippedWeapon = newWeapon;
+        attackBonus += newWeapon.getAttackBonus();
+        
+        System.out.println("🗡️ Arme équipée : " + newWeapon.getDisplayName() + " (+" + newWeapon.getAttackBonus() + " ATK) | Total ATK: " + getTotalAttack());
+    }
+    
+    public Armor getEquippedArmor() {
+        return equippedArmor;
+    }
+    
+    public Weapon getEquippedWeapon() {
+        return equippedWeapon;
     }
 
     // ===== GETTERS =====

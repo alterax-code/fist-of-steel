@@ -2,12 +2,13 @@ package com.fistofsteel.entities.player;
 
 import com.badlogic.gdx.graphics.Texture;
 import com.fistofsteel.input.InputHandler;
+import com.fistofsteel.audio.AudioManager;
 import com.fistofsteel.utils.EntityConstants;
 import com.fistofsteel.utils.PhysicsConstants;
 
 /**
  * Alexis - Combattant de mêlée avec système de combo
- * VERSION MISE À JOUR avec nouveaux imports
+ * VERSION MISE À JOUR avec AudioManager
  */
 public class Alexis extends Player {
     private Texture idleTexture;
@@ -26,8 +27,8 @@ public class Alexis extends Player {
     private float comboWindow = 0.8f;
     private float[] comboMultipliers = {1.0f, 1.25f, 1.5f};
 
-    public Alexis(InputHandler input) {
-        super(input);
+    public Alexis(InputHandler input, AudioManager audioManager) {
+        super(input, audioManager);
     }
 
     @Override
@@ -163,11 +164,7 @@ public class Alexis extends Player {
         }
         
         if (input.isHitPressed()) {
-            isHit = true;
-            hitTimer = hitDuration;
-            currentState = State.HIT;
-            animationTimer = 0f;
-            velocityX = 0;
+            triggerHitState();
             return;
         }
         
@@ -273,6 +270,9 @@ public class Alexis extends Player {
         return Math.round(baseDamage * multiplier);
     }
     
+    /**
+     * ✅ MÉTHODE MODIFIÉE : Utilise die() de Player qui joue le son
+     */
     private void die() {
         if (isDead) return;
         isDead = true;
@@ -282,6 +282,12 @@ public class Alexis extends Player {
         velocityX = 0;
         velocityY = 0;
         health = 0;
+        
+        // ✅ Jouer le son "death"
+        if (audioManager != null) {
+            audioManager.playSound("death");
+        }
+        
         System.out.println("☠️ Le joueur est mort");
     }
     
