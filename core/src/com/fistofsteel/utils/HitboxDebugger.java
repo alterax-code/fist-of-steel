@@ -8,8 +8,8 @@ import com.fistofsteel.entities.player.Player;
 import com.fistofsteel.entities.enemies.Enemy;
 
 /**
- * Utilitaire pour visualiser les hitbox pendant le développement
- * À activer/désactiver avec F3
+ * Utilitaire pour visualiser les hitbox pendant le développement.
+ * À activer/désactiver avec F3.
  */
 public class HitboxDebugger {
     
@@ -17,7 +17,9 @@ public class HitboxDebugger {
     private static ShapeRenderer shapeRenderer;
     
     /**
-     * Active ou désactive l'affichage des hitbox
+     * Active ou désactive l'affichage des hitbox.
+     * 
+     * @param enabled true pour activer, false pour désactiver
      */
     public static void setDebugEnabled(boolean enabled) {
         DEBUG_ENABLED = enabled;
@@ -27,8 +29,11 @@ public class HitboxDebugger {
     }
     
     /**
-     * Affiche la hitbox d'un joueur avec la caméra du jeu
-     * Rouge = hitbox, Bleu = sprite complet, Vert = centre
+     * Affiche la hitbox d'un joueur avec la caméra du jeu.
+     * Rouge = hitbox, Bleu = sprite complet, Vert = centre.
+     * 
+     * @param player Le joueur
+     * @param camera La caméra du jeu
      */
     public static void renderPlayerHitbox(Player player, OrthographicCamera camera) {
         if (!DEBUG_ENABLED || shapeRenderer == null) return;
@@ -38,16 +43,13 @@ public class HitboxDebugger {
         shapeRenderer.setProjectionMatrix(camera.combined);
         shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
         
-        // Hitbox en rouge
         shapeRenderer.setColor(Color.RED);
         shapeRenderer.rect(hitbox.x, hitbox.y, hitbox.width, hitbox.height);
         
-        // Rectangle complet du sprite en bleu
         shapeRenderer.setColor(Color.BLUE);
         shapeRenderer.rect(player.getX(), player.getY(), 
                           EntityConstants.PLAYER_WIDTH, EntityConstants.PLAYER_HEIGHT);
         
-        // Point central en vert
         shapeRenderer.setColor(Color.GREEN);
         float centerX = hitbox.x + hitbox.width / 2f;
         float centerY = hitbox.y + hitbox.height / 2f;
@@ -57,8 +59,11 @@ public class HitboxDebugger {
     }
     
     /**
-     * Affiche la hitbox d'un ennemi avec la caméra du jeu
-     * Rouge = hitbox, Jaune = sprite complet, Vert = centre
+     * Affiche la hitbox d'un ennemi avec la caméra du jeu.
+     * Rouge = hitbox, Jaune = sprite complet, Vert = centre.
+     * 
+     * @param enemy L'ennemi
+     * @param camera La caméra du jeu
      */
     public static void renderEnemyHitbox(Enemy enemy, OrthographicCamera camera) {
         if (!DEBUG_ENABLED || shapeRenderer == null) return;
@@ -68,16 +73,13 @@ public class HitboxDebugger {
         shapeRenderer.setProjectionMatrix(camera.combined);
         shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
         
-        // Hitbox en rouge
         shapeRenderer.setColor(Color.RED);
         shapeRenderer.rect(hitbox.x, hitbox.y, hitbox.width, hitbox.height);
         
-        // Rectangle complet du sprite en jaune (différent du joueur)
         shapeRenderer.setColor(Color.YELLOW);
         shapeRenderer.rect(enemy.getX(), enemy.getY(), 
                           EntityConstants.ENEMY_WIDTH, EntityConstants.ENEMY_HEIGHT);
         
-        // Point central en vert
         shapeRenderer.setColor(Color.GREEN);
         float centerX = hitbox.x + hitbox.width / 2f;
         float centerY = hitbox.y + hitbox.height / 2f;
@@ -87,7 +89,11 @@ public class HitboxDebugger {
     }
     
     /**
-     * Dessine une croix pour marquer un point
+     * Dessine une croix pour marquer un point.
+     * 
+     * @param x Position X
+     * @param y Position Y
+     * @param size Taille de la croix
      */
     private static void drawCross(float x, float y, float size) {
         shapeRenderer.line(x - size, y, x + size, y);
@@ -95,7 +101,7 @@ public class HitboxDebugger {
     }
     
     /**
-     * Nettoyage des ressources
+     * Nettoyage des ressources.
      */
     public static void dispose() {
         if (shapeRenderer != null) {

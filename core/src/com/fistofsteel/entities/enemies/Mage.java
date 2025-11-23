@@ -1,29 +1,48 @@
 package com.fistofsteel.entities.enemies;
 
-import com.fistofsteel.entities.player.Player;  // ✅ AJOUT
-import com.fistofsteel.entities.managers.ProjectileManager;  // ✅ AJOUT
-import com.fistofsteel.entities.projectiles.MageProjectile;  // ✅ AJOUT
+import com.fistofsteel.entities.player.Player;
+import com.fistofsteel.entities.managers.ProjectileManager;
+import com.fistofsteel.entities.projectiles.MageProjectile;
 import com.fistofsteel.utils.EntityConstants;
 
-// ... reste du code inchangé
-
 /**
- * Ennemi Mage - VERSION SIMPLIFIÉE avec projectiles
+ * Ennemi Mage - Combattant à distance avec projectiles.
  */
 public class Mage extends Enemy {
     
     private ProjectileManager projectileManager;
     private boolean hasShot = false;
 
+    /**
+     * Constructeur du Mage.
+     * 
+     * @param x Position X initiale
+     * @param y Position Y initiale
+     * @param targetPlayer Le joueur ciblé
+     */
     public Mage(float x, float y, Player targetPlayer) {
         super(x, y, targetPlayer);
     }
     
+    /**
+     * Constructeur avec zone de patrouille.
+     * 
+     * @param x Position X initiale
+     * @param y Position Y initiale
+     * @param targetPlayer Le joueur ciblé
+     * @param patrolMin Distance minimale de patrouille
+     * @param patrolMax Distance maximale de patrouille
+     */
     public Mage(float x, float y, Player targetPlayer, float patrolMin, float patrolMax) {
         super(x, y, targetPlayer);
         setPatrolZone(patrolMin, patrolMax);
     }
     
+    /**
+     * Définit le gestionnaire de projectiles.
+     * 
+     * @param manager Le ProjectileManager
+     */
     public void setProjectileManager(ProjectileManager manager) {
         this.projectileManager = manager;
     }
@@ -49,9 +68,6 @@ public class Mage extends Enemy {
         hasShot = false;
     }
     
-    /**
-     * ⭐ HOOK appelé pendant l'animation d'attaque
-     */
     @Override
     protected void onAttackFrame(int frame) {
         if (frame == 5 && !hasShot) {
@@ -60,9 +76,12 @@ public class Mage extends Enemy {
         }
     }
     
+    /**
+     * Tire un projectile vers le joueur.
+     */
     private void shootProjectile() {
         if (projectileManager == null) {
-            System.err.println("⚠️ Mage ne peut pas tirer : ProjectileManager null !");
+            System.err.println("Mage ne peut pas tirer : ProjectileManager null !");
             return;
         }
         
@@ -72,7 +91,7 @@ public class Mage extends Enemy {
         MageProjectile projectile = new MageProjectile(projectileX, projectileY, facingRight, damage);
         projectileManager.addProjectile(projectile);
         
-        System.out.println("🔥 Mage tire un projectile à (" + (int)projectileX + ", " + (int)projectileY + ")");
+        System.out.println("Mage tire un projectile a (" + (int)projectileX + ", " + (int)projectileY + ")");
     }
     
     @Override
@@ -86,7 +105,6 @@ public class Mage extends Enemy {
     
     @Override
     public void tryDealDamage() {
-        // Le Mage ne fait pas de dégâts directs
     }
 
     @Override

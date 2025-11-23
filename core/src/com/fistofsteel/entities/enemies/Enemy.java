@@ -13,12 +13,11 @@ import com.fistofsteel.utils.PhysicsConstants;
 import com.fistofsteel.utils.HealthBar;
 
 /**
- * Classe abstraite représentant un ennemi
- * ✅ MODIFIÉ : Méthodes non-final pour permettre surcharge (Boss)
+ * Classe abstraite représentant un ennemi dans le jeu.
+ * Gère l'IA, les animations, les collisions et les combats.
  */
 public abstract class Enemy {
     
-    // Position et dimensions
     protected float x, y;
     protected float width = EntityConstants.ENEMY_WIDTH;
     protected float height = EntityConstants.ENEMY_HEIGHT;
@@ -31,12 +30,13 @@ public abstract class Enemy {
     
     protected Player targetPlayer;
     
-    // Stats
     protected int health = 50;
     protected int maxHealth = 50;
     protected int damage = 10;
     
-    // IA
+    /**
+     * États possibles de l'ennemi.
+     */
     protected enum State { 
         IDLE, PATROL, CHASE, ATTACK, HIT, DEAD 
     }
@@ -52,7 +52,6 @@ public abstract class Enemy {
     protected float chaseSpeed = 75f;
     protected boolean facingRight = true;
     
-    // Timers
     protected float attackTimer = 0;
     protected float attackCooldown = 2.0f;
     protected float hitTimer = 0;
@@ -66,7 +65,6 @@ public abstract class Enemy {
     protected boolean isOnGround = false;
     protected boolean hasDealtDamageThisAttack = false;
     
-    // Animation
     protected float animationTimer = 0f;
     protected float walkFrameDuration = 0.15f;
     protected float attackFrameDuration = 0.2f;
@@ -78,16 +76,21 @@ public abstract class Enemy {
     protected int hurtFrame = 0;
     protected int idleFrame = 0;
     
-    // Physique
     protected static final float GRAVITY = -800f;
     protected static final float TERMINAL_VELOCITY = -500f;
     protected static final float GROUND_FRICTION = 0.9f;
     protected Rectangle hitbox;
     protected Array<Rectangle> collisionRects;
     
-    // ⭐ TEXTURES (chargées automatiquement)
-    protected Texture[][] textures; // [idle, hurt, walk, attack, dead]
+    protected Texture[][] textures;
     
+    /**
+     * Constructeur de l'ennemi.
+     * 
+     * @param x Position X initiale
+     * @param y Position Y initiale
+     * @param targetPlayer Le joueur ciblé
+     */
     public Enemy(float x, float y, Player targetPlayer) {
         this.x = x;
         this.y = y;
@@ -108,32 +111,37 @@ public abstract class Enemy {
         );
     }
     
+    /**
+     * Initialise les statistiques de l'ennemi.
+     */
     protected abstract void initStats();
     
     /**
-     * ⭐ NOUVEAU : Retourne le nom de l'ennemi pour charger ses sprites
+     * Retourne le nom de l'ennemi pour charger ses sprites.
+     * 
+     * @return Le nom de l'ennemi
      */
     protected abstract String getEnemyName();
     
     /**
-     * ⭐ CHARGEMENT AUTOMATIQUE DES TEXTURES
-     * Peut être surchargé pour des cas spéciaux (Boss)
+     * Charge les textures de l'ennemi.
+     * Peut être surchargé pour des cas spéciaux (Boss).
      */
     protected void loadTextures() {
         textures = EnemyAnimationHelper.loadEnemySprites("assets/sprites/sbires/", getEnemyName());
     }
     
     /**
-     * ⭐ DISPOSE DES TEXTURES
-     * Peut être surchargé pour des cas spéciaux (Boss)
+     * Libère les textures de l'ennemi.
      */
     protected void disposeTextures() {
         EnemyAnimationHelper.disposeTextures(textures);
     }
     
     /**
-     * ⭐ RÉCUPÉRATION DE LA TEXTURE COURANTE
-     * ✅ MODIFIÉ : Retiré 'final' pour permettre surcharge (Boss)
+     * Récupère la texture courante selon l'état.
+     * 
+     * @return La texture à afficher
      */
     protected Texture getCurrentTexture() {
         if (textures == null || textures.length == 0) {
@@ -181,8 +189,9 @@ public abstract class Enemy {
     }
     
     /**
-     * ⭐ ANIMATION
-     * ✅ MODIFIÉ : Retiré 'final' pour permettre surcharge (Boss)
+     * Met à jour l'animation selon l'état courant.
+     * 
+     * @param delta Le temps écoulé depuis la dernière frame
      */
     protected void updateAnimation(float delta) {
         animationTimer += delta;
@@ -208,7 +217,6 @@ public abstract class Enemy {
                     attackFrame = (attackFrame + 1) % textures[3].length;
                     animationTimer = 0f;
                     
-                    // ⭐ TIRER PROJECTILE SI NÉCESSAIRE
                     onAttackFrame(attackFrame);
                 }
                 break;
@@ -238,11 +246,12 @@ public abstract class Enemy {
     }
     
     /**
-     * ⭐ HOOK pour comportement spécifique pendant une frame d'attaque
-     * (utilisé par Mage pour tirer un projectile)
+     * Hook pour comportement spécifique pendant une frame d'attaque.
+     * Utilisé par Mage pour tirer un projectile.
+     * 
+     * @param frame La frame d'attaque courante
      */
     protected void onAttackFrame(int frame) {
-        // Par défaut, ne fait rien
     }
     
     protected abstract float getHitboxWidth();
@@ -262,15 +271,31 @@ public abstract class Enemy {
         return getHitboxOffsetX();
     }
     
+    /**
+     * Définit les rectangles de collision pour l'ennemi.
+     * 
+     * @param collisionRects Les rectangles de collision de la map
+     */
     public void setCollisionRects(Array<Rectangle> collisionRects) {
         this.collisionRects = collisionRects;
     }
     
+    /**
+     * Définit la zone de patrouille de l'ennemi.
+     * 
+     * @param min Distance minimale de patrouille
+     * @param max Distance maximale de patrouille
+     */
     public void setPatrolZone(float min, float max) {
         this.patrolRange = Math.max(Math.abs(min), Math.abs(max));
-        System.out.println("⚙️ Zone de patrouille : ±" + (int)patrolRange + " pixels");
+        System.out.println("Zone de patrouille : " + (int)patrolRange + " pixels");
     }
     
+    /**
+     * Met à jour l'IA de l'ennemi.
+     * 
+     * @param delta Le temps écoulé
+     */
     protected void updateAI(float delta) {
         if (isHit || isAttacking) {
             velocityX = 0;
@@ -291,7 +316,7 @@ public abstract class Enemy {
                 }
                 return;
             } else {
-                System.out.println("🔄 Joueur perdu ! Nouvelle zone de patrouille à x=" + (int)x);
+                System.out.println("Joueur perdu ! Nouvelle zone de patrouille a x=" + (int)x);
                 patrolCenterX = x;
                 currentState = State.IDLE;
                 velocityX = 0;
@@ -312,6 +337,9 @@ public abstract class Enemy {
         patrolWithEdgeDetection();
     }
     
+    /**
+     * Fait patrouiller l'ennemi avec détection des bords.
+     */
     protected void patrolWithEdgeDetection() {
         currentState = State.PATROL;
         
@@ -328,6 +356,11 @@ public abstract class Enemy {
         }
     }
     
+    /**
+     * Vérifie s'il y a un bord devant l'ennemi.
+     * 
+     * @return true s'il y a un bord
+     */
     protected boolean isEdgeAhead() {
         if (collisionRects == null || !isOnGround) return false;
         
@@ -348,6 +381,11 @@ public abstract class Enemy {
         return true;
     }
     
+    /**
+     * Vérifie s'il y a un mur devant l'ennemi.
+     * 
+     * @return true s'il y a un mur
+     */
     protected boolean isWallAhead() {
         if (collisionRects == null) return false;
         
@@ -368,6 +406,9 @@ public abstract class Enemy {
         return false;
     }
     
+    /**
+     * Fait poursuivre le joueur par l'ennemi.
+     */
     protected void chase() {
         currentState = State.CHASE;
         
@@ -382,6 +423,9 @@ public abstract class Enemy {
         }
     }
     
+    /**
+     * Lance une attaque.
+     */
     protected void attack() {
         currentState = State.ATTACK;
         isAttacking = true;
@@ -390,9 +434,14 @@ public abstract class Enemy {
         hasDealtDamageThisAttack = false;
         
         attackTimer = attackCooldown;
-        System.out.println("⚔️ " + getClass().getSimpleName() + " commence une attaque !");
+        System.out.println(getClass().getSimpleName() + " commence une attaque !");
     }
     
+    /**
+     * Vérifie si l'ennemi peut toucher le joueur.
+     * 
+     * @return true si le joueur est à portée
+     */
     protected boolean canHitPlayer() {
         Rectangle playerHitbox = targetPlayer.getHitbox();
         float distance = Math.abs(playerHitbox.x - hitbox.x);
@@ -401,19 +450,27 @@ public abstract class Enemy {
         return distance <= attackRange && verticalDistance <= 80f;
     }
     
+    /**
+     * Tente d'infliger des dégâts au joueur.
+     */
     public void tryDealDamage() {
         if (isAttacking && canHitPlayer() && !hasDealtDamageThisAttack && !targetPlayer.isDead()) {
             targetPlayer.applyDamage(damage);
             hasDealtDamageThisAttack = true;
-            System.out.println("💥 " + getClass().getSimpleName() + " touche le joueur ! (-" + damage + " HP)");
+            System.out.println(getClass().getSimpleName() + " touche le joueur ! (-" + damage + " HP)");
         }
     }
     
+    /**
+     * Inflige des dégâts à l'ennemi.
+     * 
+     * @param damage Les dégâts à infliger
+     */
     public void takeDamage(int damage) {
         if (isDead || isHit) return;
         
         health -= damage;
-        System.out.println("💥 " + getClass().getSimpleName() + " touché ! HP: " + health + "/" + maxHealth);
+        System.out.println(getClass().getSimpleName() + " touche ! HP: " + health + "/" + maxHealth);
         
         if (health <= 0) {
             die();
@@ -425,14 +482,22 @@ public abstract class Enemy {
         }
     }
     
+    /**
+     * Tue l'ennemi.
+     */
     protected void die() {
         isDead = true;
         currentState = State.DEAD;
         velocityX = 0;
         deadTimer = deadDuration;
-        System.out.println("💀 " + getClass().getSimpleName() + " mort !");
+        System.out.println(getClass().getSimpleName() + " mort !");
     }
     
+    /**
+     * Met à jour l'ennemi.
+     * 
+     * @param delta Le temps écoulé
+     */
     public void update(float delta) {
         if (isDead) {
             deadTimer -= delta;
@@ -461,6 +526,11 @@ public abstract class Enemy {
         updateHitbox();
     }
     
+    /**
+     * Applique la physique à l'ennemi.
+     * 
+     * @param delta Le temps écoulé
+     */
     protected void applyPhysics(float delta) {
         if (collisionRects == null) return;
         
@@ -557,6 +627,9 @@ public abstract class Enemy {
         }
     }
     
+    /**
+     * Met à jour la hitbox de l'ennemi.
+     */
     protected void updateHitbox() {
         if (useDirectionalHitbox()) {
             hitbox.set(
@@ -572,6 +645,9 @@ public abstract class Enemy {
         resolveHitboxCollisions();
     }
     
+    /**
+     * Résout les collisions de la hitbox.
+     */
     protected void resolveHitboxCollisions() {
         if (collisionRects == null || collisionRects.size == 0) return;
         
@@ -626,8 +702,9 @@ public abstract class Enemy {
     }
     
     /**
-     * ⭐ RENDU
-     * ✅ MODIFIÉ : Retiré 'final' pour permettre surcharge (Boss)
+     * Affiche l'ennemi.
+     * 
+     * @param batch Le SpriteBatch pour le rendu
      */
     public void render(SpriteBatch batch) {
         Texture currentTexture = getCurrentTexture();
@@ -664,6 +741,12 @@ public abstract class Enemy {
         }
     }
     
+    /**
+     * Affiche la barre de vie de l'ennemi.
+     * 
+     * @param shapeRenderer Le ShapeRenderer pour le rendu
+     * @param camera La caméra du jeu
+     */
     public void renderHealthBar(ShapeRenderer shapeRenderer, OrthographicCamera camera) {
         if (isDead) return;
         
@@ -680,6 +763,11 @@ public abstract class Enemy {
         shapeRenderer.end();
     }
     
+    /**
+     * Affiche le debug de l'ennemi (hitbox et portées).
+     * 
+     * @param shapeRenderer Le ShapeRenderer pour le rendu
+     */
     public void renderDebug(ShapeRenderer shapeRenderer) {
         shapeRenderer.setColor(Color.RED);
         shapeRenderer.rect(hitbox.x, hitbox.y, hitbox.width, hitbox.height);
@@ -691,11 +779,13 @@ public abstract class Enemy {
         shapeRenderer.circle(x + width/2, y + height/2, losePlayerRange);
     }
     
+    /**
+     * Libère les ressources de l'ennemi.
+     */
     public void dispose() {
         disposeTextures();
     }
     
-    // Getters
     public float getX() { return x; }
     public float getY() { return y; }
     public Rectangle getHitbox() { return hitbox; }
@@ -706,6 +796,12 @@ public abstract class Enemy {
     public int getDamage() { return damage; }
     public boolean getIsOnGround() { return isOnGround; }
     
+    /**
+     * Définit la position de l'ennemi.
+     * 
+     * @param x La nouvelle position X
+     * @param y La nouvelle position Y
+     */
     public void setPosition(float x, float y) {
         this.x = x;
         this.y = y;

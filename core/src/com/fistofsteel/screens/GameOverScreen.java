@@ -10,8 +10,8 @@ import com.fistofsteel.audio.AudioManager;
 import com.fistofsteel.ui.UIComponents.SimpleButton;
 
 /**
- * GameOverScreen - Hérite de BaseScreen
- * ✅ MODIFIÉ : Boutons disposés en ligne et centrés
+ * Écran de Game Over.
+ * Affiché quand le joueur meurt.
  */
 public class GameOverScreen extends BaseScreen {
     
@@ -43,7 +43,7 @@ public class GameOverScreen extends BaseScreen {
         super.show();
         audioManager.stopLevelMusic();
         audioManager.startVictoryMusic();
-        System.out.println("💀 Game Over Screen");
+        System.out.println("Game Over Screen");
     }
     
     @Override
@@ -54,7 +54,6 @@ public class GameOverScreen extends BaseScreen {
         float buttonY = screenHeight * 0.3f;
         float spacing = 50f;
         
-        // ✅ Boutons disposés en ligne, centrés horizontalement
         returnMenuButton = new SimpleButton("RETURN MENU", centerX - buttonWidth/2f - spacing/2f, buttonY, buttonWidth, buttonHeight);
         quitButton = new SimpleButton("QUIT", centerX + buttonWidth/2f + spacing/2f, buttonY, buttonWidth, buttonHeight);
     }

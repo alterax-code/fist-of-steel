@@ -1,13 +1,11 @@
-package com.fistofsteel.entities.projectiles;  // ✅ MODIFIÉ (était com.fistofsteel.entities)
+package com.fistofsteel.entities.projectiles;
 
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 
-// ... reste du code inchangé
-
 /**
- * Projectile d'Hugo (boule de feu)
- * VERSION SIMPLIFIÉE - utilise le système de distance de Projectile
+ * Projectile d'Hugo (boule de feu).
+ * Utilise le système de distance maximale pour se désactiver automatiquement.
  */
 public class HugoProjectile extends Projectile {
     
@@ -17,8 +15,16 @@ public class HugoProjectile extends Projectile {
     private static final float PROJECTILE_WIDTH = 50f;
     private static final float PROJECTILE_HEIGHT = 50f;
     
+    /**
+     * Constructeur du projectile d'Hugo.
+     * 
+     * @param x Position X initiale
+     * @param y Position Y initiale
+     * @param facingRight Direction du projectile
+     * @param damage Les dégâts infligés
+     */
     public HugoProjectile(float x, float y, boolean facingRight, int damage) {
-        super(x, y, facingRight, damage, 700f); // Distance max de 700px
+        super(x, y, facingRight, damage, 700f);
         
         this.hitboxWidth = 35f;
         this.hitboxHeight = 35f;
@@ -26,11 +32,14 @@ public class HugoProjectile extends Projectile {
         this.speed = 400f;
         this.velocityX = facingRight ? speed : -speed;
         
-        System.out.println("🔥 HugoProjectile créé à (" + (int)x + ", " + (int)y + ")");
+        System.out.println("HugoProjectile cree a (" + (int)x + ", " + (int)y + ")");
         
         loadTextures();
     }
     
+    /**
+     * Charge les textures de la boule de feu.
+     */
     private void loadTextures() {
         try {
             fireballTextures = new Texture[]{
@@ -39,9 +48,9 @@ public class HugoProjectile extends Projectile {
                 new Texture("assets/sprites/hugo/fireball_frame_3.png"),
                 new Texture("assets/sprites/hugo/fireball_frame_4.png")
             };
-            System.out.println("✅ Projectile Hugo : " + fireballTextures.length + " frames chargées");
+            System.out.println("Projectile Hugo : " + fireballTextures.length + " frames chargees");
         } catch (Exception e) {
-            System.err.println("❌ Erreur chargement sprites projectile Hugo : " + e.getMessage());
+            System.err.println("Erreur chargement sprites projectile Hugo : " + e.getMessage());
             fireballTextures = new Texture[0];
         }
     }

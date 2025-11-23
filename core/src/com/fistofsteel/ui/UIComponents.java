@@ -9,12 +9,12 @@ import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.Gdx;
 
 /**
- * Composants UI réutilisables pour tous les écrans
+ * Composants UI réutilisables pour tous les écrans.
  */
 public class UIComponents {
     
     /**
-     * Bouton simple avec hover effect
+     * Bouton simple avec effet hover.
      */
     public static class SimpleButton {
         private String text;
@@ -24,21 +24,46 @@ public class UIComponents {
         private Color normalColor = new Color(0.2f, 0.2f, 0.25f, 0.95f);
         private Color hoverColor = new Color(0.8f, 0.1f, 0.1f, 0.9f);
         
+        /**
+         * Constructeur.
+         * 
+         * @param text Texte du bouton
+         * @param centerX Position X du centre
+         * @param centerY Position Y du centre
+         * @param width Largeur
+         * @param height Hauteur
+         */
         public SimpleButton(String text, float centerX, float centerY, float width, float height) {
             this.text = text;
             this.bounds = new Rectangle(centerX - width/2, centerY - height/2, width, height);
         }
         
+        /**
+         * Met à jour l'état hover.
+         * 
+         * @param mouseX Position X de la souris
+         * @param mouseY Position Y de la souris
+         */
         public void update(int mouseX, int mouseY) {
             hovered = bounds.contains(mouseX, mouseY);
         }
         
+        /**
+         * Affiche le bouton.
+         * 
+         * @param sr ShapeRenderer
+         */
         public void render(ShapeRenderer sr) {
             Color color = hovered ? hoverColor : normalColor;
             sr.setColor(color);
             sr.rect(bounds.x, bounds.y, bounds.width, bounds.height);
         }
         
+        /**
+         * Affiche le bouton avec bordure.
+         * 
+         * @param sr ShapeRenderer
+         */
         public void renderWithBorder(ShapeRenderer sr) {
             render(sr);
             
@@ -53,11 +78,24 @@ public class UIComponents {
             }
         }
         
+        /**
+         * Affiche le texte du bouton.
+         * 
+         * @param batch SpriteBatch
+         * @param font BitmapFont
+         */
         public void renderText(SpriteBatch batch, BitmapFont font) {
             font.setColor(Color.WHITE);
             font.draw(batch, text, bounds.x, bounds.y + bounds.height/2 + 10f, bounds.width, Align.center, false);
         }
         
+        /**
+         * Vérifie si le bouton est cliqué.
+         * 
+         * @param mouseX Position X de la souris
+         * @param mouseY Position Y de la souris
+         * @return true si cliqué
+         */
         public boolean isClicked(int mouseX, int mouseY) {
             return bounds.contains(mouseX, mouseY);
         }
@@ -76,7 +114,7 @@ public class UIComponents {
     }
     
     /**
-     * Slider de volume avec curseur draggable
+     * Slider de volume avec curseur draggable.
      */
     public static class VolumeSlider {
         private String label;
@@ -85,6 +123,15 @@ public class UIComponents {
         private float value;
         private boolean isDragging = false;
         
+        /**
+         * Constructeur.
+         * 
+         * @param label Libellé du slider
+         * @param x Position X
+         * @param y Position Y
+         * @param width Largeur
+         * @param initialValue Valeur initiale (0.0 à 1.0)
+         */
         public VolumeSlider(String label, float x, float y, float width, float initialValue) {
             this.label = label;
             this.bounds = new Rectangle(x, y, width, 20);
@@ -92,26 +139,39 @@ public class UIComponents {
             this.cursor = new Rectangle(x + width * value - 10, y - 10, 20, 40);
         }
         
+        /**
+         * Met à jour la valeur du slider.
+         * 
+         * @param mouseX Position X de la souris
+         */
         public void updateValue(int mouseX) {
             isDragging = true;
             value = Math.max(0f, Math.min(1f, (mouseX - bounds.x) / bounds.width));
             cursor.x = bounds.x + bounds.width * value - 10;
         }
         
+        /**
+         * Affiche le slider.
+         * 
+         * @param sr ShapeRenderer
+         */
         public void render(ShapeRenderer sr) {
-            // Fond de la barre
             sr.setColor(0.3f, 0.3f, 0.35f, 1f);
             sr.rect(bounds.x, bounds.y, bounds.width, bounds.height);
             
-            // Partie remplie
             sr.setColor(0.8f, 0.1f, 0.1f, 1f);
             sr.rect(bounds.x, bounds.y, bounds.width * value, bounds.height);
             
-            // Curseur
             sr.setColor(Color.WHITE);
             sr.rect(cursor.x, cursor.y, cursor.width, cursor.height);
         }
         
+        /**
+         * Affiche le texte du slider.
+         * 
+         * @param batch SpriteBatch
+         * @param font BitmapFont
+         */
         public void renderText(SpriteBatch batch, BitmapFont font) {
             font.draw(batch, label, bounds.x, bounds.y + 50);
             font.draw(batch, (int)(value * 100) + "%", bounds.x + bounds.width + 20, bounds.y + 15);
@@ -135,24 +195,44 @@ public class UIComponents {
     }
     
     /**
-     * Bouton de configuration de touche
+     * Bouton de configuration de touche.
      */
     public static class KeyButton {
         private String action;
         private String keyName;
         private Rectangle bounds;
         
+        /**
+         * Constructeur.
+         * 
+         * @param action Nom de l'action
+         * @param keyName Nom de la touche
+         * @param x Position X
+         * @param y Position Y
+         * @param width Largeur
+         */
         public KeyButton(String action, String keyName, float x, float y, float width) {
             this.action = action;
             this.keyName = keyName;
             this.bounds = new Rectangle(x - width/2, y, width, 60);
         }
         
+        /**
+         * Affiche le bouton.
+         * 
+         * @param sr ShapeRenderer
+         */
         public void render(ShapeRenderer sr) {
             sr.setColor(0.25f, 0.25f, 0.3f, 1f);
             sr.rect(bounds.x, bounds.y, bounds.width, bounds.height);
         }
         
+        /**
+         * Affiche le texte du bouton.
+         * 
+         * @param batch SpriteBatch
+         * @param font BitmapFont
+         */
         public void renderText(SpriteBatch batch, BitmapFont font) {
             float originalScale = font.getScaleX();
             font.getData().setScale(1.5f);
@@ -163,6 +243,13 @@ public class UIComponents {
             font.getData().setScale(originalScale);
         }
         
+        /**
+         * Vérifie si le bouton est cliqué.
+         * 
+         * @param mouseX Position X de la souris
+         * @param mouseY Position Y de la souris
+         * @return true si cliqué
+         */
         public boolean isClicked(int mouseX, int mouseY) {
             return bounds.contains(mouseX, mouseY);
         }

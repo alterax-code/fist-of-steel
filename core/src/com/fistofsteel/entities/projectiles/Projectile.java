@@ -1,14 +1,12 @@
-package com.fistofsteel.entities.projectiles;  // ✅ MODIFIÉ (était com.fistofsteel.entities)
+package com.fistofsteel.entities.projectiles;
 
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Rectangle;
 
-// ... reste du code inchangé
-
 /**
- * Classe de base pour un projectile
- * VERSION AMÉLIORÉE avec système de distance max intégré
+ * Classe de base pour un projectile.
+ * Gère le déplacement, l'animation et la détection de collision.
  */
 public abstract class Projectile {
     
@@ -23,21 +21,35 @@ public abstract class Projectile {
     protected float hitboxWidth = 30f;
     protected float hitboxHeight = 30f;
     
-    // Animation
     protected float animationTimer = 0f;
     protected int currentFrame = 0;
     
-    // Anti-oneshot
     protected boolean hasDealtDamage = false;
     
-    // ⭐ NOUVEAU : Distance max tracking
     protected float distanceTraveled = 0f;
-    protected float maxDistance = 600f; // Par défaut
+    protected float maxDistance = 600f;
 
+    /**
+     * Constructeur avec distance maximale par défaut.
+     * 
+     * @param x Position X initiale
+     * @param y Position Y initiale
+     * @param facingRight Direction du projectile
+     * @param damage Les dégâts infligés
+     */
     public Projectile(float x, float y, boolean facingRight, int damage) {
         this(x, y, facingRight, damage, 600f);
     }
     
+    /**
+     * Constructeur complet.
+     * 
+     * @param x Position X initiale
+     * @param y Position Y initiale
+     * @param facingRight Direction du projectile
+     * @param damage Les dégâts infligés
+     * @param maxDistance Distance maximale avant désactivation
+     */
     public Projectile(float x, float y, boolean facingRight, int damage, float maxDistance) {
         this.x = x;
         this.y = y;
@@ -51,10 +63,14 @@ public abstract class Projectile {
         this.hitbox = new Rectangle(x, y, hitboxWidth, hitboxHeight);
     }
     
+    /**
+     * Met à jour le projectile.
+     * 
+     * @param delta Le temps écoulé
+     */
     public void update(float delta) {
         if (!active) return;
         
-        // ⭐ Tracking de la distance
         float deltaDistance = Math.abs(velocityX * delta);
         distanceTraveled += deltaDistance;
         
@@ -63,32 +79,50 @@ public abstract class Projectile {
             return;
         }
         
-        // Déplacement
         x += velocityX * delta;
         y += velocityY * delta;
         
-        // Mise à jour hitbox
         hitbox.setPosition(x, y);
         
-        // Animation
         updateAnimation(delta);
     }
     
+    /**
+     * Met à jour l'animation du projectile.
+     * 
+     * @param delta Le temps écoulé
+     */
     protected abstract void updateAnimation(float delta);
     
+    /**
+     * Affiche le projectile.
+     * 
+     * @param batch Le SpriteBatch pour le rendu
+     */
     public abstract void render(SpriteBatch batch);
     
+    /**
+     * Libère les ressources du projectile.
+     */
     public abstract void dispose();
     
+    /**
+     * Désactive le projectile.
+     */
     public void deactivate() {
         this.active = false;
     }
     
+    /**
+     * Vérifie si le projectile est hors écran.
+     * 
+     * @param mapWidth La largeur de la map
+     * @return true si hors écran
+     */
     public boolean isOffScreen(float mapWidth) {
         return x < -100f || x > mapWidth + 100f || y < -100f;
     }
     
-    // Getters/Setters
     public boolean hasDealtDamage() {
         return hasDealtDamage;
     }

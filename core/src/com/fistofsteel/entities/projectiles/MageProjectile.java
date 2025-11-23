@@ -1,12 +1,11 @@
-package com.fistofsteel.entities.projectiles;  // ✅ MODIFIÉ (était com.fistofsteel.entities)
+package com.fistofsteel.entities.projectiles;
 
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 
-// ... reste du code inchangé
 /**
- * Projectile du Mage (boule de feu)
- * VERSION SIMPLIFIÉE - utilise le système de distance de Projectile
+ * Projectile du Mage (boule de feu).
+ * Utilise le système de distance maximale pour se désactiver automatiquement.
  */
 public class MageProjectile extends Projectile {
     
@@ -16,18 +15,29 @@ public class MageProjectile extends Projectile {
     private static final float PROJECTILE_WIDTH = 60f;
     private static final float PROJECTILE_HEIGHT = 60f;
     
+    /**
+     * Constructeur du projectile du Mage.
+     * 
+     * @param x Position X initiale
+     * @param y Position Y initiale
+     * @param facingRight Direction du projectile
+     * @param damage Les dégâts infligés
+     */
     public MageProjectile(float x, float y, boolean facingRight, int damage) {
-        super(x, y, facingRight, damage, 600f); // Distance max de 600px
+        super(x, y, facingRight, damage, 600f);
         
         this.hitboxWidth = 40f;
         this.hitboxHeight = 40f;
         this.hitbox.setSize(hitboxWidth, hitboxHeight);
         
-        System.out.println("🔥 MageProjectile créé à (" + (int)x + ", " + (int)y + ")");
+        System.out.println("MageProjectile cree a (" + (int)x + ", " + (int)y + ")");
         
         loadTextures();
     }
     
+    /**
+     * Charge les textures du feu.
+     */
     private void loadTextures() {
         try {
             fireTextures = new Texture[]{
@@ -41,9 +51,9 @@ public class MageProjectile extends Projectile {
                 new Texture("assets/sprites/sbires/Mage/Fire/fire8.png"),
                 new Texture("assets/sprites/sbires/Mage/Fire/fire9.png")
             };
-            System.out.println("✅ Projectile Mage : " + fireTextures.length + " frames chargées");
+            System.out.println("Projectile Mage : " + fireTextures.length + " frames chargees");
         } catch (Exception e) {
-            System.err.println("❌ Erreur chargement sprites projectile Mage : " + e.getMessage());
+            System.err.println("Erreur chargement sprites projectile Mage : " + e.getMessage());
             fireTextures = new Texture[0];
         }
     }

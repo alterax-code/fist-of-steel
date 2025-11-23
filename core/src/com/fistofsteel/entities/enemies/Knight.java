@@ -1,20 +1,34 @@
 package com.fistofsteel.entities.enemies;
 
-import com.fistofsteel.entities.player.Player;  // ✅ AJOUT
+import com.fistofsteel.entities.player.Player;
 import com.fistofsteel.utils.EntityConstants;
 
-// ... reste du code inchangé
-
 /**
- * Ennemi Knight - VERSION SIMPLIFIÉE
- * Utilise le système d'animation automatique
+ * Ennemi Knight - Combattant de mêlée.
+ * Utilise le système d'animation automatique.
  */
 public class Knight extends Enemy {
 
+    /**
+     * Constructeur du Knight.
+     * 
+     * @param x Position X initiale
+     * @param y Position Y initiale
+     * @param targetPlayer Le joueur ciblé
+     */
     public Knight(float x, float y, Player targetPlayer) {
         super(x, y, targetPlayer);
     }
     
+    /**
+     * Constructeur avec zone de patrouille.
+     * 
+     * @param x Position X initiale
+     * @param y Position Y initiale
+     * @param targetPlayer Le joueur ciblé
+     * @param patrolMin Distance minimale de patrouille
+     * @param patrolMax Distance maximale de patrouille
+     */
     public Knight(float x, float y, Player targetPlayer, float patrolMin, float patrolMax) {
         super(x, y, targetPlayer);
         setPatrolZone(patrolMin, patrolMax);

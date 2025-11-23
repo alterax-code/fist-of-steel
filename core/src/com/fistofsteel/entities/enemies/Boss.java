@@ -7,8 +7,8 @@ import com.fistofsteel.entities.player.Player;
 import com.fistofsteel.utils.EntityConstants;
 
 /**
- * Boss "Marvin" - Ennemi spécial avec système d'animation personnalisé
- * Sprites: assets/sprites/marvin/ (Idle, Walk, atk_1)
+ * Boss "Marvin" - Ennemi spécial avec système d'animation personnalisé.
+ * Sprites: assets/sprites/marvin/ (Idle, Walk, atk_1).
  */
 public class Boss extends Enemy {
 
@@ -19,9 +19,16 @@ public class Boss extends Enemy {
     private static final float BOSS_WIDTH  = EntityConstants.ENEMY_WIDTH * 2.5f;
     private static final float BOSS_HEIGHT = EntityConstants.ENEMY_HEIGHT * 2.5f;
 
+    /**
+     * Constructeur du Boss.
+     * 
+     * @param x Position X initiale
+     * @param y Position Y initiale
+     * @param targetPlayer Le joueur ciblé
+     */
     public Boss(float x, float y, Player targetPlayer) {
         super(x, y, targetPlayer);
-        this.patrolSpeed = 0f; // Le boss ne patrouille pas
+        this.patrolSpeed = 0f;
     }
 
     @Override
@@ -42,57 +49,52 @@ public class Boss extends Enemy {
         this.chaseSpeed = 60f;
     }
 
-    // ✅ CORRIGÉ : Bon chemin vers les sprites
     @Override
     protected void loadTextures() {
         try {
-            System.out.println("👑 Chargement des sprites du Boss (Marvin)...");
+            System.out.println("Chargement des sprites du Boss (Marvin)...");
 
-            // ✅ IDLE : assets/sprites/marvin/Idle/
             idleTextures = new Texture[16];
             for (int i = 0; i < 16; i++) {
                 String path = "assets/sprites/marvin/Idle/idle_" + (i + 1) + ".png";
                 if (Gdx.files.internal(path).exists()) {
                     idleTextures[i] = new Texture(path);
                 } else {
-                    System.err.println("⚠️ Fichier manquant : " + path);
-                    idleTextures[i] = idleTextures[0]; // Utiliser la première frame
+                    System.err.println("Fichier manquant : " + path);
+                    idleTextures[i] = idleTextures[0];
                 }
             }
 
-            // ✅ WALK : assets/sprites/marvin/Walk/
             walkTextures = new Texture[12];
             for (int i = 0; i < 12; i++) {
                 String path = "assets/sprites/marvin/Walk/walk_" + (i + 1) + ".png";
                 if (Gdx.files.internal(path).exists()) {
                     walkTextures[i] = new Texture(path);
                 } else {
-                    System.err.println("⚠️ Fichier manquant : " + path);
+                    System.err.println("Fichier manquant : " + path);
                     walkTextures[i] = walkTextures[0];
                 }
             }
 
-            // ✅ ATTACK : assets/sprites/marvin/atk_1/
             attackTextures = new Texture[16];
             for (int i = 0; i < 16; i++) {
                 String path = "assets/sprites/marvin/atk_1/atk_1_" + (i + 1) + ".png";
                 if (Gdx.files.internal(path).exists()) {
                     attackTextures[i] = new Texture(path);
                 } else {
-                    System.err.println("⚠️ Fichier manquant : " + path);
+                    System.err.println("Fichier manquant : " + path);
                     attackTextures[i] = attackTextures[0];
                 }
             }
 
-            System.out.println("✅ Boss : " + idleTextures.length + " idle, " + 
+            System.out.println("Boss : " + idleTextures.length + " idle, " + 
                              walkTextures.length + " walk, " + 
-                             attackTextures.length + " attack frames chargées");
+                             attackTextures.length + " attack frames chargees");
 
         } catch (Exception e) {
-            System.err.println("❌ Erreur critique chargement sprites Boss : " + e.getMessage());
+            System.err.println("Erreur critique chargement sprites Boss : " + e.getMessage());
             e.printStackTrace();
             
-            // Fallback minimal : créer des tableaux vides pour éviter null
             if (idleTextures == null) idleTextures = new Texture[1];
             if (walkTextures == null) walkTextures = new Texture[1];
             if (attackTextures == null) attackTextures = new Texture[1];
@@ -128,19 +130,16 @@ public class Boss extends Enemy {
         float dx = Math.abs(targetPlayer.getX() - x);
         float dy = Math.abs(targetPlayer.getY() - y);
 
-        // Attaque
         if (dx <= attackRange && dy <= 100f && attackTimer <= 0) {
             attack();
             return;
         }
 
-        // Chase
         if (dx <= detectionRange && dy <= 250f) {
             chase();
             return;
         }
 
-        // Idle (le boss ne patrouille pas)
         currentState = State.IDLE;
         velocityX = 0;
     }
@@ -206,7 +205,6 @@ public class Boss extends Enemy {
                 break;
 
             case DEAD:
-                // Pas d'animation death
                 break;
         }
     }
@@ -216,13 +214,9 @@ public class Boss extends Enemy {
         Texture tex = getCurrentTexture();
         if (tex == null) return;
 
-        // ⚠️ Les sprites de Marvin regardent vers la GAUCHE par défaut
-        // Donc : facingRight → flip horizontal
         if (facingRight) {
-            // Flip horizontal = largeur négative
             batch.draw(tex, x + BOSS_WIDTH, y, -BOSS_WIDTH, BOSS_HEIGHT);
         } else {
-            // Sprite normal (vers la gauche)
             batch.draw(tex, x, y, BOSS_WIDTH, BOSS_HEIGHT);
         }
     }

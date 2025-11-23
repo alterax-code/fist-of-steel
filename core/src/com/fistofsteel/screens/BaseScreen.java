@@ -10,8 +10,8 @@ import com.fistofsteel.FistOfSteelGame;
 import com.fistofsteel.audio.AudioManager;
 
 /**
- * Classe de base pour tous les écrans du jeu
- * Gère les ressources communes (batch, fonts, background)
+ * Classe de base pour tous les écrans du jeu.
+ * Gère les ressources communes (batch, fonts, background).
  */
 public abstract class BaseScreen implements Screen {
     
@@ -28,6 +28,12 @@ public abstract class BaseScreen implements Screen {
     protected float screenWidth;
     protected float screenHeight;
     
+    /**
+     * Constructeur de l'écran de base.
+     * 
+     * @param game L'instance du jeu
+     * @param audioManager Le gestionnaire audio
+     */
     public BaseScreen(FistOfSteelGame game, AudioManager audioManager) {
         this.game = game;
         this.audioManager = audioManager;
@@ -53,18 +59,16 @@ public abstract class BaseScreen implements Screen {
     }
     
     /**
-     * Initialise les couleurs et tailles des fonts
-     * À surcharger si besoin de personnalisation
+     * Initialise les couleurs et tailles des fonts.
+     * À surcharger si besoin de personnalisation.
      */
     protected void initializeFonts() {
-        // Par défaut, fonts blancs
         font.setColor(com.badlogic.gdx.graphics.Color.WHITE);
         titleFont.setColor(com.badlogic.gdx.graphics.Color.WHITE);
     }
     
     /**
-     * Charge le background de l'écran
-     * À surcharger pour spécifier le chemin
+     * Charge le background de l'écran.
      */
     protected void loadBackground() {
         String backgroundPath = getBackgroundPath();
@@ -72,15 +76,15 @@ public abstract class BaseScreen implements Screen {
             try {
                 backgroundTexture = new Texture(Gdx.files.internal(backgroundPath));
                 backgroundTexture.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
-                System.out.println("✅ Background chargé : " + backgroundPath);
+                System.out.println("Background charge : " + backgroundPath);
             } catch (Exception e) {
-                System.err.println("⚠️ Erreur chargement background : " + e.getMessage());
+                System.err.println("Erreur chargement background : " + e.getMessage());
             }
         }
     }
     
     /**
-     * Dessine le background s'il existe
+     * Dessine le background s'il existe.
      */
     protected void renderBackground() {
         if (backgroundTexture != null) {
@@ -89,12 +93,14 @@ public abstract class BaseScreen implements Screen {
     }
     
     /**
-     * Retourne le chemin du background (null si pas de background)
+     * Retourne le chemin du background (null si pas de background).
+     * 
+     * @return Le chemin du fichier de background
      */
     protected abstract String getBackgroundPath();
     
     /**
-     * Crée les éléments spécifiques à l'écran (boutons, etc.)
+     * Crée les éléments spécifiques à l'écran (boutons, etc.).
      */
     protected abstract void createElements();
     

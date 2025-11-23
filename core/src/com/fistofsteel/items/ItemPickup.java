@@ -1,12 +1,15 @@
-package com.fistofsteel.entities.world; 
+package com.fistofsteel.entities.world;
 
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Rectangle;
-import com.fistofsteel.entities.player.Player;  
+import com.fistofsteel.entities.player.Player;
 import com.fistofsteel.items.Item;
 
-
+/**
+ * Item ramassable dans le monde du jeu.
+ * Gère l'affichage et la collecte de l'item.
+ */
 public class ItemPickup {
 
     private float x, y;
@@ -18,13 +21,20 @@ public class ItemPickup {
     private float drawWidth;
     private float drawHeight;
 
+    /**
+     * Constructeur d'un item ramassable.
+     * 
+     * @param x Position X
+     * @param y Position Y
+     * @param texture La texture de l'item
+     * @param item L'item contenu
+     */
     public ItemPickup(float x, float y, Texture texture, Item item) {
         this.x = x;
         this.y = y;
         this.texture = texture;
         this.item = item;
 
-        
         if (texture != null) {
             float texW = texture.getWidth();
             float texH = texture.getHeight();
@@ -46,10 +56,19 @@ public class ItemPickup {
         bounds = new Rectangle(x, y, drawWidth, drawHeight);
     }
 
+    /**
+     * Met à jour l'item.
+     * 
+     * @param delta Le temps écoulé
+     */
     public void update(float delta) {
-        
     }
 
+    /**
+     * Affiche l'item.
+     * 
+     * @param batch Le SpriteBatch pour le rendu
+     */
     public void render(SpriteBatch batch) {
         if (collected || texture == null) return;
         batch.draw(texture, x, y, drawWidth, drawHeight);
@@ -63,6 +82,11 @@ public class ItemPickup {
         return collected;
     }
 
+    /**
+     * Appelé quand le joueur ramasse l'item.
+     * 
+     * @param player Le joueur
+     */
     public void onPickup(Player player) {
         if (collected) return;
         collected = true;
@@ -71,9 +95,12 @@ public class ItemPickup {
             item.applyEffect(player);
         }
 
-        System.out.println("✅ Item ramassé : " + (item != null ? item.getDisplayName() : "???"));
+        System.out.println("Item ramasse : " + (item != null ? item.getDisplayName() : "???"));
     }
 
+    /**
+     * Libère les ressources.
+     */
     public void dispose() {
         if (texture != null) {
             texture.dispose();

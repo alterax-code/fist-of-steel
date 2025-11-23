@@ -7,8 +7,8 @@ import com.fistofsteel.utils.EntityConstants;
 import com.fistofsteel.utils.PhysicsConstants;
 
 /**
- * Alexis - Combattant de mêlée avec système de combo
- * VERSION MISE À JOUR avec AudioManager
+ * Alexis - Combattant de mêlée avec système de combo.
+ * Possède trois niveaux de combo avec multiplicateurs de dégâts.
  */
 public class Alexis extends Player {
     private Texture idleTexture;
@@ -21,12 +21,17 @@ public class Alexis extends Player {
     private Texture[] attackTextures;
     private Texture[] deadTextures;
     
-    // Système de combo
     private int comboLevel = 0;
     private float comboTimer = 0f;
     private float comboWindow = 0.8f;
     private float[] comboMultipliers = {1.0f, 1.25f, 1.5f};
 
+    /**
+     * Constructeur d'Alexis.
+     * 
+     * @param input Le gestionnaire d'input
+     * @param audioManager Le gestionnaire audio
+     */
     public Alexis(InputHandler input, AudioManager audioManager) {
         super(input, audioManager);
     }
@@ -95,6 +100,12 @@ public class Alexis extends Player {
         }
     }
     
+    /**
+     * Retourne l'index de la texture d'attaque selon le combo.
+     * 
+     * @param frame La frame d'attaque courante
+     * @return L'index de la texture
+     */
     private int getComboTextureIndex(int frame) {
         if (frame == 0) {
             return 0;
@@ -153,7 +164,7 @@ public class Alexis extends Player {
         
         if (comboTimer > comboWindow) {
             if (comboLevel != 0) {
-                System.out.println("⏱️ Combo reset (délai dépassé)");
+                System.out.println("Combo reset (delai depasse)");
             }
             comboLevel = 0;
         }
@@ -182,7 +193,7 @@ public class Alexis extends Player {
                 case 1: comboName = "COMBO 2"; break;
                 case 2: comboName = "COMBO 3"; break;
             }
-            System.out.println("⚔️ Alexis : " + comboName + " (x" + multiplier + " dégâts)");
+            System.out.println("Alexis : " + comboName + " (x" + multiplier + " degats)");
             
             isAttacking = true;
             attackTimer = attackDuration;
@@ -271,7 +282,7 @@ public class Alexis extends Player {
     }
     
     /**
-     * ✅ MÉTHODE MODIFIÉE : Utilise die() de Player qui joue le son
+     * Tue le joueur (pour les tests).
      */
     private void die() {
         if (isDead) return;
@@ -283,12 +294,11 @@ public class Alexis extends Player {
         velocityY = 0;
         health = 0;
         
-        // ✅ Jouer le son "death"
         if (audioManager != null) {
             audioManager.playSound("death");
         }
         
-        System.out.println("☠️ Le joueur est mort");
+        System.out.println("Le joueur est mort");
     }
     
     public int getComboLevel() {

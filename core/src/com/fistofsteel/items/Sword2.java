@@ -1,5 +1,8 @@
 package com.fistofsteel.items;
 
+/**
+ * Épée tranchante offrant un bonus d'attaque moyen.
+ */
 public class Sword2 extends Weapon {
 
     public Sword2() {

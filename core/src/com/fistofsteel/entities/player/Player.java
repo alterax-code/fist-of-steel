@@ -11,6 +11,10 @@ import com.fistofsteel.utils.EntityConstants;
 import com.fistofsteel.items.Armor;
 import com.fistofsteel.items.Weapon;
 
+/**
+ * Classe abstraite représentant le joueur.
+ * Gère le mouvement, les combats, l'équipement et les animations.
+ */
 public abstract class Player {
     protected float x, y;
     protected float velocityX, velocityY;
@@ -23,6 +27,9 @@ public abstract class Player {
     
     protected Array<Rectangle> collisionRects;
 
+    /**
+     * États possibles du joueur.
+     */
     protected enum State { 
         IDLE, WALK, CROUCH, JUMP, FALL, 
         ATTACK, BLOCK, HIT, DEAD 
@@ -30,9 +37,9 @@ public abstract class Player {
     protected State currentState = State.IDLE;
     
     protected float attackTimer = 0f;
-    protected float attackDuration = 0.4f; // ✅ Augmenté de 0.3f à 0.4f
-    protected float attackCooldownTimer = 0f; // ✅ NOUVEAU : Cooldown après l'attaque
-    protected float attackCooldown = 0.6f; // ✅ NOUVEAU : 0.6s de cooldown
+    protected float attackDuration = 0.4f;
+    protected float attackCooldownTimer = 0f;
+    protected float attackCooldown = 0.6f;
     protected float hitTimer = 0f;
     protected float hitDuration = 0.2f;
     protected boolean isDead = false;
@@ -50,7 +57,7 @@ public abstract class Player {
     
     protected float animationTimer = 0f;
     protected float walkFrameDuration = 0.15f;
-    protected float attackFrameDuration = 0.2f; // ✅ Augmenté de 0.15f à 0.2f
+    protected float attackFrameDuration = 0.2f;
     protected float deadFrameDuration = 0.3f;
     
     protected int walkFrame = 0;
@@ -59,17 +66,21 @@ public abstract class Player {
     
     private int debugFrameCounter = 0;
 
-    // ===== STATS =====
     protected int maxHealth = 100;
     protected int health = maxHealth;
     protected int armor = 0;
     protected int baseAttack = 10;
     protected int attackBonus = 0;
     
-    // ===== SYSTÈME D'ÉQUIPEMENT =====
     protected Armor equippedArmor = null;
     protected Weapon equippedWeapon = null;
 
+    /**
+     * Constructeur du joueur.
+     * 
+     * @param input Le gestionnaire d'input
+     * @param audioManager Le gestionnaire audio
+     */
     public Player(InputHandler input, AudioManager audioManager) {
         this.input = input;
         this.audioManager = audioManager;
@@ -79,7 +90,6 @@ public abstract class Player {
         this.health = maxHealth;
     }
     
-    // ===== MÉTHODES ABSTRAITES =====
     protected abstract void loadTextures();
     protected abstract void disposeTextures();
     protected abstract Texture getCurrentTexture();
@@ -91,10 +101,20 @@ public abstract class Player {
     protected abstract float getHitboxOffsetX();
     protected abstract float getHitboxOffsetY();
     
+    /**
+     * Définit les rectangles de collision.
+     * 
+     * @param collisions Les rectangles de collision
+     */
     public void setCollisionRects(Array<Rectangle> collisions) {
         this.collisionRects = collisions;
     }
     
+    /**
+     * Met à jour le joueur.
+     * 
+     * @param delta Le temps écoulé
+     */
     public void update(float delta) {
         handleInput(delta);
         updateTimers(delta);
@@ -105,33 +125,35 @@ public abstract class Player {
         
         debugFrameCounter++;
         if (debugFrameCounter >= 60) {
-            System.out.println("🔍 Player: (" + (int)x + ", " + (int)y + ") | Ground: " + onGround + " | State: " + currentState);
+            System.out.println("Player: (" + (int)x + ", " + (int)y + ") | Ground: " + onGround + " | State: " + currentState);
             debugFrameCounter = 0;
         }
     }
 
+    /**
+     * Gère les entrées du joueur.
+     * 
+     * @param delta Le temps écoulé
+     */
     protected void handleInput(float delta) {
         if (isDead) return;
         if (isHit) return;
         if (isAttacking) return;
         
-        // ===== MORT =====
         if (input.isDeadPressed()) {
             die();
             return;
         }
         
-        // ===== HIT =====
         if (input.isHitPressed()) {
             triggerHitState();
             return;
         }
         
-        // ===== ATTAQUE ✅ MODIFIÉ : Vérification du cooldown =====
         if (input.isAttackPressed() && attackCooldownTimer <= 0) {
             isAttacking = true;
             attackTimer = attackDuration;
-            attackCooldownTimer = attackCooldown; // ✅ Démarrer le cooldown
+            attackCooldownTimer = attackCooldown;
             currentState = State.ATTACK;
             attackFrame = 0;
             animationTimer = 0f;
@@ -140,7 +162,6 @@ public abstract class Player {
             return;
         }
         
-        // ===== SAUT =====
         if (input.isJumpPressed() && onGround) {
             velocityY = PhysicsConstants.JUMP_FORCE;
             onGround = false;
@@ -153,12 +174,10 @@ public abstract class Player {
         boolean blockActive = input.isBlockPressed();
         boolean crouchPressed = input.isCrouchPressed();
         
-        // ===== BLOCK =====
         if (blockActive) {
             currentState = State.BLOCK;
             velocityX = 0;
         }
-        // ===== CROUCH / FAST FALL =====
         else if (crouchPressed) {
             if (onGround) {
                 currentState = State.CROUCH;
@@ -185,7 +204,6 @@ public abstract class Player {
                 }
             }
         }
-        // ===== MOUVEMENT NORMAL =====
         else {
             if (isFastFalling) {
                 isFastFalling = false;
@@ -210,6 +228,11 @@ public abstract class Player {
         }
     }
 
+    /**
+     * Met à jour les timers du joueur.
+     * 
+     * @param delta Le temps écoulé
+     */
     protected void updateTimers(float delta) {
         if (isAttacking) {
             attackTimer -= delta;
@@ -220,7 +243,6 @@ public abstract class Player {
             }
         }
         
-        // ✅ NOUVEAU : Décrémenter le cooldown d'attaque
         if (attackCooldownTimer > 0) {
             attackCooldownTimer -= delta;
         }
@@ -242,6 +264,11 @@ public abstract class Player {
         }
     }
 
+    /**
+     * Applique la physique au joueur.
+     * 
+     * @param delta Le temps écoulé
+     */
     protected void applyPhysics(float delta) {
         if (isDead) return;
         
@@ -307,7 +334,6 @@ public abstract class Player {
             }
         }
         
-        // Collision horizontale
         float newX = x + velocityX * delta;
         hitbox.setPosition(newX + getHitboxOffsetX(), y + getHitboxOffsetY());
         
@@ -326,6 +352,11 @@ public abstract class Player {
         }
     }
 
+    /**
+     * Met à jour l'animation du joueur.
+     * 
+     * @param delta Le temps écoulé
+     */
     protected void updateAnimation(float delta) {
         animationTimer += delta;
         
@@ -359,6 +390,11 @@ public abstract class Player {
         }
     }
 
+    /**
+     * Affiche le joueur.
+     * 
+     * @param batch Le SpriteBatch pour le rendu
+     */
     public void render(SpriteBatch batch) {
         Texture currentTexture = getCurrentTexture();
 
@@ -390,6 +426,9 @@ public abstract class Player {
         }
     }
 
+    /**
+     * Résout les collisions de la hitbox.
+     */
     protected void resolveHitboxCollisions() {
         if (collisionRects == null || collisionRects.size == 0) return;
         
@@ -433,8 +472,11 @@ public abstract class Player {
         }
     }
 
-    // ===== SYSTÈME DE SANTÉ =====
-
+    /**
+     * Applique des dégâts au joueur.
+     * 
+     * @param rawDamage Les dégâts bruts avant réduction d'armure
+     */
     public void applyDamage(int rawDamage) {
         if (isDead || isHit) return;
         
@@ -443,7 +485,7 @@ public abstract class Player {
         health -= effectiveDamage;
         if (health < 0) health = 0;
         
-        System.out.println("💥 Dégâts : " + rawDamage + " (armure -" + armor + ") = " + effectiveDamage + " | HP: " + health + "/" + maxHealth);
+        System.out.println("Degats : " + rawDamage + " (armure -" + armor + ") = " + effectiveDamage + " | HP: " + health + "/" + maxHealth);
         
         if (health == 0) {
             die();
@@ -452,6 +494,9 @@ public abstract class Player {
         }
     }
 
+    /**
+     * Déclenche l'état "touché".
+     */
     protected void triggerHitState() {
         isHit = true;
         hitTimer = hitDuration;
@@ -464,13 +509,21 @@ public abstract class Player {
         }
     }
 
+    /**
+     * Soigne le joueur.
+     * 
+     * @param amount Le nombre de PV à restaurer
+     */
     public void heal(int amount) {
         if (amount <= 0) return;
         health += amount;
         if (health > maxHealth) health = maxHealth;
-        System.out.println("💊 Heal +" + amount + " -> " + health + "/" + maxHealth);
+        System.out.println("Heal +" + amount + " -> " + health + "/" + maxHealth);
     }
 
+    /**
+     * Tue le joueur.
+     */
     private void die() {
         if (isDead) return;
         isDead = true;
@@ -485,10 +538,8 @@ public abstract class Player {
             audioManager.playSound("death");
         }
         
-        System.out.println("☠️ Le joueur est mort");
+        System.out.println("Le joueur est mort");
     }
-
-    // ===== SYSTÈME D'ATTAQUE =====
 
     public int getTotalAttack() {
         return baseAttack + attackBonus;
@@ -514,45 +565,51 @@ public abstract class Player {
         return false;
     }
 
-    // ===== SYSTÈME D'ARMURE =====
-
     public int getArmor() {
         return armor;
     }
 
     public void setArmor(int armor) {
         this.armor = Math.max(0, armor);
-        System.out.println("🛡️ Armure : " + this.armor);
+        System.out.println("Armure : " + this.armor);
     }
     
-    // ===== SYSTÈME D'ÉQUIPEMENT =====
-    
+    /**
+     * Équipe une armure.
+     * 
+     * @param newArmor L'armure à équiper
+     */
     public void equipArmor(Armor newArmor) {
         if (newArmor == null) return;
         
         if (equippedArmor != null) {
             armor -= equippedArmor.getArmorBonus();
-            System.out.println("🛡️ Armure retirée : " + equippedArmor.getDisplayName() + " (-" + equippedArmor.getArmorBonus() + " DEF)");
+            System.out.println("Armure retiree : " + equippedArmor.getDisplayName() + " (-" + equippedArmor.getArmorBonus() + " DEF)");
         }
         
         equippedArmor = newArmor;
         armor += newArmor.getArmorBonus();
         
-        System.out.println("🛡️ Armure équipée : " + newArmor.getDisplayName() + " (+" + newArmor.getArmorBonus() + " DEF) | Total DEF: " + armor);
+        System.out.println("Armure equipee : " + newArmor.getDisplayName() + " (+" + newArmor.getArmorBonus() + " DEF) | Total DEF: " + armor);
     }
     
+    /**
+     * Équipe une arme.
+     * 
+     * @param newWeapon L'arme à équiper
+     */
     public void equipWeapon(Weapon newWeapon) {
         if (newWeapon == null) return;
         
         if (equippedWeapon != null) {
             attackBonus -= equippedWeapon.getAttackBonus();
-            System.out.println("🗡️ Arme retirée : " + equippedWeapon.getDisplayName() + " (-" + equippedWeapon.getAttackBonus() + " ATK)");
+            System.out.println("Arme retiree : " + equippedWeapon.getDisplayName() + " (-" + equippedWeapon.getAttackBonus() + " ATK)");
         }
         
         equippedWeapon = newWeapon;
         attackBonus += newWeapon.getAttackBonus();
         
-        System.out.println("🗡️ Arme équipée : " + newWeapon.getDisplayName() + " (+" + newWeapon.getAttackBonus() + " ATK) | Total ATK: " + getTotalAttack());
+        System.out.println("Arme equipee : " + newWeapon.getDisplayName() + " (+" + newWeapon.getAttackBonus() + " ATK) | Total ATK: " + getTotalAttack());
     }
     
     public Armor getEquippedArmor() {
@@ -563,8 +620,6 @@ public abstract class Player {
         return equippedWeapon;
     }
 
-    // ===== GETTERS =====
-
     public int getHealth() { return health; }
     public int getMaxHealth() { return maxHealth; }
     public State getCurrentState() { return currentState; }
@@ -574,6 +629,12 @@ public abstract class Player {
     public float getY() { return y; }
     public Rectangle getHitbox() { return hitbox; }
 
+    /**
+     * Définit la position du joueur.
+     * 
+     * @param x La nouvelle position X
+     * @param y La nouvelle position Y
+     */
     public void setPosition(float x, float y) {
         this.x = x;
         this.y = y;
@@ -598,6 +659,9 @@ public abstract class Player {
         }
     }
 
+    /**
+     * Libère les ressources du joueur.
+     */
     public void dispose() {
         disposeTextures();
     }

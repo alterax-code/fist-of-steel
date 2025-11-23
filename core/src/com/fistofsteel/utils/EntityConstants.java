@@ -1,10 +1,10 @@
 package com.fistofsteel.utils;
 
 /**
- * Constantes des dimensions et hitboxes des entités
+ * Constantes des dimensions et hitboxes des entités.
  */
 public class EntityConstants {
-    // ===== JOUEUR =====
+    
     public static final float PLAYER_WIDTH = 120;
     public static final float PLAYER_HEIGHT = 128;
     
@@ -13,7 +13,6 @@ public class EntityConstants {
     public static final float PLAYER_HITBOX_OFFSET_X = (PLAYER_WIDTH - PLAYER_HITBOX_WIDTH) / 2f;
     public static final float PLAYER_HITBOX_OFFSET_Y = 5f;
     
-    // ===== ENNEMIS =====
     public static final float ENEMY_WIDTH = 160f;
     public static final float ENEMY_HEIGHT = 170f;
     

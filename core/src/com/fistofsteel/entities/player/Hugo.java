@@ -8,8 +8,8 @@ import com.fistofsteel.audio.AudioManager;
 import com.fistofsteel.utils.EntityConstants;
 
 /**
- * Hugo - Personnage agile à distance
- * VERSION MISE À JOUR avec AudioManager
+ * Hugo - Personnage agile à distance.
+ * Tire des projectiles au lieu d'attaquer au corps à corps.
  */
 public class Hugo extends Player {
     private Texture idleTexture;
@@ -25,10 +25,21 @@ public class Hugo extends Player {
     private ProjectileManager projectileManager;
     private boolean hasShot = false;
 
+    /**
+     * Constructeur d'Hugo.
+     * 
+     * @param input Le gestionnaire d'input
+     * @param audioManager Le gestionnaire audio
+     */
     public Hugo(InputHandler input, AudioManager audioManager) {
         super(input, audioManager);
     }
     
+    /**
+     * Définit le gestionnaire de projectiles.
+     * 
+     * @param manager Le ProjectileManager
+     */
     public void setProjectileManager(ProjectileManager manager) {
         this.projectileManager = manager;
     }
@@ -182,9 +193,12 @@ public class Hugo extends Player {
         }
     }
     
+    /**
+     * Tire un projectile.
+     */
     private void shootProjectile() {
         if (projectileManager == null) {
-            System.err.println("⚠️ Hugo ne peut pas tirer : ProjectileManager null !");
+            System.err.println("Hugo ne peut pas tirer : ProjectileManager null !");
             return;
         }
         
@@ -194,6 +208,6 @@ public class Hugo extends Player {
         HugoProjectile projectile = new HugoProjectile(projectileX, projectileY, facingRight, getTotalAttack());
         projectileManager.addProjectile(projectile);
         
-        System.out.println("🔥 Hugo tire un projectile à (" + (int)projectileX + ", " + (int)projectileY + ")");
+        System.out.println("Hugo tire un projectile a (" + (int)projectileX + ", " + (int)projectileY + ")");
     }
 }

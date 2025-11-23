@@ -10,9 +10,13 @@ import com.fistofsteel.entities.enemies.Enemy;
 import com.fistofsteel.entities.enemies.Knight;
 import com.fistofsteel.entities.enemies.Mage;
 import com.fistofsteel.entities.enemies.Rogue;
-import com.fistofsteel.entities.enemies.Boss;  // ⭐ AJOUT
+import com.fistofsteel.entities.enemies.Boss;
 import com.fistofsteel.utils.HitboxDebugger;
 
+/**
+ * Gestionnaire des ennemis du jeu.
+ * Gère le spawn, l'update, le rendu et les combats de tous les ennemis.
+ */
 public class EnemyManager {
 
     private Array<Enemy> enemies;
@@ -23,11 +27,21 @@ public class EnemyManager {
     
     private ProjectileManager projectileManager;
 
+    /**
+     * Constructeur du gestionnaire d'ennemis.
+     * 
+     * @param player Le joueur cible
+     */
     public EnemyManager(Player player) {
         this.enemies = new Array<>();
         this.player = player;
     }
     
+    /**
+     * Définit le gestionnaire de projectiles.
+     * 
+     * @param manager Le ProjectileManager
+     */
     public void setProjectileManager(ProjectileManager manager) {
         this.projectileManager = manager;
         
@@ -38,26 +52,42 @@ public class EnemyManager {
         }
     }
 
-    // ----------- KNIGHT -----------
-
+    /**
+     * Ajoute un Knight à la position donnée.
+     * 
+     * @param x Position X
+     * @param y Position Y
+     */
     public void addKnight(float x, float y) {
         Knight knight = new Knight(x, y, player);
         enemies.add(knight);
         totalEnemiesSpawned++;
-        System.out.println("⚔️ Knight ajouté à (" + (int)x + ", " + (int)y + ")");
+        System.out.println("Knight ajoute a (" + (int)x + ", " + (int)y + ")");
     }
 
+    /**
+     * Ajoute un Knight avec une zone de patrouille.
+     * 
+     * @param x Position X
+     * @param y Position Y
+     * @param patrolMin Distance minimale de patrouille
+     * @param patrolMax Distance maximale de patrouille
+     */
     public void addKnight(float x, float y, float patrolMin, float patrolMax) {
         Knight knight = new Knight(x, y, player);
         knight.setPatrolZone(patrolMin, patrolMax);
         enemies.add(knight);
         totalEnemiesSpawned++;
-        System.out.println("⚔️ Knight ajouté à (" + (int)x + ", " + (int)y + ") | Patrol: [" +
+        System.out.println("Knight ajoute a (" + (int)x + ", " + (int)y + ") | Patrol: [" +
                 (int)patrolMin + " -> " + (int)patrolMax + "]");
     }
 
-    // ----------- MAGE -----------
-
+    /**
+     * Ajoute un Mage à la position donnée.
+     * 
+     * @param x Position X
+     * @param y Position Y
+     */
     public void addMage(float x, float y) {
         Mage mage = new Mage(x, y, player);
         if (projectileManager != null) {
@@ -65,9 +95,17 @@ public class EnemyManager {
         }
         enemies.add(mage);
         totalEnemiesSpawned++;
-        System.out.println("🧙 Mage ajouté à (" + (int)x + ", " + (int)y + ")");
+        System.out.println("Mage ajoute a (" + (int)x + ", " + (int)y + ")");
     }
 
+    /**
+     * Ajoute un Mage avec une zone de patrouille.
+     * 
+     * @param x Position X
+     * @param y Position Y
+     * @param patrolMin Distance minimale de patrouille
+     * @param patrolMax Distance maximale de patrouille
+     */
     public void addMage(float x, float y, float patrolMin, float patrolMax) {
         Mage mage = new Mage(x, y, player);
         mage.setPatrolZone(patrolMin, patrolMax);
@@ -76,71 +114,114 @@ public class EnemyManager {
         }
         enemies.add(mage);
         totalEnemiesSpawned++;
-        System.out.println("🧙 Mage ajouté à (" + (int)x + ", " + (int)y + 
+        System.out.println("Mage ajoute a (" + (int)x + ", " + (int)y + 
                 ") | Patrol: [" + (int)patrolMin + " -> " + (int)patrolMax + "]");
     }
 
-    // ----------- ROGUE -----------
-
+    /**
+     * Ajoute un Rogue à la position donnée.
+     * 
+     * @param x Position X
+     * @param y Position Y
+     */
     public void addRogue(float x, float y) {
         Rogue rogue = new Rogue(x, y, player);
         enemies.add(rogue);
         totalEnemiesSpawned++;
-        System.out.println("🗡️ Rogue ajouté à (" + (int)x + ", " + (int)y + ")");
+        System.out.println("Rogue ajoute a (" + (int)x + ", " + (int)y + ")");
     }
 
+    /**
+     * Ajoute un Rogue avec une zone de patrouille.
+     * 
+     * @param x Position X
+     * @param y Position Y
+     * @param patrolMin Distance minimale de patrouille
+     * @param patrolMax Distance maximale de patrouille
+     */
     public void addRogue(float x, float y, float patrolMin, float patrolMax) {
         Rogue rogue = new Rogue(x, y, player);
         rogue.setPatrolZone(patrolMin, patrolMax);
         enemies.add(rogue);
         totalEnemiesSpawned++;
-        System.out.println("🗡️ Rogue ajouté à (" + (int)x + ", " + (int)y + 
+        System.out.println("Rogue ajoute a (" + (int)x + ", " + (int)y + 
                 ") | Patrol: [" + (int)patrolMin + " -> " + (int)patrolMax + "]");
     }
 
-    // ----------- BOSS (⭐ NOUVEAU) -----------
-
+    /**
+     * Ajoute un Boss à la position donnée.
+     * 
+     * @param x Position X
+     * @param y Position Y
+     */
     public void addBoss(float x, float y) {
         Boss boss = new Boss(x, y, player);
         enemies.add(boss);
         totalEnemiesSpawned++;
-        System.out.println("👑 BOSS ajouté à (" + (int)x + ", " + (int)y + ")");
+        System.out.println("BOSS ajoute a (" + (int)x + ", " + (int)y + ")");
     }
 
-    // ----------- COLLISIONS & UPDATE -----------
-
+    /**
+     * Définit les rectangles de collision pour tous les ennemis.
+     * 
+     * @param collisions Les rectangles de collision
+     */
     public void setCollisionRects(Array<Rectangle> collisions) {
         for (Enemy enemy : enemies) {
             enemy.setCollisionRects(collisions);
         }
     }
 
+    /**
+     * Met à jour tous les ennemis.
+     * 
+     * @param delta Le temps écoulé
+     */
     public void update(float delta) {
         for (Enemy enemy : enemies) {
             enemy.update(delta);
         }
     }
 
+    /**
+     * Affiche tous les ennemis.
+     * 
+     * @param batch Le SpriteBatch pour le rendu
+     */
     public void render(SpriteBatch batch) {
         for (Enemy enemy : enemies) {
             enemy.render(batch);
         }
     }
     
+    /**
+     * Affiche les barres de vie de tous les ennemis.
+     * 
+     * @param shapeRenderer Le ShapeRenderer pour le rendu
+     * @param camera La caméra du jeu
+     */
     public void renderHealthBars(ShapeRenderer shapeRenderer, OrthographicCamera camera) {
         for (Enemy enemy : enemies) {
             enemy.renderHealthBar(shapeRenderer, camera);
         }
     }
 
-    // ----------- COMBATS -----------
-
+    /**
+     * Vérifie et applique les attaques des ennemis sur le joueur.
+     * 
+     * @param player Le joueur
+     */
     public void checkEnemyAttacks(Player player) {
         for (Enemy enemy : enemies) {
             enemy.tryDealDamage();
         }
     }
 
+    /**
+     * Vérifie et applique l'attaque du joueur sur les ennemis.
+     * 
+     * @param player Le joueur
+     */
     public void checkPlayerAttack(Player player) {
         if (player.isRangedAttacker()) {
             return;
@@ -157,15 +238,16 @@ public class EnemyManager {
                 int damage = player.getTotalAttack();
                 enemy.takeDamage(damage);
                 player.markDamageDealt();
-                System.out.println("💥 " + enemy.getClass().getSimpleName() +
-                        " touché ! (-" + damage + " HP) | HP: " + enemy.getHealth() + "/" + enemy.getMaxHealth());
+                System.out.println(enemy.getClass().getSimpleName() +
+                        " touche ! (-" + damage + " HP) | HP: " + enemy.getHealth() + "/" + enemy.getMaxHealth());
                 break;
             }
         }
     }
 
-    // ----------- CLEANUP -----------
-
+    /**
+     * Retire les ennemis morts de la liste.
+     */
     public void removeDeadEnemies() {
         Array<Enemy> toRemove = new Array<>();
         for (Enemy enemy : enemies) {
@@ -181,6 +263,11 @@ public class EnemyManager {
         }
     }
 
+    /**
+     * Compte le nombre d'ennemis vivants.
+     * 
+     * @return Le nombre d'ennemis vivants
+     */
     public int getAliveCount() {
         int count = 0;
         for (Enemy enemy : enemies) {
@@ -205,12 +292,20 @@ public class EnemyManager {
         return enemies;
     }
 
+    /**
+     * Affiche les hitboxes de debug pour tous les ennemis.
+     * 
+     * @param camera La caméra du jeu
+     */
     public void renderDebugHitboxes(OrthographicCamera camera) {
         for (Enemy enemy : enemies) {
             HitboxDebugger.renderEnemyHitbox(enemy, camera);
         }
     }
 
+    /**
+     * Libère les ressources de tous les ennemis.
+     */
     public void dispose() {
         for (Enemy enemy : enemies) {
             enemy.dispose();

@@ -11,8 +11,8 @@ import com.fistofsteel.audio.AudioManager;
 import com.fistofsteel.ui.UIComponents.SimpleButton;
 
 /**
- * CharactersChoice - Hérite de BaseScreen
- * ✅ MODIFIÉ : Boutons de sélection centrés
+ * Écran de sélection de personnage.
+ * Permet de choisir entre Hugo et Alexis.
  */
 public class CharactersChoice extends BaseScreen {
     
@@ -40,7 +40,7 @@ public class CharactersChoice extends BaseScreen {
     @Override
     public void show() {
         super.show();
-        System.out.println("🎵 CharactersChoice : Musique menu continue");
+        System.out.println("CharactersChoice : Musique menu continue");
     }
     
     @Override
@@ -48,10 +48,9 @@ public class CharactersChoice extends BaseScreen {
         float centerX = screenWidth / 2f;
         float charBtnWidth = Math.min(360f, screenWidth * 0.32f);
         float charBtnHeight = 120f;
-        float yRow = screenHeight * 0.5f; // ✅ Centré verticalement
+        float yRow = screenHeight * 0.5f;
         float gap = 50f;
         
-        // ✅ Boutons centrés horizontalement
         hugoButton = new SimpleButton("HUGO", centerX - charBtnWidth/2f - gap/2f, yRow, charBtnWidth, charBtnHeight);
         alexisButton = new SimpleButton("ALEXIS", centerX + charBtnWidth/2f + gap/2f, yRow, charBtnWidth, charBtnHeight);
         backButton = new SimpleButton("BACK", centerX, screenHeight * 0.18f, 300f, 70f);

@@ -13,7 +13,8 @@ import com.fistofsteel.items.Weapon;
 import com.fistofsteel.utils.ColorUtils;
 
 /**
- * HUD du joueur affiché en haut à gauche de l'écran
+ * HUD du joueur affiché en haut à gauche de l'écran.
+ * Affiche la barre de vie, l'inventaire, le timer et le compteur de kills.
  */
 public class PlayerHUD {
     
@@ -29,29 +30,30 @@ public class PlayerHUD {
     private static final float INVENTORY_SLOT_SIZE = 50f;
     private static final float SPACING = 15f;
     
-    // Textures des icônes d'items
     private Texture armorLightIcon;
     private Texture armorHeavyIcon;
     private Texture sword1Icon;
     private Texture sword2Icon;
     private Texture sword3Icon;
     
+    /**
+     * Constructeur. Initialise le HUD et charge les icônes d'items.
+     */
     public PlayerHUD() {
         shapeRenderer = new ShapeRenderer();
         font = new BitmapFont();
         font.getData().setScale(1.5f);
         font.setColor(Color.WHITE);
         
-        // Charger les icônes d'items
         try {
             armorLightIcon = new Texture("assets/items/armor_light.png");
             armorHeavyIcon = new Texture("assets/items/armor_heavy.png");
             sword1Icon = new Texture("assets/items/sword_1.png");
             sword2Icon = new Texture("assets/items/sword_2.png");
             sword3Icon = new Texture("assets/items/sword_3.png");
-            System.out.println("✅ Icônes d'items chargées pour le HUD");
+            System.out.println("Icones d'items chargees pour le HUD");
         } catch (Exception e) {
-            System.err.println("⚠️ Erreur chargement icônes items : " + e.getMessage());
+            System.err.println("Erreur chargement icones items : " + e.getMessage());
         }
         
         float screenWidth = Gdx.graphics.getWidth();
@@ -61,10 +63,23 @@ public class PlayerHUD {
         hudCamera.update();
     }
     
+    /**
+     * Met à jour le HUD (timer).
+     * 
+     * @param delta Temps écoulé depuis la dernière frame
+     */
     public void update(float delta) {
         levelTime += delta;
     }
     
+    /**
+     * Affiche le HUD complet.
+     * 
+     * @param batch Le SpriteBatch pour le rendu
+     * @param player Le joueur
+     * @param enemiesKilled Nombre d'ennemis tués
+     * @param totalEnemies Nombre total d'ennemis
+     */
     public void render(SpriteBatch batch, Player player, int enemiesKilled, int totalEnemies) {
         shapeRenderer.setProjectionMatrix(hudCamera.combined);
         batch.setProjectionMatrix(hudCamera.combined);
@@ -85,6 +100,14 @@ public class PlayerHUD {
         renderKillCounter(batch, currentY, enemiesKilled, totalEnemies);
     }
     
+    /**
+     * Affiche la barre de vie.
+     * 
+     * @param batch Le SpriteBatch
+     * @param y Position Y
+     * @param currentHealth Vie actuelle
+     * @param maxHealth Vie maximum
+     */
     private void renderHealthBar(SpriteBatch batch, float y, int currentHealth, int maxHealth) {
         if (maxHealth <= 0) return;
         
@@ -111,8 +134,14 @@ public class PlayerHUD {
         batch.end();
     }
     
+    /**
+     * Affiche l'inventaire (armure et arme équipées).
+     * 
+     * @param batch Le SpriteBatch
+     * @param y Position Y
+     * @param player Le joueur
+     */
     private void renderInventory(SpriteBatch batch, float y, Player player) {
-        // Dessiner les slots
         shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
         
         for (int i = 0; i < 2; i++) {
@@ -127,10 +156,8 @@ public class PlayerHUD {
         
         shapeRenderer.end();
         
-        // Dessiner les icônes des items équipés
         batch.begin();
         
-        // SLOT 0 : ARMURE
         Armor armor = player.getEquippedArmor();
         if (armor != null) {
             Texture icon = getArmorIcon(armor);
@@ -144,7 +171,6 @@ public class PlayerHUD {
             }
         }
         
-        // SLOT 1 : ARME
         Weapon weapon = player.getEquippedWeapon();
         if (weapon != null) {
             Texture icon = getWeaponIcon(weapon);
@@ -162,7 +188,10 @@ public class PlayerHUD {
     }
     
     /**
-     * Retourne l'icône appropriée pour l'armure équipée
+     * Retourne l'icône appropriée pour l'armure équipée.
+     * 
+     * @param armor L'armure
+     * @return La texture de l'icône ou null
      */
     private Texture getArmorIcon(Armor armor) {
         if (armor == null) return null;
@@ -178,7 +207,10 @@ public class PlayerHUD {
     }
     
     /**
-     * Retourne l'icône appropriée pour l'arme équipée
+     * Retourne l'icône appropriée pour l'arme équipée.
+     * 
+     * @param weapon L'arme
+     * @return La texture de l'icône ou null
      */
     private Texture getWeaponIcon(Weapon weapon) {
         if (weapon == null) return null;
@@ -195,6 +227,12 @@ public class PlayerHUD {
         return null;
     }
     
+    /**
+     * Affiche le timer du niveau.
+     * 
+     * @param batch Le SpriteBatch
+     * @param y Position Y
+     */
     private void renderTimer(SpriteBatch batch, float y) {
         batch.begin();
         font.setColor(Color.CYAN);
@@ -206,6 +244,14 @@ public class PlayerHUD {
         batch.end();
     }
     
+    /**
+     * Affiche le compteur de kills.
+     * 
+     * @param batch Le SpriteBatch
+     * @param y Position Y
+     * @param killed Ennemis tués
+     * @param total Total d'ennemis
+     */
     private void renderKillCounter(SpriteBatch batch, float y, int killed, int total) {
         batch.begin();
         font.setColor(Color.YELLOW);
@@ -214,19 +260,36 @@ public class PlayerHUD {
         batch.end();
     }
     
+    /**
+     * Réinitialise le timer du niveau.
+     */
     public void resetTimer() {
         levelTime = 0f;
     }
     
+    /**
+     * Retourne le temps écoulé dans le niveau.
+     * 
+     * @return Le temps en secondes
+     */
     public float getLevelTime() {
         return levelTime;
     }
     
+    /**
+     * Redimensionne le HUD lors du resize de la fenêtre.
+     * 
+     * @param width Nouvelle largeur
+     * @param height Nouvelle hauteur
+     */
     public void resize(int width, int height) {
         hudCamera.setToOrtho(false, width, height);
         hudCamera.update();
     }
     
+    /**
+     * Libère les ressources.
+     */
     public void dispose() {
         shapeRenderer.dispose();
         font.dispose();

@@ -1,6 +1,5 @@
 package com.fistofsteel.screens;
 
-// LibGDX imports
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.Screen;
@@ -18,31 +17,24 @@ import com.badlogic.gdx.maps.tiled.renderers.OrthogonalTiledMapRenderer;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.utils.Array;
 
-// Core game imports
 import com.fistofsteel.FistOfSteelGame;
 import com.fistofsteel.audio.AudioManager;
-
-// Player imports
 import com.fistofsteel.entities.player.Player;
 import com.fistofsteel.entities.player.Alexis;
 import com.fistofsteel.entities.player.Hugo;
-
-// Manager imports
 import com.fistofsteel.entities.managers.EnemyManager;
 import com.fistofsteel.entities.managers.ProjectileManager;
 import com.fistofsteel.entities.managers.WorldItemManager;
 import com.fistofsteel.entities.managers.LevelExitManager;
-
-// Input imports
 import com.fistofsteel.input.InputHandler;
-
-// UI imports
 import com.fistofsteel.ui.PlayerHUD;
-
-// Utils imports
 import com.fistofsteel.utils.EntityConstants;
 import com.fistofsteel.utils.HitboxDebugger;
 
+/**
+ * Gestionnaire principal du jeu.
+ * Gère le chargement des niveaux, l'update des entités et le rendu.
+ */
 public class GameManager implements Screen {
     private FistOfSteelGame game;
     private OrthographicCamera camera;
@@ -73,10 +65,25 @@ public class GameManager implements Screen {
     
     private PlayerHUD playerHUD;
 
+    /**
+     * Constructeur avec niveau par défaut.
+     * 
+     * @param game L'instance du jeu
+     * @param selectedCharacter Le personnage choisi
+     * @param audioManager Le gestionnaire audio
+     */
     public GameManager(FistOfSteelGame game, String selectedCharacter, AudioManager audioManager) {
         this(game, selectedCharacter, audioManager, "level1_example");
     }
     
+    /**
+     * Constructeur complet.
+     * 
+     * @param game L'instance du jeu
+     * @param selectedCharacter Le personnage choisi
+     * @param audioManager Le gestionnaire audio
+     * @param levelName Le nom du niveau à charger
+     */
     public GameManager(FistOfSteelGame game, String selectedCharacter, AudioManager audioManager, String levelName) {
         this.game = game;
         this.selectedCharacter = selectedCharacter;
@@ -87,108 +94,100 @@ public class GameManager implements Screen {
     @Override
     public void show() {
         System.out.println("\n========================================");
-        System.out.println("🎮 INITIALISATION DE GAMEMANAGER");
-        System.out.println("📁 Niveau: " + currentLevel);
+        System.out.println("INITIALISATION DE GAMEMANAGER");
+        System.out.println("Niveau: " + currentLevel);
         System.out.println("========================================\n");
         
-        // 1. CAMÉRA
         camera = new OrthographicCamera();
         float worldHeight = 20 * 64;
         float screenAspectRatio = (float) Gdx.graphics.getWidth() / Gdx.graphics.getHeight();
         float viewportWidth = worldHeight * screenAspectRatio;
         camera.setToOrtho(false, viewportWidth, worldHeight);
-        System.out.println("✅ Caméra initialisée");
+        System.out.println("Camera initialisee");
         
-        // 2. BATCH ET SHAPE RENDERER
         batch = new SpriteBatch();
         shapeRenderer = new ShapeRenderer();
-        System.out.println("✅ SpriteBatch et ShapeRenderer créés");
+        System.out.println("SpriteBatch et ShapeRenderer crees");
         
-        // 3. INPUT HANDLER
         inputHandler = new InputHandler(audioManager);
         Gdx.input.setInputProcessor(inputHandler);
-        System.out.println("✅ InputHandler créé et connecté à AudioManager");
+        System.out.println("InputHandler cree et connecte a AudioManager");
         
-        // 4. TILED MAP
         loadTiledMap();
         loadBackgroundFromTiled();
         
-        // 5. PLAYER
         if ("Alexis".equals(selectedCharacter)) {
             player = new Alexis(inputHandler, audioManager);
-            System.out.println("✅ Personnage: Alexis");
+            System.out.println("Personnage: Alexis");
         } else {
             player = new Hugo(inputHandler, audioManager);
-            System.out.println("✅ Personnage: Hugo");
+            System.out.println("Personnage: Hugo");
         }
         
         if (collisionRects != null && collisionRects.size > 0) {
             player.setCollisionRects(collisionRects);
-            System.out.println("✅ Collisions configurées pour le joueur (" + collisionRects.size + " rectangles)");
+            System.out.println("Collisions configurees pour le joueur (" + collisionRects.size + " rectangles)");
         } else {
-            System.err.println("⚠️ ATTENTION : Aucune collision chargée !");
+            System.err.println("ATTENTION : Aucune collision chargee !");
         }
         
         loadSpawnFromTiled();
         
-        // 6. PROJECTILE MANAGER
         projectileManager = new ProjectileManager(mapWidthInPixels);
-        System.out.println("✅ ProjectileManager créé");
+        System.out.println("ProjectileManager cree");
         
-        // ⭐ Si Hugo, connecter le ProjectileManager
         if (player instanceof Hugo) {
             ((Hugo) player).setProjectileManager(projectileManager);
-            System.out.println("✅ Hugo connecté au ProjectileManager");
+            System.out.println("Hugo connecte au ProjectileManager");
         }
         
-        // 7. ENEMY MANAGER
         enemyManager = new EnemyManager(player);
         enemyManager.setProjectileManager(projectileManager);
         loadEnemiesFromTiled();
         
         if (collisionRects != null) {
             enemyManager.setCollisionRects(collisionRects);
-            System.out.println("✅ Collisions configurées pour " + enemyManager.getTotalCount() + " ennemis");
+            System.out.println("Collisions configurees pour " + enemyManager.getTotalCount() + " ennemis");
         }
         
-        // 8. ITEMS
         worldItemManager = new WorldItemManager();
         loadPotionsFromTiled();
         loadItemsFromTiled();
         
-        // 9. LEVEL EXIT MANAGER
         levelExitManager = new LevelExitManager();
         loadExitsFromTiled();
         
-        // 10. HUD
         playerHUD = new PlayerHUD();
-        System.out.println("✅ HUD du joueur initialisé");
+        System.out.println("HUD du joueur initialise");
         
-        // 11. MUSIQUE
         audioManager.startLevelMusic();
-        System.out.println("🎵 Musique level démarrée");
+        System.out.println("Musique level demarree");
         
-        // 12. DEBUG
         HitboxDebugger.setDebugEnabled(debugMode);
         
-        // 13. FINALIZE
         updateCamera();
         camera.update();
         batch.setProjectionMatrix(camera.combined);
         
-        System.out.println("\n✅ GAMEMANAGER PRÊT !\n");
+        System.out.println("\nGAMEMANAGER PRET !\n");
     }
     
+    /**
+     * Charge le background depuis le fichier Tiled.
+     */
     private void loadBackgroundFromTiled() {
         try {
             backgroundTexture = new Texture(Gdx.files.internal("assets/maps/Gemini_Generated_Image_3ijzal3ijzal3ijz_2 (1).png"));
             backgroundTexture.setWrap(Texture.TextureWrap.Repeat, Texture.TextureWrap.ClampToEdge);
-            System.out.println("✅ Background chargé avec répétition X");
+            System.out.println("Background charge avec repetition X");
         } catch (Exception e) {
-            System.err.println("⚠️ Erreur chargement background : " + e.getMessage());
+            System.err.println("Erreur chargement background : " + e.getMessage());
         }
     }
     
+    /**
+     * Charge la map Tiled.
+     */
     private void loadTiledMap() {
         try {
             String mapPath = "maps/" + currentLevel + ".tmx";
@@ -203,16 +202,19 @@ public class GameManager implements Screen {
             mapWidthInPixels = mapWidthInTiles * tileWidth;
             mapHeightInPixels = mapHeightInTiles * tileHeight;
             
-            System.out.println("✅ Map Tiled: " + mapWidthInPixels + "x" + mapHeightInPixels + " pixels");
+            System.out.println("Map Tiled: " + mapWidthInPixels + "x" + mapHeightInPixels + " pixels");
             
             loadCollisions();
             loadDeathZones();
         } catch (Exception e) {
-            System.err.println("⚠️ Erreur chargement map: " + e.getMessage());
+            System.err.println("Erreur chargement map: " + e.getMessage());
             e.printStackTrace();
         }
     }
     
+    /**
+     * Charge les rectangles de collision depuis la map.
+     */
     private void loadCollisions() {
         collisionRects = new Array<>();
         if (tiledMap == null) return;
@@ -226,10 +228,13 @@ public class GameManager implements Screen {
                     collisionRects.add(new Rectangle(rect));
                 }
             }
-            System.out.println("✅ Collisions: " + collisionRects.size + " rectangles");
+            System.out.println("Collisions: " + collisionRects.size + " rectangles");
         }
     }
     
+    /**
+     * Charge les zones de mort depuis la map.
+     */
     private void loadDeathZones() {
         deathRects = new Array<>();
         if (tiledMap == null) return;
@@ -243,18 +248,21 @@ public class GameManager implements Screen {
                     deathRects.add(new Rectangle(rect));
                 }
             }
-            System.out.println("✅ Zones de mort: " + deathRects.size + " rectangles");
+            System.out.println("Zones de mort: " + deathRects.size + " rectangles");
         } else {
-            System.out.println("ℹ️ Aucune layer 'Death' trouvée dans la map");
+            System.out.println("Aucune layer 'Death' trouvee dans la map");
         }
     }
     
+    /**
+     * Charge le point de spawn du joueur depuis la map.
+     */
     private void loadSpawnFromTiled() {
         if (tiledMap == null) return;
         
         MapLayer spawnLayer = tiledMap.getLayers().get("spawn");
         if (spawnLayer == null) {
-            System.err.println("⚠️ Layer 'spawn' introuvable !");
+            System.err.println("Layer 'spawn' introuvable !");
             return;
         }
         
@@ -273,7 +281,7 @@ public class GameManager implements Screen {
                 float libgdxY = tiledY;
                 
                 player.setPosition(libgdxX, libgdxY);
-                System.out.println("✅ Spawn: (" + (int)libgdxX + ", " + (int)libgdxY + ")");
+                System.out.println("Spawn: (" + (int)libgdxX + ", " + (int)libgdxY + ")");
                 
                 if (collisionRects != null) {
                     Rectangle playerHitbox = player.getHitbox();
@@ -293,9 +301,9 @@ public class GameManager implements Screen {
                     }
                     
                     if (playerGrounded) {
-                        System.out.println("   ✅ Joueur bien positionné au sol");
+                        System.out.println("   Joueur bien positionne au sol");
                     } else {
-                        System.err.println("   ⚠️ ATTENTION : Joueur pas au sol ! Vérifiez le spawn dans Tiled");
+                        System.err.println("   ATTENTION : Joueur pas au sol ! Verifiez le spawn dans Tiled");
                     }
                 }
                 
@@ -303,18 +311,18 @@ public class GameManager implements Screen {
             }
         }
         
-        System.err.println("⚠️ Aucun spawn trouvé dans le layer 'spawn' !");
+        System.err.println("Aucun spawn trouve dans le layer 'spawn' !");
     }
     
     /**
-     * Charge les potions depuis la couche Tiled "Potions"
+     * Charge les potions depuis la couche Tiled "Potions".
      */
     private void loadPotionsFromTiled() {
         if (tiledMap == null || worldItemManager == null) return;
         
         MapLayer potionLayer = tiledMap.getLayers().get("Potions");
         if (potionLayer == null) {
-            System.out.println("ℹ️ Layer 'Potions' non trouvé");
+            System.out.println("Layer 'Potions' non trouve");
             return;
         }
         
@@ -331,18 +339,18 @@ public class GameManager implements Screen {
             potionCount++;
         }
         
-        System.out.println("✅ Potions: " + potionCount + " chargées via WorldItemManager");
+        System.out.println("Potions: " + potionCount + " chargees via WorldItemManager");
     }
     
     /**
-     * Charge les items (armures, armes) depuis la couche Tiled "Items"
+     * Charge les items (armures, armes) depuis la couche Tiled "Items".
      */
     private void loadItemsFromTiled() {
         if (tiledMap == null || worldItemManager == null) return;
         
         MapLayer itemsLayer = tiledMap.getLayers().get("Items");
         if (itemsLayer == null) {
-            System.out.println("ℹ️ Layer 'Items' non trouvé - Aucun item d'équipement");
+            System.out.println("Layer 'Items' non trouve - Aucun item d'equipement");
             return;
         }
         
@@ -379,19 +387,22 @@ public class GameManager implements Screen {
                     itemCount++;
                     break;
                 default:
-                    System.out.println("⚠️ Type d'item non reconnu : " + itemType);
+                    System.out.println("Type d'item non reconnu : " + itemType);
             }
         }
         
-        System.out.println("✅ Items d'équipement: " + itemCount + " chargés");
+        System.out.println("Items d'equipement: " + itemCount + " charges");
     }
     
+    /**
+     * Charge les portes de sortie depuis la couche Tiled "Exits".
+     */
     private void loadExitsFromTiled() {
         if (tiledMap == null || levelExitManager == null) return;
         
         MapLayer exitsLayer = tiledMap.getLayers().get("Exits");
         if (exitsLayer == null) {
-            System.out.println("ℹ️ Layer 'Exits' non trouvé - Aucune porte de sortie");
+            System.out.println("Layer 'Exits' non trouve - Aucune porte de sortie");
             return;
         }
         
@@ -410,28 +421,28 @@ public class GameManager implements Screen {
             exitCount++;
         }
         
-        System.out.println("✅ Portes de sortie: " + exitCount + " chargées");
+        System.out.println("Portes de sortie: " + exitCount + " chargees");
     }
     
     /**
-     * ⭐ MODIFIÉ : Ajout du support pour le Boss
+     * Charge les ennemis depuis la couche Tiled "Enemies".
      */
     private void loadEnemiesFromTiled() {
-        System.out.println("\n🔍 Chargement des ennemis...");
+        System.out.println("\nChargement des ennemis...");
         
         if (tiledMap == null) {
-            System.out.println("❌ tiledMap est NULL !");
+            System.out.println("tiledMap est NULL !");
             return;
         }
         
         MapLayer enemyLayer = tiledMap.getLayers().get("Enemies");
         if (enemyLayer == null) {
-            System.out.println("⚠️ Layer 'Enemies' non trouvé");
+            System.out.println("Layer 'Enemies' non trouve");
             return;
         }
         
-        System.out.println("✅ Layer 'Enemies' trouvé !");
-        System.out.println("📦 Nombre d'objets dans la couche : " + enemyLayer.getObjects().getCount());
+        System.out.println("Layer 'Enemies' trouve !");
+        System.out.println("Nombre d'objets dans la couche : " + enemyLayer.getObjects().getCount());
         
         int enemyCount = 0;
         
@@ -474,20 +485,23 @@ public class GameManager implements Screen {
                     enemyManager.addRogue(libgdxX, libgdxY);
                 }
                 enemyCount++;
-            } else if ("Boss".equalsIgnoreCase(enemyType)) {  // ⭐ AJOUT DU BOSS
+            } else if ("Boss".equalsIgnoreCase(enemyType)) {
                 enemyManager.addBoss(libgdxX, libgdxY);
                 enemyCount++;
-                System.out.println("👑 BOSS Marvin chargé !");
+                System.out.println("BOSS Marvin charge !");
             } else {
-                System.out.println("⚠️ Type d'ennemi non reconnu : " + enemyType);
+                System.out.println("Type d'ennemi non reconnu : " + enemyType);
             }
         }
         
         stabilizeAllEnemies();
         
-        System.out.println("✅ Ennemis: " + enemyCount + " chargés\n");
+        System.out.println("Ennemis: " + enemyCount + " charges\n");
     }
     
+    /**
+     * Stabilise tous les ennemis en les faisant tomber au sol.
+     */
     private void stabilizeAllEnemies() {
         if (enemyManager == null) return;
         
@@ -496,7 +510,7 @@ public class GameManager implements Screen {
             enemyManager.update(0.016f);
         }
         
-        System.out.println("✅ Tous les ennemis stabilisés après " + maxAttempts + " frames");
+        System.out.println("Tous les ennemis stabilises apres " + maxAttempts + " frames");
     }
     
     @Override
@@ -504,27 +518,23 @@ public class GameManager implements Screen {
         Gdx.gl.glClearColor(0.1f, 0.1f, 0.15f, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
-        // DEBUG TOGGLE (F3)
         if (Gdx.input.isKeyJustPressed(Input.Keys.F3)) {
             debugMode = !debugMode;
             HitboxDebugger.setDebugEnabled(debugMode);
-            System.out.println("🔧 Debug mode: " + (debugMode ? "ON" : "OFF"));
+            System.out.println("Debug mode: " + (debugMode ? "ON" : "OFF"));
         }
 
-        // RETOUR MENU (ESC)
         if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)) {
             audioManager.stopLevelMusic();
             audioManager.startMenuMusic();
-            System.out.println("🎵 Retour au menu");
+            System.out.println("Retour au menu");
             game.setScreen(new MenuScreen(game, audioManager));
             return;
         }
 
-        // UPDATE
         player.update(delta);
         enemyManager.update(delta);
         
-        // UPDATE PROJECTILES
         if (projectileManager != null) {
             projectileManager.update(delta);
             projectileManager.checkPlayerCollisions(player);
@@ -541,31 +551,27 @@ public class GameManager implements Screen {
             playerHUD.update(delta);
         }
         
-        // VÉRIFIER GAME OVER
         if (checkGameOver()) {
             game.setScreen(new GameOverScreen(game, audioManager));
             return;
         }
         
-        // UPDATE PORTES
         if (levelExitManager != null) {
             levelExitManager.update(enemyManager.getEnemiesKilled(), enemyManager.getTotalEnemiesSpawned());
             
             String nextLevel = levelExitManager.checkPlayerOnExit(player);
             if (nextLevel != null) {
-                System.out.println("🚪 Changement de niveau -> " + nextLevel);
+                System.out.println("Changement de niveau -> " + nextLevel);
                 loadNextLevel(nextLevel);
                 return;
             }
         }
         
-        // VÉRIFIER VICTOIRE
         if (checkVictory()) {
             game.setScreen(new WinnerScreen(game, audioManager));
             return;
         }
         
-        // COMBATS
         enemyManager.checkEnemyAttacks(player);
         enemyManager.checkPlayerAttack(player);
         enemyManager.removeDeadEnemies();
@@ -573,24 +579,20 @@ public class GameManager implements Screen {
         updateCamera();
         camera.update();
 
-        // RENDER BACKGROUND
         batch.setProjectionMatrix(camera.combined);
         batch.begin();
         renderBackground();
         batch.end();
         
-        // RENDER MAP
         if (tiledMapRenderer != null) {
             tiledMapRenderer.setView(camera);
             tiledMapRenderer.render();
         }
         
-        // RENDER ENTITIES
         batch.begin();
         player.render(batch);
         enemyManager.render(batch);
         
-        // RENDER PROJECTILES
         if (projectileManager != null) {
             projectileManager.render(batch);
         }
@@ -605,26 +607,28 @@ public class GameManager implements Screen {
         
         batch.end();
         
-        // BARRES DE VIE DES ENNEMIS
         if (shapeRenderer != null) {
             enemyManager.renderHealthBars(shapeRenderer, camera);
         }
         
-        // DEBUG HITBOXES
         if (debugMode) {
             HitboxDebugger.renderPlayerHitbox(player, camera);
             enemyManager.renderDebugHitboxes(camera);
         }
         
-        // RENDER HUD
         if (playerHUD != null) {
             playerHUD.render(batch, player, enemyManager.getEnemiesKilled(), enemyManager.getTotalEnemiesSpawned());
         }
     }
     
+    /**
+     * Vérifie si le joueur a perdu (mort ou tombé dans le vide).
+     * 
+     * @return true si le jeu est terminé
+     */
     private boolean checkGameOver() {
         if (player.getHealth() <= 0) {
-            System.out.println("💀 GAME OVER - Le joueur est mort (0 PV)");
+            System.out.println("GAME OVER - Le joueur est mort (0 PV)");
             return true;
         }
         
@@ -632,7 +636,7 @@ public class GameManager implements Screen {
             Rectangle playerHitbox = player.getHitbox();
             for (Rectangle deathRect : deathRects) {
                 if (playerHitbox.overlaps(deathRect)) {
-                    System.out.println("💀 GAME OVER - Le joueur est tombé dans une zone de mort");
+                    System.out.println("GAME OVER - Le joueur est tombe dans une zone de mort");
                     return true;
                 }
             }
@@ -641,9 +645,14 @@ public class GameManager implements Screen {
         return false;
     }
     
+    /**
+     * Vérifie si le joueur a gagné (niveau 4 terminé).
+     * 
+     * @return true si le jeu est gagné
+     */
     private boolean checkVictory() {
         if (System.currentTimeMillis() % 1000 < 16) {
-            System.out.println("🔍 Debug victoire - Niveau: " + currentLevel + 
+            System.out.println("Debug victoire - Niveau: " + currentLevel + 
                               " | Ennemis vivants: " + enemyManager.getAliveCount() + 
                               " | Total ennemis: " + enemyManager.getTotalEnemiesSpawned());
         }
@@ -653,9 +662,9 @@ public class GameManager implements Screen {
         boolean hasEnemies = enemyManager.getTotalEnemiesSpawned() > 0;
         
         if (isLevel4 && allEnemiesDead && hasEnemies) {
-            System.out.println("🎉 VICTOIRE - Tous les ennemis du niveau 4 sont vaincus !");
-            System.out.println("   📊 Stats finales:");
-            System.out.println("      - Ennemis tués: " + enemyManager.getEnemiesKilled());
+            System.out.println("VICTOIRE - Tous les ennemis du niveau 4 sont vaincus !");
+            System.out.println("   Stats finales:");
+            System.out.println("      - Ennemis tues: " + enemyManager.getEnemiesKilled());
             System.out.println("      - Ennemis total: " + enemyManager.getTotalEnemiesSpawned());
             return true;
         }
@@ -663,15 +672,23 @@ public class GameManager implements Screen {
         return false;
     }
     
+    /**
+     * Charge le niveau suivant.
+     * 
+     * @param nextLevelName Le nom du prochain niveau
+     */
     private void loadNextLevel(String nextLevelName) {
         System.out.println("\n========================================");
-        System.out.println("🔄 CHANGEMENT DE NIVEAU");
+        System.out.println("CHANGEMENT DE NIVEAU");
         System.out.println("Ancien: " + currentLevel + " -> Nouveau: " + nextLevelName);
         System.out.println("========================================\n");
         
         game.setScreen(new GameManager(game, selectedCharacter, audioManager, nextLevelName));
     }
     
+    /**
+     * Affiche le background répété horizontalement.
+     */
     private void renderBackground() {
         if (backgroundTexture == null) return;
         
@@ -683,6 +700,9 @@ public class GameManager implements Screen {
         }
     }
     
+    /**
+     * Met à jour la position de la caméra pour suivre le joueur.
+     */
     private void updateCamera() {
         float mapWidth = mapWidthInPixels;
         float mapHeight = mapHeightInPixels;
@@ -735,7 +755,7 @@ public class GameManager implements Screen {
 
     @Override
     public void dispose() {
-        System.out.println("\n🧹 Nettoyage GameManager...");
+        System.out.println("\nNettoyage GameManager...");
         
         if (batch != null) batch.dispose();
         if (shapeRenderer != null) shapeRenderer.dispose();
@@ -751,6 +771,6 @@ public class GameManager implements Screen {
         
         HitboxDebugger.dispose();
         
-        System.out.println("✅ GameManager dispose\n");
+        System.out.println("GameManager dispose\n");
     }
 }

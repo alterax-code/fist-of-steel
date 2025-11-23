@@ -6,29 +6,29 @@ import com.badlogic.gdx.audio.Sound;
 import java.util.HashMap;
 
 /**
- * Gestionnaire audio centralisé - VERSION 3 MUSIQUES
- * Gère séparément la musique du menu, la musique du level et la musique de victoire/défaite
+ * Gestionnaire audio centralisé pour le jeu.
+ * Gère séparément la musique du menu, la musique du level et la musique de victoire/défaite.
+ * Gère également tous les effets sonores du jeu.
  */
 public class AudioManager {
     
-    // Volumes
     private float soundVolume = 1.0f;
     private float musicVolume = 0.5f;
     
-    // Collections
     private HashMap<String, Sound> sounds;
     
-    // ⭐ TROIS MUSIQUES SÉPARÉES
-    private Music menuMusic;      // Pour MenuScreen, OptionsScreen, CharactersChoice
-    private Music levelMusic;     // Pour GameManager (en jeu)
-    private Music victoryMusic;   // Pour GameOverScreen et WinnerScreen
+    private Music menuMusic;
+    private Music levelMusic;
+    private Music victoryMusic;
     
-    // Debug
     private boolean audioSystemReady = false;
     
+    /**
+     * Constructeur. Initialise et charge tous les fichiers audio.
+     */
     public AudioManager() {
         System.out.println("\n========================================");
-        System.out.println("📊 INITIALISATION AUDIOMANAGER");
+        System.out.println("INITIALISATION AUDIOMANAGER");
         System.out.println("========================================");
         
         sounds = new HashMap<>();
@@ -38,13 +38,12 @@ public class AudioManager {
     }
     
     /**
-     * Charge TOUS les fichiers audio au démarrage
+     * Charge tous les fichiers audio au démarrage.
      */
     private void loadAllAudio() {
         long startTime = System.currentTimeMillis();
         
-        // ===== SONS =====
-        System.out.println("📂 Chargement des sons...");
+        System.out.println("Chargement des sons...");
         int soundsLoaded = 0;
         
         soundsLoaded += loadSound("jump", "assets/sounds/jump.ogg") ? 1 : 0;
@@ -52,59 +51,60 @@ public class AudioManager {
         soundsLoaded += loadSound("hit", "assets/sounds/hit.ogg") ? 1 : 0;
         soundsLoaded += loadSound("death", "assets/sounds/death.ogg") ? 1 : 0;
         
-        System.out.println("✅ " + soundsLoaded + "/4 sons chargés");
+        System.out.println(soundsLoaded + "/4 sons charges");
         
-        // ===== MUSIQUE MENU =====
-        System.out.println("\n🎵 Chargement de la musique menu...");
+        System.out.println("\nChargement de la musique menu...");
         try {
             menuMusic = Gdx.audio.newMusic(Gdx.files.internal("assets/music/Untitled.ogg"));
-            menuMusic.setLooping(true);  // ⭐ BOUCLE AUTOMATIQUE
+            menuMusic.setLooping(true);
             menuMusic.setVolume(musicVolume);
-            System.out.println("✅ Musique menu chargée : Untitled.ogg (looping activé)");
+            System.out.println("Musique menu chargee : Untitled.ogg (looping active)");
         } catch (Exception e) {
-            System.err.println("❌ ERREUR musique menu : " + e.getMessage());
+            System.err.println("ERREUR musique menu : " + e.getMessage());
             System.err.println("   Fichier attendu : assets/music/Untitled.ogg");
             menuMusic = null;
         }
         
-        // ===== MUSIQUE LEVEL =====
-        System.out.println("\n🎵 Chargement de la musique level...");
+        System.out.println("\nChargement de la musique level...");
         try {
             levelMusic = Gdx.audio.newMusic(Gdx.files.internal("assets/music/Untitled-_1_.ogg"));
-            levelMusic.setLooping(true);  // ⭐ BOUCLE AUTOMATIQUE
+            levelMusic.setLooping(true);
             levelMusic.setVolume(musicVolume);
-            System.out.println("✅ Musique level chargée : Untitled-_1_.ogg (looping activé)");
+            System.out.println("Musique level chargee : Untitled-_1_.ogg (looping active)");
         } catch (Exception e) {
-            System.err.println("❌ ERREUR musique level : " + e.getMessage());
+            System.err.println("ERREUR musique level : " + e.getMessage());
             System.err.println("   Fichier attendu : assets/music/Untitled-_1_.ogg");
             levelMusic = null;
         }
         
-        // ===== MUSIQUE VICTOIRE/DÉFAITE =====
-        System.out.println("\n🎵 Chargement de la musique victoire...");
+        System.out.println("\nChargement de la musique victoire...");
         try {
             victoryMusic = Gdx.audio.newMusic(Gdx.files.internal("assets/music/EPIC-VICTORY-FANFARE_-explosive-triumpha.ogg"));
-            victoryMusic.setLooping(true);  // ⭐ BOUCLE AUTOMATIQUE
+            victoryMusic.setLooping(true);
             victoryMusic.setVolume(musicVolume);
-            System.out.println("✅ Musique victoire chargée : EPIC-VICTORY-FANFARE_-explosive-triumpha.ogg (looping activé)");
+            System.out.println("Musique victoire chargee : EPIC-VICTORY-FANFARE_-explosive-triumpha.ogg (looping active)");
         } catch (Exception e) {
-            System.err.println("❌ ERREUR musique victoire : " + e.getMessage());
+            System.err.println("ERREUR musique victoire : " + e.getMessage());
             System.err.println("   Fichier attendu : assets/music/EPIC-VICTORY-FANFARE_-explosive-triumpha.ogg");
             victoryMusic = null;
         }
         
         long endTime = System.currentTimeMillis();
-        System.out.println("\n⏱️ Temps de chargement : " + (endTime - startTime) + "ms");
+        System.out.println("\nTemps de chargement : " + (endTime - startTime) + "ms");
         
         audioSystemReady = (soundsLoaded > 0);
         
         if (!audioSystemReady) {
-            System.err.println("⚠️ ATTENTION : Système audio non fonctionnel !");
+            System.err.println("ATTENTION : Systeme audio non fonctionnel !");
         }
     }
     
     /**
-     * Charge un son individuel avec vérification
+     * Charge un son individuel avec vérification.
+     * 
+     * @param name Le nom du son
+     * @param path Le chemin du fichier
+     * @return true si le chargement a réussi, false sinon
      */
     private boolean loadSound(String name, String path) {
         try {
@@ -115,166 +115,146 @@ public class AudioManager {
             sounds.put(name, sound);
             
             double timeMs = (end - start) / 1_000_000.0;
-            System.out.println("  ✓ " + name + " (" + String.format("%.2f", timeMs) + "ms)");
+            System.out.println("  " + name + " (" + String.format("%.2f", timeMs) + "ms)");
             return true;
         } catch (Exception e) {
-            System.err.println("  ✗ " + name + " : " + e.getMessage());
+            System.err.println("  " + name + " : " + e.getMessage());
             return false;
         }
     }
     
-    // ========================================
-    // 🎵 GESTION MUSIQUE MENU
-    // ========================================
-    
     /**
-     * Démarre la musique du MENU
-     * Utilisé par : MenuScreen, OptionsScreen, CharactersChoice
+     * Démarre la musique du menu.
+     * Utilisé par MenuScreen, OptionsScreen, CharactersChoice.
      */
     public void startMenuMusic() {
-        // Arrêter les autres musiques
         stopLevelMusic();
         stopVictoryMusic();
         
-        // ⭐ Ne démarrer QUE si elle n'est pas déjà en train de jouer
         if (menuMusic != null && !menuMusic.isPlaying()) {
             menuMusic.play();
-            System.out.println("🎵 Musique MENU démarrée");
+            System.out.println("Musique MENU demarree");
         } else if (menuMusic != null && menuMusic.isPlaying()) {
-            System.out.println("🎵 Musique MENU déjà en cours");
+            System.out.println("Musique MENU deja en cours");
         }
     }
     
     /**
-     * Arrête la musique du menu
+     * Arrête la musique du menu.
      */
     public void stopMenuMusic() {
         if (menuMusic != null && menuMusic.isPlaying()) {
             menuMusic.stop();
-            System.out.println("🎵 Musique MENU arrêtée");
+            System.out.println("Musique MENU arretee");
         }
     }
     
     /**
-     * Met en pause la musique du menu
+     * Met en pause la musique du menu.
      */
     public void pauseMenuMusic() {
         if (menuMusic != null && menuMusic.isPlaying()) {
             menuMusic.pause();
-            System.out.println("🎵 Musique MENU en pause");
+            System.out.println("Musique MENU en pause");
         }
     }
     
     /**
-     * Reprend la musique du menu
+     * Reprend la musique du menu.
      */
     public void resumeMenuMusic() {
         if (menuMusic != null) {
             menuMusic.play();
-            System.out.println("🎵 Musique MENU reprise");
+            System.out.println("Musique MENU reprise");
         }
     }
     
-    // ========================================
-    // 🎮 GESTION MUSIQUE LEVEL
-    // ========================================
-    
     /**
-     * Démarre la musique du LEVEL (en jeu)
-     * Utilisé par : GameManager
+     * Démarre la musique du level (en jeu).
+     * Utilisé par GameManager.
      */
     public void startLevelMusic() {
-        // Arrêter les autres musiques
         stopMenuMusic();
         stopVictoryMusic();
         
-        // ⭐ Ne démarrer QUE si elle n'est pas déjà en train de jouer
         if (levelMusic != null && !levelMusic.isPlaying()) {
             levelMusic.play();
-            System.out.println("🎵 Musique LEVEL démarrée");
+            System.out.println("Musique LEVEL demarree");
         } else if (levelMusic != null && levelMusic.isPlaying()) {
-            System.out.println("🎵 Musique LEVEL déjà en cours");
+            System.out.println("Musique LEVEL deja en cours");
         }
     }
     
     /**
-     * Arrête la musique du level
+     * Arrête la musique du level.
      */
     public void stopLevelMusic() {
         if (levelMusic != null && levelMusic.isPlaying()) {
             levelMusic.stop();
-            System.out.println("🎵 Musique LEVEL arrêtée");
+            System.out.println("Musique LEVEL arretee");
         }
     }
     
     /**
-     * Met en pause la musique du level
+     * Met en pause la musique du level.
      */
     public void pauseLevelMusic() {
         if (levelMusic != null && levelMusic.isPlaying()) {
             levelMusic.pause();
-            System.out.println("🎵 Musique LEVEL en pause");
+            System.out.println("Musique LEVEL en pause");
         }
     }
     
     /**
-     * Reprend la musique du level
+     * Reprend la musique du level.
      */
     public void resumeLevelMusic() {
         if (levelMusic != null) {
             levelMusic.play();
-            System.out.println("🎵 Musique LEVEL reprise");
+            System.out.println("Musique LEVEL reprise");
         }
     }
     
-    // ========================================
-    // 🏆 GESTION MUSIQUE VICTOIRE/DÉFAITE
-    // ========================================
-    
     /**
-     * Démarre la musique de VICTOIRE/DÉFAITE
-     * Utilisé par : GameOverScreen, WinnerScreen
+     * Démarre la musique de victoire/défaite.
+     * Utilisé par GameOverScreen, WinnerScreen.
      */
     public void startVictoryMusic() {
-        // Arrêter les autres musiques
         stopMenuMusic();
         stopLevelMusic();
         
-        // ⭐ Ne démarrer QUE si elle n'est pas déjà en train de jouer
         if (victoryMusic != null && !victoryMusic.isPlaying()) {
             victoryMusic.play();
-            System.out.println("🎵 Musique VICTOIRE démarrée");
+            System.out.println("Musique VICTOIRE demarree");
         } else if (victoryMusic != null && victoryMusic.isPlaying()) {
-            System.out.println("🎵 Musique VICTOIRE déjà en cours");
+            System.out.println("Musique VICTOIRE deja en cours");
         }
     }
     
     /**
-     * Arrête la musique de victoire
+     * Arrête la musique de victoire.
      */
     public void stopVictoryMusic() {
         if (victoryMusic != null && victoryMusic.isPlaying()) {
             victoryMusic.stop();
-            System.out.println("🎵 Musique VICTOIRE arrêtée");
+            System.out.println("Musique VICTOIRE arretee");
         }
     }
     
-    // ========================================
-    // 🔊 GESTION SONS
-    // ========================================
-    
     /**
-     * Joue un son IMMÉDIATEMENT
+     * Joue un son immédiatement.
+     * 
+     * @param soundName Le nom du son à jouer
      */
     public void playSound(String soundName) {
         if (!audioSystemReady) {
-            System.err.println("⚠️ Audio non prêt, impossible de jouer : " + soundName);
+            System.err.println("Audio non pret, impossible de jouer : " + soundName);
             return;
         }
         
         Sound sound = sounds.get(soundName);
         if (sound == null) {
-            System.err.println("❌ Son introuvable : " + soundName);
+            System.err.println("Son introuvable : " + soundName);
             System.err.println("   Sons disponibles : " + sounds.keySet());
             return;
         }
@@ -286,29 +266,28 @@ public class AudioManager {
         double delayMs = (endTime - playTime) / 1_000_000.0;
         
         if (soundId == -1) {
-            System.err.println("❌ Échec lecture du son : " + soundName);
+            System.err.println("Echec lecture du son : " + soundName);
         } else {
-            // Log seulement si le délai est anormal
             if (delayMs > 5.0) {
-                System.err.println("⚠️ DÉLAI ANORMAL pour " + soundName + " : " + String.format("%.2f", delayMs) + "ms");
+                System.err.println("DELAI ANORMAL pour " + soundName + " : " + String.format("%.2f", delayMs) + "ms");
             }
         }
     }
     
-    // ========================================
-    // 🎛️ CONTRÔLES VOLUME
-    // ========================================
-    
     /**
-     * Change le volume des effets sonores
+     * Change le volume des effets sonores.
+     * 
+     * @param volume Le nouveau volume (0.0 à 1.0)
      */
     public void setSoundVolume(float volume) {
         this.soundVolume = Math.max(0f, Math.min(1f, volume));
-        System.out.println("🔊 Volume sons : " + (int)(soundVolume * 100) + "%");
+        System.out.println("Volume sons : " + (int)(soundVolume * 100) + "%");
     }
     
     /**
-     * Change le volume de TOUTES les musiques
+     * Change le volume de toutes les musiques.
+     * 
+     * @param volume Le nouveau volume (0.0 à 1.0)
      */
     public void setMusicVolume(float volume) {
         this.musicVolume = Math.max(0f, Math.min(1f, volume));
@@ -321,62 +300,50 @@ public class AudioManager {
         if (victoryMusic != null) {
             victoryMusic.setVolume(musicVolume);
         }
-        System.out.println("🎵 Volume musique : " + (int)(musicVolume * 100) + "%");
+        System.out.println("Volume musique : " + (int)(musicVolume * 100) + "%");
     }
     
-    // ========================================
-    // 🔄 UPDATE (pour vérifications)
-    // ========================================
-    
     /**
-     * Vérifie et relance les musiques si nécessaire
-     * Note : Avec setLooping(true), ce n'est plus nécessaire
+     * Vérifie et relance les musiques si nécessaire.
+     * Note : Avec setLooping(true), ce n'est plus nécessaire.
      */
     public void update() {
-        // Les musiques sont en loop automatique, pas besoin de les relancer manuellement
+        // Les musiques sont en loop automatique
     }
     
-    // ========================================
-    // 🧹 NETTOYAGE
-    // ========================================
-    
     /**
-     * Libère toutes les ressources audio
+     * Libère toutes les ressources audio.
      */
     public void dispose() {
-        System.out.println("\n🧹 Nettoyage AudioManager...");
+        System.out.println("\nNettoyage AudioManager...");
         
-        // Arrêter et disposer la musique menu
         if (menuMusic != null) {
             if (menuMusic.isPlaying()) {
                 menuMusic.stop();
             }
             menuMusic.dispose();
             menuMusic = null;
-            System.out.println("  ✓ Musique menu disposée");
+            System.out.println("  Musique menu disposee");
         }
         
-        // Arrêter et disposer la musique level
         if (levelMusic != null) {
             if (levelMusic.isPlaying()) {
                 levelMusic.stop();
             }
             levelMusic.dispose();
             levelMusic = null;
-            System.out.println("  ✓ Musique level disposée");
+            System.out.println("  Musique level disposee");
         }
         
-        // Arrêter et disposer la musique victoire
         if (victoryMusic != null) {
             if (victoryMusic.isPlaying()) {
                 victoryMusic.stop();
             }
             victoryMusic.dispose();
             victoryMusic = null;
-            System.out.println("  ✓ Musique victoire disposée");
+            System.out.println("  Musique victoire disposee");
         }
         
-        // Disposer tous les sons
         int soundsDisposed = 0;
         for (Sound sound : sounds.values()) {
             if (sound != null) {
@@ -385,15 +352,11 @@ public class AudioManager {
             }
         }
         sounds.clear();
-        System.out.println("  ✓ " + soundsDisposed + " sons disposés");
+        System.out.println("  " + soundsDisposed + " sons disposes");
         
         audioSystemReady = false;
-        System.out.println("✅ AudioManager disposé\n");
+        System.out.println("AudioManager dispose\n");
     }
-    
-    // ========================================
-    // 📊 GETTERS / STATUS
-    // ========================================
     
     public float getSoundVolume() {
         return soundVolume;
@@ -420,12 +383,12 @@ public class AudioManager {
     }
     
     /**
-     * Affiche le statut de l'audio (debug)
+     * Affiche le statut de l'audio pour le debug.
      */
     public void printStatus() {
-        System.out.println("\n📊 STATUT AUDIO :");
-        System.out.println("  Système prêt : " + audioSystemReady);
-        System.out.println("  Sons chargés : " + sounds.size());
+        System.out.println("\nSTATUT AUDIO :");
+        System.out.println("  Systeme pret : " + audioSystemReady);
+        System.out.println("  Sons charges : " + sounds.size());
         System.out.println("  Musique menu : " + (menuMusic != null ? "OK" : "NULL"));
         System.out.println("  Musique level : " + (levelMusic != null ? "OK" : "NULL"));
         System.out.println("  Musique victoire : " + (victoryMusic != null ? "OK" : "NULL"));

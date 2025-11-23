@@ -14,23 +14,41 @@ import com.fistofsteel.items.Sword1;
 import com.fistofsteel.items.Sword2;
 import com.fistofsteel.items.Sword3;
 
+/**
+ * Gestionnaire des items ramassables dans le monde.
+ * Gère le spawn, l'affichage et la collecte des items.
+ */
 public class WorldItemManager {
 
     private Array<ItemPickup> pickups = new Array<>();
 
+    /**
+     * Met à jour tous les items.
+     * 
+     * @param delta Le temps écoulé
+     */
     public void update(float delta) {
         for (ItemPickup pickup : pickups) {
             pickup.update(delta);
         }
     }
 
+    /**
+     * Affiche tous les items.
+     * 
+     * @param batch Le SpriteBatch pour le rendu
+     */
     public void render(SpriteBatch batch) {
         for (ItemPickup pickup : pickups) {
             pickup.render(batch);
         }
     }
 
-    // Collision joueur ↔ items
+    /**
+     * Vérifie les collisions entre le joueur et les items.
+     * 
+     * @param player Le joueur
+     */
     public void checkPlayerCollisions(Player player) {
         Rectangle playerBounds = player.getHitbox();
 
@@ -40,7 +58,6 @@ public class WorldItemManager {
             }
         }
 
-        // Nettoyage des items ramassés
         for (int i = pickups.size - 1; i >= 0; i--) {
             if (pickups.get(i).isCollected()) {
                 pickups.removeIndex(i);
@@ -48,8 +65,12 @@ public class WorldItemManager {
         }
     }
 
-    // ===== SPAWN POTIONS =====
-    
+    /**
+     * Fait apparaître une potion de soin.
+     * 
+     * @param x Position X
+     * @param y Position Y
+     */
     public void spawnHealPotion(float x, float y) {
         Texture tex = new Texture("assets/items/potion_frame_1.png");
         Item item = new Potion("heal_small", "Potion de soin", 30);
@@ -57,11 +78,15 @@ public class WorldItemManager {
         ItemPickup pickup = new ItemPickup(x, y, tex, item);
         pickups.add(pickup);
 
-        System.out.println("💊 Potion spawn à (" + (int)x + ", " + (int)y + "). Total pickups = " + pickups.size);
+        System.out.println("Potion spawn a (" + (int)x + ", " + (int)y + "). Total pickups = " + pickups.size);
     }
 
-    // ===== SPAWN ARMURES =====
-    
+    /**
+     * Fait apparaître une armure légère.
+     * 
+     * @param x Position X
+     * @param y Position Y
+     */
     public void spawnArmorLight(float x, float y) {
         Texture tex = new Texture("assets/items/armor_light.png");
         Item item = new LightArmor();
@@ -69,9 +94,15 @@ public class WorldItemManager {
         ItemPickup pickup = new ItemPickup(x, y, tex, item);
         pickups.add(pickup);
 
-        System.out.println("🛡️ Armure légère spawn à (" + (int)x + ", " + (int)y + "). Total pickups = " + pickups.size);
+        System.out.println("Armure legere spawn a (" + (int)x + ", " + (int)y + "). Total pickups = " + pickups.size);
     }
 
+    /**
+     * Fait apparaître une armure lourde.
+     * 
+     * @param x Position X
+     * @param y Position Y
+     */
     public void spawnArmorHeavy(float x, float y) {
         Texture tex = new Texture("assets/items/armor_heavy.png");
         Item item = new HeavyArmor();
@@ -79,11 +110,15 @@ public class WorldItemManager {
         ItemPickup pickup = new ItemPickup(x, y, tex, item);
         pickups.add(pickup);
 
-        System.out.println("🛡️ Armure lourde spawn à (" + (int)x + ", " + (int)y + "). Total pickups = " + pickups.size);
+        System.out.println("Armure lourde spawn a (" + (int)x + ", " + (int)y + "). Total pickups = " + pickups.size);
     }
 
-    // ===== SPAWN ARMES =====
-    
+    /**
+     * Fait apparaître une épée de base.
+     * 
+     * @param x Position X
+     * @param y Position Y
+     */
     public void spawnSword1(float x, float y) {
         Texture tex = new Texture("assets/items/sword_1.png");
         Item item = new Sword1();
@@ -91,9 +126,15 @@ public class WorldItemManager {
         ItemPickup pickup = new ItemPickup(x, y, tex, item);
         pickups.add(pickup);
 
-        System.out.println("🗡️ Épée de base spawn à (" + (int)x + ", " + (int)y + "). Total pickups = " + pickups.size);
+        System.out.println("Epee de base spawn a (" + (int)x + ", " + (int)y + "). Total pickups = " + pickups.size);
     }
 
+    /**
+     * Fait apparaître une épée tranchante.
+     * 
+     * @param x Position X
+     * @param y Position Y
+     */
     public void spawnSword2(float x, float y) {
         Texture tex = new Texture("assets/items/sword_2.png");
         Item item = new Sword2();
@@ -101,9 +142,15 @@ public class WorldItemManager {
         ItemPickup pickup = new ItemPickup(x, y, tex, item);
         pickups.add(pickup);
 
-        System.out.println("🗡️ Épée tranchante spawn à (" + (int)x + ", " + (int)y + "). Total pickups = " + pickups.size);
+        System.out.println("Epee tranchante spawn a (" + (int)x + ", " + (int)y + "). Total pickups = " + pickups.size);
     }
 
+    /**
+     * Fait apparaître une épée légendaire.
+     * 
+     * @param x Position X
+     * @param y Position Y
+     */
     public void spawnSword3(float x, float y) {
         Texture tex = new Texture("assets/items/sword_3.png");
         Item item = new Sword3();
@@ -111,9 +158,12 @@ public class WorldItemManager {
         ItemPickup pickup = new ItemPickup(x, y, tex, item);
         pickups.add(pickup);
 
-        System.out.println("🗡️ Épée légendaire spawn à (" + (int)x + ", " + (int)y + "). Total pickups = " + pickups.size);
+        System.out.println("Epee legendaire spawn a (" + (int)x + ", " + (int)y + "). Total pickups = " + pickups.size);
     }
 
+    /**
+     * Libère les ressources.
+     */
     public void dispose() {
         for (ItemPickup pickup : pickups) {
             pickup.dispose();

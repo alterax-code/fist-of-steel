@@ -10,7 +10,8 @@ import com.fistofsteel.audio.AudioManager;
 import com.fistofsteel.ui.UIComponents.SimpleButton;
 
 /**
- * MenuScreen - Hérite de BaseScreen
+ * Écran du menu principal.
+ * Premier écran affiché au lancement du jeu.
  */
 public class MenuScreen extends BaseScreen {
     
@@ -42,7 +43,7 @@ public class MenuScreen extends BaseScreen {
         
         if (!audioManager.isMenuMusicPlaying()) {
             audioManager.startMenuMusic();
-            System.out.println("🎵 MenuScreen : Musique menu démarrée");
+            System.out.println("MenuScreen : Musique menu demarree");
         }
     }
     

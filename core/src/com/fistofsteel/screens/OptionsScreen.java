@@ -13,7 +13,8 @@ import com.fistofsteel.ui.UIComponents.VolumeSlider;
 import com.fistofsteel.ui.UIComponents.KeyButton;
 
 /**
- * OptionsScreen - Hérite de BaseScreen, utilise UIComponents
+ * Écran des options.
+ * Permet de régler le volume et de configurer les touches.
  */
 public class OptionsScreen extends BaseScreen {
     
@@ -31,7 +32,7 @@ public class OptionsScreen extends BaseScreen {
     
     @Override
     protected String getBackgroundPath() {
-        return null; // Pas de background pour Options
+        return null;
     }
     
     @Override
@@ -43,7 +44,7 @@ public class OptionsScreen extends BaseScreen {
     @Override
     public void show() {
         super.show();
-        System.out.println("🎵 OptionsScreen : Musique menu continue");
+        System.out.println("OptionsScreen : Musique menu continue");
     }
     
     @Override
