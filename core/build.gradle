@@ -1,16 +1,34 @@
-sourceCompatibility = 21
-targetCompatibility = 21
+apply plugin: "java-library"
 
+sourceCompatibility = 21
 [compileJava, compileTestJava]*.options*.encoding = 'UTF-8'
 
-sourceSets.main.java.srcDirs = [ "src/" ]
-
-java {
-    toolchain {
-        languageVersion = JavaLanguageVersion.of(21)
+sourceSets {
+    main {
+        java {
+            srcDirs = ["src/"]
+            exclude "test/**"
+        }
+        resources.srcDirs = ["src/"]
+    }
+    test {
+        java.srcDirs = ["src/test/java/"]
     }
 }
 
-compileJava {
-    options.incremental = true
+dependencies {
+    api "com.badlogicgames.gdx:gdx:$gdxVersion"
+    
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.9.3'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+test {
+    useJUnitPlatform()
+    
+    testLogging {
+        events "passed", "skipped", "failed"
+        exceptionFormat "full"
+        showStandardStreams = false
+    }
 }
