@@ -1,12 +1,12 @@
-package com.fistofsteel.entities.world;  // ✅ MODIFIÉ (était com.fistofsteel.entities)
+package com.fistofsteel.entities.world; 
 
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Rectangle;
-import com.fistofsteel.entities.player.Player;  // ✅ AJOUT
+import com.fistofsteel.entities.player.Player;  
 import com.fistofsteel.items.Item;
 
-// ... reste du code inchangé
+
 public class ItemPickup {
 
     private float x, y;
@@ -24,7 +24,7 @@ public class ItemPickup {
         this.texture = texture;
         this.item = item;
 
-        // Calcul taille d’affichage (max 64 px sur le côté le plus long)
+        
         if (texture != null) {
             float texW = texture.getWidth();
             float texH = texture.getHeight();
@@ -47,7 +47,7 @@ public class ItemPickup {
     }
 
     public void update(float delta) {
-        // plus tard on pourra ajouter un petit hover / animation
+        
     }
 
     public void render(SpriteBatch batch) {

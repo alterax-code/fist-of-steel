@@ -113,7 +113,7 @@ public class GameManager implements Screen {
         loadTiledMap();
         loadBackgroundFromTiled();
         
-        // 5. PLAYER (✅ PASSE MAINTENANT L'AUDIOMANAGER)
+        // 5. PLAYER
         if ("Alexis".equals(selectedCharacter)) {
             player = new Alexis(inputHandler, audioManager);
             System.out.println("✅ Personnage: Alexis");
@@ -335,7 +335,7 @@ public class GameManager implements Screen {
     }
     
     /**
-     * ⭐ NOUVEAU : Charge les items (armures, armes) depuis la couche Tiled "Items"
+     * Charge les items (armures, armes) depuis la couche Tiled "Items"
      */
     private void loadItemsFromTiled() {
         if (tiledMap == null || worldItemManager == null) return;
@@ -413,6 +413,9 @@ public class GameManager implements Screen {
         System.out.println("✅ Portes de sortie: " + exitCount + " chargées");
     }
     
+    /**
+     * ⭐ MODIFIÉ : Ajout du support pour le Boss
+     */
     private void loadEnemiesFromTiled() {
         System.out.println("\n🔍 Chargement des ennemis...");
         
@@ -471,6 +474,10 @@ public class GameManager implements Screen {
                     enemyManager.addRogue(libgdxX, libgdxY);
                 }
                 enemyCount++;
+            } else if ("Boss".equalsIgnoreCase(enemyType)) {  // ⭐ AJOUT DU BOSS
+                enemyManager.addBoss(libgdxX, libgdxY);
+                enemyCount++;
+                System.out.println("👑 BOSS Marvin chargé !");
             } else {
                 System.out.println("⚠️ Type d'ennemi non reconnu : " + enemyType);
             }
@@ -517,7 +524,7 @@ public class GameManager implements Screen {
         player.update(delta);
         enemyManager.update(delta);
         
-        // ⭐ UPDATE PROJECTILES
+        // UPDATE PROJECTILES
         if (projectileManager != null) {
             projectileManager.update(delta);
             projectileManager.checkPlayerCollisions(player);
@@ -583,7 +590,7 @@ public class GameManager implements Screen {
         player.render(batch);
         enemyManager.render(batch);
         
-        // ⭐ RENDER PROJECTILES
+        // RENDER PROJECTILES
         if (projectileManager != null) {
             projectileManager.render(batch);
         }

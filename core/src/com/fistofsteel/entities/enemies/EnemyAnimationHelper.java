@@ -34,10 +34,10 @@ public class EnemyAnimationHelper {
         
         boolean isRogue = enemyName.equals("Rogue");
         
-        // IDLE
+        // IDLE - ✅ CAS SPÉCIAL pour Rogue : idle11.png manquant
         int idleCount = getIdleFrameCount(enemyName);
         if (isRogue) {
-            allTextures[0] = loadAnimationRobust(basePath, enemyName, "Idle", "idle", idleCount, 1);
+            allTextures[0] = loadRogueIdleAnimation(basePath, enemyName);
         } else {
             allTextures[0] = loadAnimation(basePath, enemyName, "Idle/idle", idleCount, 1);
         }
@@ -80,6 +80,38 @@ public class EnemyAnimationHelper {
         System.out.println("   💀 Death: " + allTextures[4].length + " frames");
         
         return allTextures;
+    }
+    
+    /**
+     * ✅ VERSION SIMPLE : Charge idle1 à idle18 en sautant idle11
+     */
+    private static Texture[] loadRogueIdleAnimation(String basePath, String enemyName) {
+        Texture[] textures = new Texture[17];
+        int loadedCount = 0;
+        int textureIndex = 0;
+        
+        for (int frameNumber = 1; frameNumber <= 18; frameNumber++) {
+            if (frameNumber == 11) continue; // ✅ Sauter idle11
+            
+            String path = basePath + enemyName + "/Idle/idle" + frameNumber + ".png";
+            
+            try {
+                if (Gdx.files.internal(path).exists()) {
+                    textures[textureIndex] = new Texture(Gdx.files.internal(path));
+                    loadedCount++;
+                } else {
+                    System.err.println("⚠️  Fichier non trouvé : " + path);
+                    textures[textureIndex] = getFallbackTexture();
+                }
+            } catch (Exception e) {
+                System.err.println("❌ Erreur chargement " + path + ": " + e.getMessage());
+                textures[textureIndex] = getFallbackTexture();
+            }
+            textureIndex++;
+        }
+        
+        System.out.println("   📦 Idle (Rogue) : " + loadedCount + "/17 frames chargées (idle11 sautée)");
+        return textures;
     }
     
     /**
@@ -132,7 +164,7 @@ public class EnemyAnimationHelper {
         switch (enemyName) {
             case "Knight": return 12;
             case "Mage": return 14;
-            case "Rogue": return 18;
+            case "Rogue": return 17;  // ✅ 17 frames (idle1-10 + idle12-18)
             default: return 12;
         }
     }

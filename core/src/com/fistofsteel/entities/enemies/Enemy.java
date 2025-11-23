@@ -14,7 +14,7 @@ import com.fistofsteel.utils.HealthBar;
 
 /**
  * Classe abstraite représentant un ennemi
- * ✅ MODIFIÉ : Cooldown d'attaque augmenté, sprites de mort agrandis et tournés
+ * ✅ MODIFIÉ : Méthodes non-final pour permettre surcharge (Boss)
  */
 public abstract class Enemy {
     
@@ -52,9 +52,9 @@ public abstract class Enemy {
     protected float chaseSpeed = 75f;
     protected boolean facingRight = true;
     
-    // Timers ✅ MODIFIÉ : Cooldown d'attaque augmenté
+    // Timers
     protected float attackTimer = 0;
-    protected float attackCooldown = 2.0f; // ✅ Augmenté de 1.5f à 2.0f
+    protected float attackCooldown = 2.0f;
     protected float hitTimer = 0;
     protected float hitDuration = 0.3f;
     protected float deadTimer = 0;
@@ -66,10 +66,10 @@ public abstract class Enemy {
     protected boolean isOnGround = false;
     protected boolean hasDealtDamageThisAttack = false;
     
-    // Animation ✅ MODIFIÉ : Durées d'animation augmentées
+    // Animation
     protected float animationTimer = 0f;
     protected float walkFrameDuration = 0.15f;
-    protected float attackFrameDuration = 0.2f; // ✅ Augmenté de 0.15f à 0.2f
+    protected float attackFrameDuration = 0.2f;
     protected float deadFrameDuration = 0.3f;
     
     protected int walkFrame = 0;
@@ -117,6 +117,7 @@ public abstract class Enemy {
     
     /**
      * ⭐ CHARGEMENT AUTOMATIQUE DES TEXTURES
+     * Peut être surchargé pour des cas spéciaux (Boss)
      */
     protected void loadTextures() {
         textures = EnemyAnimationHelper.loadEnemySprites("assets/sprites/sbires/", getEnemyName());
@@ -124,15 +125,17 @@ public abstract class Enemy {
     
     /**
      * ⭐ DISPOSE DES TEXTURES
+     * Peut être surchargé pour des cas spéciaux (Boss)
      */
     protected void disposeTextures() {
         EnemyAnimationHelper.disposeTextures(textures);
     }
     
     /**
-     * ⭐ RÉCUPÉRATION DE LA TEXTURE COURANTE (méthode finale)
+     * ⭐ RÉCUPÉRATION DE LA TEXTURE COURANTE
+     * ✅ MODIFIÉ : Retiré 'final' pour permettre surcharge (Boss)
      */
-    protected final Texture getCurrentTexture() {
+    protected Texture getCurrentTexture() {
         if (textures == null || textures.length == 0) {
             return null;
         }
@@ -178,9 +181,10 @@ public abstract class Enemy {
     }
     
     /**
-     * ⭐ ANIMATION (méthode finale)
+     * ⭐ ANIMATION
+     * ✅ MODIFIÉ : Retiré 'final' pour permettre surcharge (Boss)
      */
-    protected final void updateAnimation(float delta) {
+    protected void updateAnimation(float delta) {
         animationTimer += delta;
         
         switch (currentState) {
@@ -622,10 +626,10 @@ public abstract class Enemy {
     }
     
     /**
-     * ⭐ RENDU (méthode finale)
-     * ✅ MODIFIÉ : Sprites de mort agrandis et tournés de 90° sens anti-horaire
+     * ⭐ RENDU
+     * ✅ MODIFIÉ : Retiré 'final' pour permettre surcharge (Boss)
      */
-    public final void render(SpriteBatch batch) {
+    public void render(SpriteBatch batch) {
         Texture currentTexture = getCurrentTexture();
         
         if (currentTexture == null) {
@@ -633,12 +637,11 @@ public abstract class Enemy {
         }
         
         if (currentState == State.DEAD) {
-            // ✅ Garder les dimensions normales (pas d'inversion)
             float rotatedWidth = EntityConstants.ENEMY_WIDTH;
             float rotatedHeight = EntityConstants.ENEMY_HEIGHT;
             float originX = rotatedWidth / 2f;
             float originY = rotatedHeight / 2f;
-            float rotation = -90f; // ✅ Rotation de 90° sens anti-horaire
+            float rotation = -90f;
             float scaleX = facingRight ? 1f : -1f;
             
             batch.draw(
