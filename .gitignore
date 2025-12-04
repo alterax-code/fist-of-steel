@@ -1,25 +1,133 @@
-# LibGDX Build
-/build/
-/core/build/
-/desktop/build/
-/android/build/
-/html/build/
-/ios/build/
+# ============================================
+# Fist of Steel - .gitignore
+# ============================================
 
+# =========================
 # Gradle
-/.gradle/
+# =========================
+.gradle/
+build/
+*/build/
 
-# IntelliJ / IDEA
+# Gradle Wrapper (optionnel - décommentez si vous voulez inclure le wrapper)
+# !gradle/wrapper/gradle-wrapper.jar
+# !gradlew
+# !gradlew.bat
+
+# =========================
+# IDE - IntelliJ IDEA
+# =========================
 .idea/
+*.iml
+*.ipr
+*.iws
 out/
+.idea_modules/
 
-# Eclipse
+# =========================
+# IDE - Eclipse
+# =========================
 .classpath
 .project
 .settings/
+bin/
+.metadata/
 
-# autres fichiers lourds
+# =========================
+# IDE - NetBeans
+# =========================
+nbproject/private/
+nbbuild/
+dist/
+nbdist/
+.nb-gradle/
+
+# =========================
+# IDE - VS Code
+# =========================
+.vscode/
+*.code-workspace
+
+# =========================
+# Fichiers compilés Java
+# =========================
+*.class
 *.jar
+*.war
+*.ear
+*.nar
+
+# =========================
+# Logs et fichiers temporaires
+# =========================
+*.log
+*.tmp
+*.temp
+*.swp
+*~
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# =========================
+# LibGDX spécifique
+# =========================
+# Fichiers générés par les outils GDX
+*.gwt.xml.bak
+html/war/
+android/assets/
+ios/robovm-build/
+
+# TexturePacker output (si vous utilisez le packer)
+# *.atlas
+# *.pack
+
+# =========================
+# Fichiers de sauvegarde
+# =========================
+*.bak
+*.backup
+*.old
+
+# =========================
+# Distribution
+# =========================
+# Décommentez si vous ne voulez pas versionner les builds
+# desktop/build/libs/*.jar
+# *.exe
+# *.dmg
+# *.app
+
+# =========================
+# Fichiers sensibles
+# =========================
+# Clés API, mots de passe, etc.
+secrets.properties
+local.properties
+*.keystore
+*.jks
+
+# =========================
+# Archives
+# =========================
 *.zip
 *.tar
-*.class
+*.tar.gz
+*.rar
+*.7z
+
+# =========================
+# Tiled Map Editor - Fichiers de backup
+# =========================
+*.tmx~
+*.tsx~
+*.tmx.bak
+
+# =========================
+# Tests et couverture
+# =========================
+test-results/
+test-output/
+*.exec
+jacoco.exec
+desktop/build/

@@ -494,6 +494,19 @@ public abstract class Enemy {
     }
     
     /**
+ * Tue l'ennemi instantanément (sans animation de mort).
+ * Utilisé quand l'ennemi tombe dans une zone de mort.
+ */
+public void killInstantly() {
+    isDead = true;
+    currentState = State.DEAD;
+    velocityX = 0;
+    velocityY = 0;
+    deadTimer = 0;
+    health = 0;
+    System.out.println(getClass().getSimpleName() + " mort instantanément (zone de mort) !");
+}
+    /**
      * Met à jour l'ennemi.
      * 
      * @param delta Le temps écoulé

@@ -20,6 +20,7 @@ import com.badlogic.gdx.utils.Array;
 import com.fistofsteel.FistOfSteelGame;
 import com.fistofsteel.audio.AudioManager;
 import com.fistofsteel.entities.player.Player;
+import com.fistofsteel.entities.player.PlayerData;  // ← AJOUTÉ : Import PlayerData
 import com.fistofsteel.entities.player.Alexis;
 import com.fistofsteel.entities.player.Hugo;
 import com.fistofsteel.entities.managers.EnemyManager;
@@ -34,6 +35,8 @@ import com.fistofsteel.utils.HitboxDebugger;
 /**
  * Gestionnaire principal du jeu.
  * Gère le chargement des niveaux, l'update des entités et le rendu.
+ * 
+ * MODIFIÉ : Supporte maintenant la persistance des données joueur entre les niveaux.
  */
 public class GameManager implements Screen {
     private FistOfSteelGame game;
@@ -64,20 +67,25 @@ public class GameManager implements Screen {
     private ProjectileManager projectileManager;
     
     private PlayerHUD playerHUD;
+    
+    // ═══════════════════════════════════════════════════════════════════════════
+    // AJOUTÉ : Données du joueur à conserver entre les niveaux
+    // ═══════════════════════════════════════════════════════════════════════════
+    private PlayerData playerData;
 
     /**
-     * Constructeur avec niveau par défaut.
+     * Constructeur avec niveau par défaut (NOUVELLE PARTIE).
      * 
      * @param game L'instance du jeu
      * @param selectedCharacter Le personnage choisi
      * @param audioManager Le gestionnaire audio
      */
     public GameManager(FistOfSteelGame game, String selectedCharacter, AudioManager audioManager) {
-        this(game, selectedCharacter, audioManager, "level1_example");
+        this(game, selectedCharacter, audioManager, "level1_example", null);  // ← null = nouvelle partie
     }
     
     /**
-     * Constructeur complet.
+     * Constructeur complet (NOUVELLE PARTIE).
      * 
      * @param game L'instance du jeu
      * @param selectedCharacter Le personnage choisi
@@ -85,10 +93,30 @@ public class GameManager implements Screen {
      * @param levelName Le nom du niveau à charger
      */
     public GameManager(FistOfSteelGame game, String selectedCharacter, AudioManager audioManager, String levelName) {
+        this(game, selectedCharacter, audioManager, levelName, null);  // ← null = nouvelle partie
+    }
+    
+    /**
+     * NOUVEAU CONSTRUCTEUR : Avec données du joueur (CHANGEMENT DE NIVEAU).
+     * 
+     * @param game L'instance du jeu
+     * @param selectedCharacter Le personnage choisi
+     * @param audioManager Le gestionnaire audio
+     * @param levelName Le nom du niveau à charger
+     * @param playerData Les données du joueur à restaurer (null = nouvelle partie)
+     */
+    public GameManager(FistOfSteelGame game, String selectedCharacter, AudioManager audioManager, String levelName, PlayerData playerData) {
         this.game = game;
         this.selectedCharacter = selectedCharacter;
         this.audioManager = audioManager;
         this.currentLevel = levelName;
+        this.playerData = playerData;  // ← AJOUTÉ : Stocker les données du joueur
+        
+        if (playerData != null) {
+            System.out.println("GameManager créé avec données joueur conservées");
+        } else {
+            System.out.println("GameManager créé pour nouvelle partie");
+        }
     }
 
     @Override
@@ -124,6 +152,14 @@ public class GameManager implements Screen {
             System.out.println("Personnage: Hugo");
         }
         
+        // ═══════════════════════════════════════════════════════════════════════════
+        // AJOUTÉ : Restaurer les données du joueur si on change de niveau
+        // ═══════════════════════════════════════════════════════════════════════════
+        if (playerData != null) {
+            playerData.applyToPlayer(player);
+            System.out.println("Données du joueur restaurées depuis le niveau précédent");
+        }
+        
         if (collisionRects != null && collisionRects.size > 0) {
             player.setCollisionRects(collisionRects);
             System.out.println("Collisions configurees pour le joueur (" + collisionRects.size + " rectangles)");
@@ -148,6 +184,13 @@ public class GameManager implements Screen {
         if (collisionRects != null) {
             enemyManager.setCollisionRects(collisionRects);
             System.out.println("Collisions configurees pour " + enemyManager.getTotalCount() + " ennemis");
+        }
+        
+        // ═══════════════════════════════════════════════════════════════════════════
+        // AJOUTÉ : Passer les zones de mort à EnemyManager
+        // ═══════════════════════════════════════════════════════════════════════════
+        if (deathRects != null) {
+            enemyManager.setDeathRects(deathRects);
         }
         
         worldItemManager = new WorldItemManager();
@@ -524,11 +567,12 @@ public class GameManager implements Screen {
             System.out.println("Debug mode: " + (debugMode ? "ON" : "OFF"));
         }
 
+        // ═══════════════════════════════════════════════════════════════════════════
+        // MODIFIÉ : Ouvrir le menu pause au lieu de quitter directement
+        // ═══════════════════════════════════════════════════════════════════════════
         if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)) {
-            audioManager.stopLevelMusic();
-            audioManager.startMenuMusic();
-            System.out.println("Retour au menu");
-            game.setScreen(new MenuScreen(game, audioManager));
+            System.out.println("Ouverture du menu pause");
+            game.setScreen(new PauseScreen(game, audioManager, this));
             return;
         }
 
@@ -673,7 +717,7 @@ public class GameManager implements Screen {
     }
     
     /**
-     * Charge le niveau suivant.
+     * Charge le niveau suivant EN CONSERVANT les données du joueur.
      * 
      * @param nextLevelName Le nom du prochain niveau
      */
@@ -683,7 +727,13 @@ public class GameManager implements Screen {
         System.out.println("Ancien: " + currentLevel + " -> Nouveau: " + nextLevelName);
         System.out.println("========================================\n");
         
-        game.setScreen(new GameManager(game, selectedCharacter, audioManager, nextLevelName));
+        // ═══════════════════════════════════════════════════════════════════════════
+        // MODIFIÉ : Sauvegarder les données du joueur avant de changer de niveau
+        // ═══════════════════════════════════════════════════════════════════════════
+        PlayerData savedData = new PlayerData(player);
+        
+        // Créer le nouveau GameManager AVEC les données du joueur
+        game.setScreen(new GameManager(game, selectedCharacter, audioManager, nextLevelName, savedData));
     }
     
     /**

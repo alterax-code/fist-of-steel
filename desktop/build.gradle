@@ -1,51 +1,74 @@
 plugins {
-    id 'java'
     id 'application'
 }
 
-sourceCompatibility = 21
-targetCompatibility = 21
-
-sourceSets.main.java.srcDirs = [ "src/" ]
-sourceSets.main.resources.srcDirs = ["../assets"]
-
-application {
-    mainClass = "com.fistofsteel.DesktopLauncher"
+// ══════════════════════════════════════════════════════════════════════════════
+// CONFIGURATION DES SOURCES (structure non-standard)
+// ══════════════════════════════════════════════════════════════════════════════
+sourceSets {
+    main {
+        java {
+            srcDirs = ['src']  // desktop/src/ contient directement com/fistofsteel/
+        }
+        resources {
+            srcDirs = [rootProject.file('assets').path]
+        }
+    }
 }
 
-run {
-    standardInput = System.in
-    workingDir = file("../")
-    ignoreExitValue = true
+if (org.gradle.internal.os.OperatingSystem.current().isMacOsX()) {
+    application.applicationDefaultJvmArgs = ['-XstartOnFirstThread']
 }
 
 dependencies {
-    implementation project(":core")
+    implementation project(':core')
     implementation "com.badlogicgames.gdx:gdx-backend-lwjgl3:$gdxVersion"
     implementation "com.badlogicgames.gdx:gdx-platform:$gdxVersion:natives-desktop"
 }
 
-jar {
-    dependsOn(':core:jar')
+// Classe principale du jeu
+def mainClassPath = 'com.fistofsteel.DesktopLauncher'
+application {
+    mainClass = mainClassPath
+}
+
+run {
+    workingDir = rootProject.file('.')
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// TASK : Fat JAR
+// ══════════════════════════════════════════════════════════════════════════════
+tasks.register('fatJar', Jar) {
+    dependsOn ':core:classes', classes
+    
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
     
     manifest {
-        attributes(
-            'Main-Class': 'com.fistofsteel.DesktopLauncher'
-        )
+        attributes 'Main-Class': mainClassPath
     }
+    
+    // Classes DESKTOP
+    from files(sourceSets.main.output.classesDirs)
+    
+    // Ressources DESKTOP
+    from sourceSets.main.output.resourcesDir
+    
+    // Classes CORE
+    from files(project(':core').sourceSets.main.output.classesDirs)
+    
+    // Ressources CORE
+    from project(':core').sourceSets.main.output.resourcesDir
+    
+    // Dépendances externes (LibGDX)
     from {
-        configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
+        configurations.runtimeClasspath.findAll { file ->
+            !file.name.contains('core')
+        }.collect { it.isDirectory() ? it : zipTree(it) }
     }
-    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-}
-
-java {
-    toolchain {
-        languageVersion = JavaLanguageVersion.of(21)
-    }
-}
-
-compileJava {
-    options.encoding = 'UTF-8'
-    options.incremental = true
+    
+    archiveBaseName = 'FistOfSteel'
+    archiveVersion = '1.0'
+    archiveClassifier = 'all'
+    destinationDirectory = file("$buildDir/libs")
 }

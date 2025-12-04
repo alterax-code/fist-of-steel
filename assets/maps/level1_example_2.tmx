@@ -1,53 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.10" tiledversion="1.11.2" orientation="orthogonal" renderorder="right-down" width="90" height="20" tilewidth="64" tileheight="64" infinite="0" nextlayerid="11" nextobjectid="139">
+<map version="1.10" tiledversion="1.11.2" orientation="orthogonal" renderorder="right-down" width="90" height="20" tilewidth="64" tileheight="64" infinite="0" nextlayerid="13" nextobjectid="143">
  <tileset firstgid="1" source="ground_tileset.tsx"/>
  <tileset firstgid="13" source="fdhgsjhfshgf.tsx"/>
- <objectgroup id="7" name="Potions">
-  <object id="101" name="potion" x="3038" y="102" width="64" height="64"/>
- </objectgroup>
- <objectgroup id="9" name="Armor">
-  <object id="96" name="armorlight" x="750" y="986" width="64" height="64">
-   <properties>
-    <property name="type" value="light"/>
-   </properties>
-  </object>
- </objectgroup>
- <objectgroup id="8" name="Enemies">
-  <properties>
-   <property name="patrolMax" type="float" value="200"/>
-   <property name="patrolMin" type="float" value="-200"/>
-  </properties>
-  <object id="97" name="EnemySpawn" x="1140" y="733" width="160" height="130">
-   <properties>
-    <property name="type" value="Knight"/>
-   </properties>
-  </object>
-  <object id="100" name="EnemySpawn" x="5521.64" y="897.303" width="160" height="130">
-   <properties>
-    <property name="type" value="Rogue"/>
-   </properties>
-  </object>
-  <object id="102" name="EnemySpawn" x="3346" y="351" width="160" height="130">
-   <properties>
-    <property name="type" value="Mage"/>
-   </properties>
-  </object>
-  <object id="103" name="EnemySpawn" x="4176.97" y="724.636" width="160" height="130">
-   <properties>
-    <property name="type" value="Knight"/>
-   </properties>
-  </object>
-  <object id="104" name="EnemySpawn" x="1913.94" y="928.939" width="160" height="130">
-   <properties>
-    <property name="type" value="Knight"/>
-   </properties>
-  </object>
-  <object id="105" name="EnemySpawn" x="3347.27" y="898.636" width="160" height="130">
-   <properties>
-    <property name="type" value="Knight"/>
-   </properties>
-  </object>
- </objectgroup>
  <imagelayer id="2" name="Background" repeatx="1">
   <image source="Gemini_Generated_Image_3ijzal3ijzal3ijz_2 (1).png" width="1920" height="1280"/>
  </imagelayer>
@@ -75,24 +29,32 @@
 21,21,21,21,21,21,21,21,21,21,21,21,21,21,21,21,21,21,21,21,21,21,21,21,21,21,21,21,21,21,21,21,21,21,21,21,21,21,21,21,17,0,0,0,0,0,0,0,17,21,21,21,21,21,21,21,21,21,21,21,21,21,21,21,21,21,21,21,21,21,21,21,17,0,0,0,0,0,0,0,0,17,21,21,21,21,21,21,21,21
 </data>
  </layer>
- <objectgroup id="10" name="Weapons">
-  <object id="98" name="sword1" x="1663.67" y="307.667" width="64" height="64">
+ <objectgroup id="7" name="Potions">
+  <object id="101" name="potion" x="3038" y="107" width="64" height="64"/>
+ </objectgroup>
+ <objectgroup id="10" name="Items">
+  <object id="98" x="1663.67" y="307.667" width="64" height="64">
    <properties>
-    <property name="type" value="sword1"/>
+    <property name="type" value="sword2"/>
+   </properties>
+  </object>
+  <object id="142" x="793.939" y="960.606" width="130.303" height="118.182">
+   <properties>
+    <property name="type" value="armor_light"/>
    </properties>
   </object>
  </objectgroup>
  <objectgroup id="5" name="Exits">
-  <object id="12" x="5606" y="424" width="88" height="144">
+  <object id="12" x="5606" y="416" width="88" height="144">
    <properties>
-    <property name="targetLevel" value="level1_example_2"/>
+    <property name="targetLevel" value="level1_example_3"/>
    </properties>
   </object>
  </objectgroup>
  <objectgroup id="3" name="Collisions">
   <object id="4" x="-62.0303" y="-0.5" width="63.25" height="1280.67"/>
   <object id="6" x="5762.81" y="-0.410758" width="63.25" height="1280.67"/>
-  <object id="106" x="-117.27" y="-10" width="5762.54" height="52"/>
+  <object id="106" x="2.73" y="-10" width="5761.21" height="52"/>
   <object id="107" x="1536.5" y="577.667" width="63" height="64"/>
   <object id="111" x="1663.91" y="383.818" width="64.1818" height="64.6364"/>
   <object id="112" x="1408.27" y="768" width="63.9091" height="63.9091"/>
@@ -110,16 +72,57 @@
   <object id="128" x="4992.36" y="832.364" width="63.3636" height="63.4545"/>
   <object id="129" x="5376.13" y="768" width="63.5" height="64.375"/>
   <object id="130" x="5504.25" y="575.75" width="256" height="64.25"/>
-  <object id="133" x="-375" y="1151.75" width="3000" height="153.25"/>
+  <object id="133" x="1" y="1151.75" width="2624" height="251.25"/>
   <object id="134" x="2416" y="-792"/>
-  <object id="136" x="3071.64" y="1152" width="1601" height="134.727"/>
+  <object id="136" x="3071.64" y="1152" width="1601" height="244.727"/>
   <object id="137" x="5184.55" y="960" width="63.2727" height="64.1818"/>
-  <object id="138" x="5183.82" y="1152.18" width="800" height="136.727"/>
+  <object id="138" x="5183.82" y="1152.18" width="579" height="240.727"/>
  </objectgroup>
  <objectgroup id="4" name="spawn">
   <object id="11" name="playerSpawn" x="374.5" y="853" width="75" height="110">
    <properties>
     <property name="type" value="spawn"/>
+   </properties>
+  </object>
+ </objectgroup>
+ <objectgroup id="12" name="Death">
+  <object id="139" x="2222.85" y="1393.94" width="1281.82" height="66.6667"/>
+  <object id="140" x="4320.24" y="1392.73" width="1281.82" height="66.6667"/>
+  <object id="141" x="-465.152" y="2181.82" width="7093.94" height="763.636"/>
+ </objectgroup>
+ <objectgroup id="8" name="Enemies">
+  <properties>
+   <property name="patrolMax" type="float" value="200"/>
+   <property name="patrolMin" type="float" value="-200"/>
+  </properties>
+  <object id="97" name="EnemySpawn" x="1140" y="733" width="160" height="130">
+   <properties>
+    <property name="type" value="Knight"/>
+   </properties>
+  </object>
+  <object id="100" name="EnemySpawn" x="5515.58" y="794.273" width="160" height="130">
+   <properties>
+    <property name="type" value="Rogue"/>
+   </properties>
+  </object>
+  <object id="102" name="EnemySpawn" x="3342.97" y="211.606" width="160" height="130">
+   <properties>
+    <property name="type" value="Mage"/>
+   </properties>
+  </object>
+  <object id="103" name="EnemySpawn" x="4176.97" y="703.424" width="160" height="130">
+   <properties>
+    <property name="type" value="Knight"/>
+   </properties>
+  </object>
+  <object id="104" name="EnemySpawn" x="1910.91" y="871.363" width="160" height="130">
+   <properties>
+    <property name="type" value="Knight"/>
+   </properties>
+  </object>
+  <object id="105" name="EnemySpawn" x="3353.33" y="792.575" width="160" height="130">
+   <properties>
+    <property name="type" value="Knight"/>
    </properties>
   </object>
  </objectgroup>

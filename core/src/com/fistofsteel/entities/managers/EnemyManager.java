@@ -16,6 +16,8 @@ import com.fistofsteel.utils.HitboxDebugger;
 /**
  * Gestionnaire des ennemis du jeu.
  * Gère le spawn, l'update, le rendu et les combats de tous les ennemis.
+ * 
+ * MODIFIÉ : Les ennemis meurent maintenant s'ils touchent une zone de mort.
  */
 public class EnemyManager {
 
@@ -26,6 +28,11 @@ public class EnemyManager {
     private int totalEnemiesSpawned = 0;
     
     private ProjectileManager projectileManager;
+    
+    // ═══════════════════════════════════════════════════════════════════════════
+    // AJOUTÉ : Zones de mort pour tuer les ennemis qui tombent sous la map
+    // ═══════════════════════════════════════════════════════════════════════════
+    private Array<Rectangle> deathRects;
 
     /**
      * Constructeur du gestionnaire d'ennemis.
@@ -35,6 +42,7 @@ public class EnemyManager {
     public EnemyManager(Player player) {
         this.enemies = new Array<>();
         this.player = player;
+        this.deathRects = new Array<>();  // ← AJOUTÉ
     }
     
     /**
@@ -49,6 +57,22 @@ public class EnemyManager {
             if (enemy instanceof Mage) {
                 ((Mage) enemy).setProjectileManager(manager);
             }
+        }
+    }
+    
+    // ═══════════════════════════════════════════════════════════════════════════
+    // AJOUTÉ : Méthode pour définir les zones de mort
+    // ═══════════════════════════════════════════════════════════════════════════
+    /**
+     * Définit les zones de mort pour les ennemis.
+     * Les ennemis qui touchent ces zones meurent instantanément.
+     * 
+     * @param deathRects Les rectangles des zones de mort
+     */
+    public void setDeathRects(Array<Rectangle> deathRects) {
+        this.deathRects = deathRects;
+        if (deathRects != null) {
+            System.out.println("Zones de mort configurées pour les ennemis (" + deathRects.size + " zones)");
         }
     }
 
@@ -174,12 +198,46 @@ public class EnemyManager {
 
     /**
      * Met à jour tous les ennemis.
+     * Vérifie également si un ennemi touche une zone de mort.
      * 
      * @param delta Le temps écoulé
      */
     public void update(float delta) {
         for (Enemy enemy : enemies) {
             enemy.update(delta);
+        }
+        
+        // ═══════════════════════════════════════════════════════════════════════════
+        // AJOUTÉ : Vérifier si un ennemi touche une zone de mort
+        // ═══════════════════════════════════════════════════════════════════════════
+        checkEnemyDeathZones();
+    }
+    
+    // ═══════════════════════════════════════════════════════════════════════════
+    // AJOUTÉ : Méthode pour vérifier les zones de mort
+    // ═══════════════════════════════════════════════════════════════════════════
+    /**
+     * Vérifie si des ennemis touchent une zone de mort et les tue.
+     */
+    private void checkEnemyDeathZones() {
+        if (deathRects == null || deathRects.size == 0) return;
+        
+        for (Enemy enemy : enemies) {
+            // Ne pas vérifier les ennemis déjà morts
+            if (enemy.isDead()) continue;
+            
+            Rectangle enemyHitbox = enemy.getHitbox();
+            
+            for (Rectangle deathRect : deathRects) {
+                if (enemyHitbox.overlaps(deathRect)) {
+                    // Tuer l'ennemi instantanément
+                    enemy.killInstantly();
+                    System.out.println(enemy.getClass().getSimpleName() + 
+                            " est tombé dans une zone de mort ! Position: (" + 
+                            (int)enemy.getX() + ", " + (int)enemy.getY() + ")");
+                    break;
+                }
+            }
         }
     }
 

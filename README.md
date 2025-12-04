@@ -1,338 +1,327 @@
-# 2D-Game
+# 🎮 Fist of Steel: Marvin's Vengeance
 
-Création d'un jeux vidéo en 2D
+<div align="center">
 
-arboresence :
+![Java](https://img.shields.io/badge/Java-21-orange?style=for-the-badge&logo=openjdk)
+![LibGDX](https://img.shields.io/badge/LibGDX-1.12+-red?style=for-the-badge)
+![Gradle](https://img.shields.io/badge/Gradle-8.5-blue?style=for-the-badge&logo=gradle)
+![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)
 
-2D-GAME/
-├── .gradle/
-│
-├── assets/
-│ ├── items/
-│ │ ├── potion*frame_1.png
-│ │ ├── potion_frame_2.png
-│ │ ├── potion_frame_3.png
-│ │ ├── potion_frame_4.png
-│ │ └── potion_frame_5.png
-│ │
-│ ├── maps/
-│ │ ├── background_double.png
-│ │ ├── fdhgsjhfshgf.tsx
-│ │ ├── gemini_walls_perfect_256x192_transparent.png
-│ │ ├── gemini_walls_ZERO_MAGENTA_FINAL.png
-│ │ ├── ground_tileset.png
-│ │ ├── ground_tileset.tsx
-│ │ └── level1_example.tmx
-│ │
-│ ├── menu/
-│ │ ├── character_selection_background.png
-│ │ └── menu_background.png
-│ │
-│ ├── music/
-│ │ ├── background_music.mp3
-│ │ ├── background_music.ogg
-│ │ ├── Untitled-\_1*.ogg
-│ │ └── Untitled.ogg
-│ │
-│ ├── sounds/
-│ │ ├── attack.mp3
-│ │ ├── attack.ogg
-│ │ ├── death.ogg
-│ │ ├── death.wav
-│ │ ├── hit.mp3
-│ │ ├── hit.ogg
-│ │ ├── jump.flac
-│ │ └── jump.ogg
-│ │
-│ └── sprites/
-│ ├── alexis/
-│ │ ├── alexis_attack_1.png
-│ │ ├── alexis_attack_2.png
-│ │ ├── alexis_attack_3.png
-│ │ ├── alexis_attack_4.png
-│ │ ├── alexis_block.png
-│ │ ├── alexis_crouch.png
-│ │ ├── alexis_dead_1.png
-│ │ ├── alexis_dead_2.png
-│ │ ├── alexis_hit.png
-│ │ ├── alexis_idle.png
-│ │ ├── alexis_jump.png
-│ │ ├── alexis_walk_1.png
-│ │ ├── alexis_walk_2.png
-│ │ └── alexis_walk_3.png
-│ │
-│ ├── hugo/
-│ │ ├── hugo_attack_1.png
-│ │ ├── hugo_attack_2.png
-│ │ ├── hugo_block.png
-│ │ ├── hugo_crouch.png
-│ │ ├── hugo_dead_1.png
-│ │ ├── hugo_dead_2.png
-│ │ ├── hugo_hit.png
-│ │ ├── hugo_idle.png
-│ │ ├── hugo_jump.png
-│ │ ├── hugo_walk_1.png
-│ │ ├── hugo_walk_2.png
-│ │ └── hugo_walk_3.png
-│ │
-│ └── sbires/
-│ ├── Knight/
-│ │ ├── Attack/
-│ │ │ ├── attack0.png
-│ │ │ ├── attack1.png
-│ │ │ ├── attack2.png
-│ │ │ ├── attack3.png
-│ │ │ └── attack4.png
-│ │ │
-│ │ ├── Climb/
-│ │ │ ├── climb1.png
-│ │ │ ├── climb2.png
-│ │ │ ├── climb3.png
-│ │ │ └── climb4.png
-│ │ │
-│ │ ├── Death/
-│ │ │ ├── death1.png
-│ │ │ ├── death2.png
-│ │ │ ├── death3.png
-│ │ │ ├── death4.png
-│ │ │ ├── death5.png
-│ │ │ ├── death6.png
-│ │ │ ├── death7.png
-│ │ │ ├── death8.png
-│ │ │ ├── death9.png
-│ │ │ └── death10.png
-│ │ │
-│ │ ├── Hurt/
-│ │ │ ├── hurt1.png
-│ │ │ ├── hurt2.png
-│ │ │ ├── hurt3.png
-│ │ │ └── hurt4.png
-│ │ │
-│ │ ├── Idle/
-│ │ │ ├── idle1.png
-│ │ │ ├── idle2.png
-│ │ │ ├── idle3.png
-│ │ │ ├── idle4.png
-│ │ │ ├── idle5.png
-│ │ │ ├── idle6.png
-│ │ │ ├── idle7.png
-│ │ │ ├── idle8.png
-│ │ │ ├── idle9.png
-│ │ │ ├── idle10.png
-│ │ │ ├── idle11.png
-│ │ │ └── idle12.png
-│ │ │
-│ │ ├── Walk/
-│ │ │ └── knight.png
-│ │
-│ ├── Mage/
-│ │ ├── Attack/
-│ │ │ ├── attack1.png
-│ │ │ ├── attack2.png
-│ │ │ ├── attack3.png
-│ │ │ ├── attack4.png
-│ │ │ ├── attack5.png
-│ │ │ ├── attack6.png
-│ │ │ └── attack7.png
-│ │ │
-│ │ ├── Death/
-│ │ │ ├── death1.png
-│ │ │ ├── death2.png
-│ │ │ ├── death3.png
-│ │ │ ├── death4.png
-│ │ │ ├── death5.png
-│ │ │ ├── death6.png
-│ │ │ ├── death7.png
-│ │ │ ├── death8.png
-│ │ │ ├── death9.png
-│ │ │ └── death10.png
-│ │ │
-│ │ ├── Fire/
-│ │ │ ├── fire1.png
-│ │ │ ├── fire2.png
-│ │ │ ├── fire3.png
-│ │ │ ├── fire4.png
-│ │ │ ├── fire5.png
-│ │ │ ├── fire6.png
-│ │ │ ├── fire7.png
-│ │ │ ├── fire8.png
-│ │ │ └── fire9.png
-│ │ │
-│ │ ├── Hurt/
-│ │ │ ├── hurt1.png
-│ │ │ ├── hurt2.png
-│ │ │ ├── hurt3.png
-│ │ │ └── hurt4.png
-│ │ │
-│ │ ├── Idle/
-│ │ │ ├── idle1.png
-│ │ │ ├── idle2.png
-│ │ │ ├── idle3.png
-│ │ │ ├── idle4.png
-│ │ │ ├── idle5.png
-│ │ │ ├── idle6.png
-│ │ │ ├── idle7.png
-│ │ │ ├── idle8.png
-│ │ │ ├── idle9.png
-│ │ │ ├── idle10.png
-│ │ │ ├── idle11.png
-│ │ │ ├── idle12.png
-│ │ │ ├── idle13.png
-│ │ │ └── idle14.png
-│ │ │
-│ │ ├── Walk/
-│ │ │ ├── walk1.png
-│ │ │ ├── walk2.png
-│ │ │ ├── walk3.png
-│ │ │ ├── walk4.png
-│ │ │ ├── walk5.png
-│ │ │ └── walk6.png
-│ │ │
-│ │ └── mage.png
-│ │
-│ └── Rogue/
-│ ├── Attack/
-│ │ ├── Attack1.png
-│ │ ├── Attack2.png
-│ │ ├── Attack3.png
-│ │ ├── Attack4.png
-│ │ ├── Attack5.png
-│ │ ├── Attack6.png
-│ │ └── Attack7.png
-│ │
-│ ├── Climb/
-│ │ ├── climb1.png
-│ │ ├── climb2.png
-│ │ ├── climb3.png
-│ │ └── climb4.png
-│ │
-│ ├── Death/
-│ │ ├── death1.png
-│ │ ├── death2.png
-│ │ ├── death3.png
-│ │ ├── death4.png
-│ │ ├── death5.png
-│ │ ├── death6.png
-│ │ ├── death7.png
-│ │ ├── death8.png
-│ │ ├── death9.png
-│ │ └── death10.png
-│ │
-│ ├── Hurt/
-│ │ ├── hurt1.png
-│ │ ├── hurt2.png
-│ │ ├── hurt3.png
-│ │ └── hurt4.png
-│ │
-│ ├── Idle/
-│ │ ├── idle1.png
-│ │ ├── idle2.png
-│ │ ├── idle3.png
-│ │ ├── idle4.png
-│ │ ├── idle5.png
-│ │ ├── idle6.png
-│ │ ├── idle7.png
-│ │ ├── idle8.png
-│ │ ├── idle9.png
-│ │ ├── idle10.png
-│ │ ├── idle12.png
-│ │ ├── idle13.png
-│ │ ├── idle14.png
-│ │ ├── idle15.png
-│ │ ├── idle16.png
-│ │ ├── idle17.png
-│ │ └── idle18.png
-│ │
-│ ├── Jump/
-│ │ ├── jump1.png
-│ │ ├── jump2.png
-│ │ ├── jump3.png
-│ │ ├── jump4.png
-│ │ ├── jump5.png
-│ │ ├── jump6.png
-│ │ └── jump7.png
-│ │
-│ ├── Run/
-│ │ ├── run1.png
-│ │ ├── run2.png
-│ │ ├── run3.png
-│ │ ├── run4.png
-│ │ ├── run5.png
-│ │ ├── run6.png
-│ │ ├── run7.png
-│ │ └── run8.png
-│ │
-│ ├── Walk/
-│ │ ├── walk1.png
-│ │ ├── walk2.png
-│ │ ├── walk3.png
-│ │ ├── walk4.png
-│ │ ├── walk5.png
-│ │ └── walk6.png
-│ │
-│ ├── Walk_Attack/
-│ │ ├── walk_attack1.png
-│ │ ├── walk_attack2.png
-│ │ ├── walk_attack3.png
-│ │ ├── walk_attack4.png
-│ │ ├── walk_attack5.png
-│ │ └── walk_attack6.png
-│ │
-│ └── rogue.png
-│
-├── core/
-│ ├── build/
-│ ├── src/com/fistofsteel/
-│ │ ├── audio/
-│ │ │ └── AudioManager.java
-│ │ │
-│ │ ├── entities/
-│ │ │ ├── Alexis.java
-│ │ │ ├── Enemy.java
-│ │ │ ├── EnemyManager.java
-│ │ │ ├── Hugo.java
-│ │ │ ├── Knight.java
-│ │ │ ├── Mage.java
-│ │ │ ├── Player.java
-│ │ │ ├── Rogue.java
-│ │ │ └── WorldItemManager.java
-│ │ │
-│ │ ├── input/
-│ │ │ └── InputHandler.java
-│ │ │
-│ │ ├── items/
-│ │ │ ├── Armor.java
-│ │ │ ├── Item.java
-│ │ │ ├── ItemPickup.java
-│ │ │ ├── Potion.java
-│ │ │ └── Weapon.java
-│ │ │
-│ │ ├── screens/
-│ │ │ ├── CharactersChoice.java
-│ │ │ ├── GameManager.java
-│ │ │ ├── MenuScreen.java
-│ │ │ └── OptionsScreen.java
-│ │ │
-│ │ └── utils/
-│ │ └── FistOfSteelGame.java
-│ │
-│ ├── build.gradle
-│ └── build.gradle.backup
-│
-├── desktop/
-│ ├── build/
-│ ├── src/com/fistofsteel/
-│ │ └── DesktopLauncher.java
-│ │
-│ ├── build.gradle
-│ └── build.gradle.backup
-│
-├── gradle/
-│
-├── build.gradle
-├── create_project.sh
-├── gradle.properties
-├── gradle.properties.backup
-├── gradlew
-├── README.md
-└── settings.gradle
+**Un beat'em up 2D rétro en pixel art développé avec LibGDX**
+
+[ Télécharger](#-installation) • [Jouer](#-lancer-le-jeu) • [Documentation](#-structure-du-projet) • [Contribuer](#-contribution)
+
+</div>
+
+---
+
+## À propos
+
+**Fist of Steel: Marvin's Vengeance** est un jeu de combat 2D de type beat'em up développé en Java avec le framework LibGDX. Incarnez Alexis ou Hugo et affrontez des hordes d'ennemis à travers 4 niveaux pour vaincre le boss final : Marvin !
+
+### Caractéristiques
+
+- **2 personnages jouables** : Alexis (mêlée avec combos) et Hugo (attaques à distance)
+- **Système de combat** : Combos, blocage, esquive et attaques spéciales
+- **Système d'équipement** : Armures et armes avec bonus de stats
+- **4 niveaux progressifs** avec un boss final
+- **Bande sonore immersive** avec gestion séparée musique/effets
+- **Progression** : Santé et équipement conservés entre les niveaux
+
+---
+
+## Prérequis
+
+Avant de commencer, assurez-vous d'avoir installé :
+
+| Outil              | Version minimale                 | Vérification     |
+| ------------------ | -------------------------------- | ----------------- |
+| **Java JDK** | 21+                              | `java -version` |
+| **Gradle**   | 8.0+ (optionnel, wrapper inclus) | `./gradlew -v`  |
+| **Git**      | Dernière version                | `git --version` |
+
+### Installation de Java 21
+
+<details>
+<summary>Windows</summary>
+
+1. Téléchargez [Eclipse Temurin JDK 21](https://adoptium.net/)
+2. Exécutez l'installateur
+3. Ajoutez `JAVA_HOME` aux variables d'environnement
+
+</details>
+
+<details>
+<summary>macOS</summary>
+
+```bash
+brew install openjdk@21
+```
+
+</details>
+
+<details>
+<summary>Linux (Ubuntu/Debian)</summary>
+
+```bash
+sudo apt update
+sudo apt install openjdk-21-jdk
+```
+
+</details>
+
+---
+
+## Installation
+
+### Option 1 : Cloner le repository
+
+```bash
+# Cloner le projet
+git clone https://github.com/VOTRE_USERNAME/fist-of-steel.git
+
+# Accéder au dossier
+cd fist-of-steel
+
+# Vérifier que tout fonctionne
+./gradlew --version
+```
+
+### Option 2 : Télécharger le ZIP
+
+1. Cliquez sur le bouton vert **Code** en haut de la page
+2. Sélectionnez **Download ZIP**
+3. Extrayez l'archive
+4. Ouvrez un terminal dans le dossier extrait
+
+---
+
+## Lancer le jeu
+
+### Méthode rapide (recommandée)
+
+```bash
+./gradlew desktop:run
+```
+
+> **Note Windows** : Utilisez `gradlew.bat desktop:run` au lieu de `./gradlew`
+
+### Première exécution
+
+La première fois, Gradle téléchargera les dépendances (~100 Mo). Cela peut prendre quelques minutes selon votre connexion.
+
+```bash
+# Linux/macOS
+./gradlew desktop:run
+
+# Windows
+gradlew.bat desktop:run
+```
+
+### Créer un exécutable (.jar)
+
+```bash
+./gradlew desktop:dist
+```
+
+Le fichier JAR sera généré dans : `desktop/build/libs/desktop-1.0.jar`
+
+Pour l'exécuter :
+
+```bash
+java -jar desktop/build/libs/desktop-1.0.jar
+```
+
+---
+
+## Contrôles
+
+| Action                  | Touche                   |
+| ----------------------- | ------------------------ |
+| Déplacement gauche     | `A` ou `←`          |
+| Déplacement droite     | `D` ou `→`          |
+| Sauter                  | `ESPACE`               |
+| Attaquer                | `Q` ou `Clic gauche` |
+| Bloquer                 | `E`                    |
+| S'accroupir / Fast fall | `S`                    |
+| Mode debug (hitboxes)   | `F3`                   |
+| Retour menu             | `ÉCHAP`               |
+
+---
+
+## Structure du projet
+
+```
+fist-of-steel/
+├── 📁 core/                    # Code source principal
+│   └── src/com/fistofsteel/
+│       ├── 📁 audio/           # Gestion audio
+│       ├── 📁 entities/        # Joueurs, ennemis, projectiles
+│       │   ├── enemies/        # Knight, Mage, Rogue, Boss
+│       │   ├── managers/       # EnemyManager, ProjectileManager...
+│       │   ├── player/         # Alexis, Hugo, Player
+│       │   ├── projectiles/    # Projectiles du jeu
+│       │   └── world/          # Items, sorties de niveau
+│       ├── 📁 input/           # Gestion des entrées
+│       ├── 📁 items/           # Armes, armures, potions
+│       ├── 📁 screens/         # Écrans (menu, jeu, options...)
+│       ├── 📁 ui/              # Interface utilisateur
+│       └── 📁 utils/           # Utilitaires et constantes
+├── 📁 desktop/                 # Launcher desktop
+├── 📁 assets/                  # Ressources du jeu
+│   ├── 📁 sprites/             # Textures et animations
+│   ├── 📁 maps/                # Niveaux Tiled (.tmx)
+│   ├── 📁 music/               # Musiques
+│   ├── 📁 sounds/              # Effets sonores
+│   └── 📁 items/               # Icônes d'objets
+├── 📁 maps/                    # Fichiers de maps
+├── 📄 build.gradle             # Configuration Gradle principale
+├── 📄 settings.gradle          # Paramètres Gradle
+└── 📄 README.md                # Ce fichier
+```
+
+---
+
+## Tests
+
+Exécuter les tests unitaires :
+
+```bash
+./gradlew test
+```
+
+Les tests couvrent :
+
+- ✅ Système de combos (Alexis)
+- ✅ Statistiques des armes
+- ✅ Calculs de dégâts
+
+---
+
+## Développement
+
+### Importer dans un IDE
+
+<details>
+<summary>IntelliJ IDEA (recommandé)</summary>
+
+1. **File** → **Open**
+2. Sélectionnez le dossier du projet
+3. Choisissez "Import as Gradle project"
+4. Attendez la synchronisation
+5. Run → **Edit Configurations** → **+** → **Application**
+   - Main class: `com.fistofsteel.DesktopLauncher`
+   - Working directory: `$PROJECT_DIR$/assets`
+   - Use classpath of module: `desktop.main`
+
+</details>
+
+<details>
+<summary>Eclipse</summary>
+
+```bash
+./gradlew eclipse
+```
+
+Puis importez le projet via **File** → **Import** → **Existing Projects**
+
+</details>
+
+<details>
+<summary>VS Code</summary>
+
+1. Installez l'extension "Extension Pack for Java"
+2. Ouvrez le dossier du projet
+3. Attendez l'indexation
+4. Utilisez le terminal intégré pour les commandes Gradle
+
+</details>
+
+### Commandes utiles
+
+| Commande                   | Description             |
+| -------------------------- | ----------------------- |
+| `./gradlew desktop:run`  | Lancer le jeu           |
+| `./gradlew desktop:dist` | Créer le JAR           |
+| `./gradlew test`         | Exécuter les tests     |
+| `./gradlew clean`        | Nettoyer le build       |
+| `./gradlew tasks`        | Voir toutes les tâches |
+
+---
+
+## Assets et Crédits
+
+- **Sprites personnages** : Créés avec génération IA + retouches
+- **Maps** : Créées avec [Tiled Map Editor](https://www.mapeditor.org/)
+- **Musiques** : Compositions originales
+- **Framework** : [LibGDX](https://libgdx.com/)
+
+---
+
+## Troubleshooting
+
+<details>
+<summary>❌ "Could not find or load main class"</summary>
+
+```bash
+./gradlew clean desktop:run
+```
+
+</details>
+
+<details>
+<summary>❌ Erreur OpenGL / Écran noir</summary>
+
+- Mettez à jour vos drivers graphiques
+- Essayez de lancer avec : `java -jar -Dorg.lwjgl.opengl.Display.allowSoftwareOpenGL=true desktop.jar`
+
+</details>
+
+<details>
+<summary>❌ Assets non trouvés</summary>
+
+Vérifiez que le dossier `assets/` est bien présent et contient les sous-dossiers `sprites/`, `maps/`, `music/`, `sounds/`
+
+</details>
+
+<details>
+<summary>❌ Permission denied (Linux/macOS)</summary>
+
+```bash
+chmod +x gradlew
+./gradlew desktop:run
+```
+
+</details>
+
+---
+
+## Contribution
+
+Les contributions sont les bienvenues ! Voici comment participer :
+
+1. **Fork** le projet
+2. Créez une branche (`git checkout -b feature/ma-fonctionnalite`)
+3. Committez vos changements (`git commit -m 'Ajout de ma fonctionnalité'`)
+4. Push sur la branche (`git push origin feature/ma-fonctionnalite`)
+5. Ouvrez une **Pull Request**
+
+### Guidelines
+
+- Respectez le style de code existant
+- Ajoutez des commentaires Javadoc pour les nouvelles classes
+- Testez vos modifications avant de soumettre
+
+---
+
+## License
+
+Ce projet est sous licence MIT - voir le fichier [LICENSE](LICENSE) pour plus de détails.
+
+---
+
+## Auteurs
+
+- **Alterax** - *Développeur principal*
+
+</div>

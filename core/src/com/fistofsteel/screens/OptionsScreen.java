@@ -10,21 +10,18 @@ import com.fistofsteel.FistOfSteelGame;
 import com.fistofsteel.audio.AudioManager;
 import com.fistofsteel.ui.UIComponents.SimpleButton;
 import com.fistofsteel.ui.UIComponents.VolumeSlider;
-import com.fistofsteel.ui.UIComponents.KeyButton;
 
 /**
  * Écran des options.
- * Permet de régler le volume et de configurer les touches.
+ * Permet de régler le volume de la musique et des effets sonores.
+ * 
+ * MODIFIÉ : Suppression de la configuration des touches (non fonctionnelle).
  */
 public class OptionsScreen extends BaseScreen {
     
     private VolumeSlider musicSlider;
     private VolumeSlider sfxSlider;
     private SimpleButton backButton;
-    
-    private boolean waitingForKey = false;
-    private String keyToRemap = "";
-    private KeyButton[] keyButtons;
     
     public OptionsScreen(FistOfSteelGame game, AudioManager audioManager) {
         super(game, audioManager);
@@ -51,32 +48,17 @@ public class OptionsScreen extends BaseScreen {
     protected void createElements() {
         float centerX = screenWidth / 2f;
         
+        // Sliders de volume - positionnés au centre de l'écran
         float sliderWidth = Math.min(800f, screenWidth * 0.42f);
         float sliderX = centerX - sliderWidth / 2f;
-        float sliderY1 = screenHeight * 0.65f;
-        float sliderY2 = screenHeight * 0.51f;
+        float sliderY1 = screenHeight * 0.55f;
+        float sliderY2 = screenHeight * 0.40f;
         
         musicSlider = new VolumeSlider("MUSIC VOLUME", sliderX, sliderY1, sliderWidth, audioManager.getMusicVolume());
         sfxSlider = new VolumeSlider("SFX VOLUME", sliderX, sliderY2, sliderWidth, audioManager.getSoundVolume());
         
-        float keyStartY = screenHeight * 0.37f;
-        float keySpacing = screenHeight * 0.074f;
-        float keyWidth = 250f;
-        
-        float col1X = centerX - keyWidth - 50;
-        float col2X = centerX;
-        float col3X = centerX + keyWidth + 50;
-        
-        keyButtons = new KeyButton[] {
-            new KeyButton("Left", "A", col1X, keyStartY, keyWidth),
-            new KeyButton("Right", "D", col2X, keyStartY, keyWidth),
-            new KeyButton("Jump", "SPACE", col3X, keyStartY, keyWidth),
-            new KeyButton("Attack", "Q", col1X, keyStartY - keySpacing, keyWidth),
-            new KeyButton("Block", "E", col2X, keyStartY - keySpacing, keyWidth),
-            new KeyButton("Crouch", "S", col3X, keyStartY - keySpacing, keyWidth)
-        };
-        
-        float backY = screenHeight * 0.14f;
+        // Bouton retour
+        float backY = screenHeight * 0.20f;
         backButton = new SimpleButton("BACK", centerX, backY, 300, 70);
     }
     
@@ -88,27 +70,13 @@ public class OptionsScreen extends BaseScreen {
         int mouseX = Gdx.input.getX();
         int mouseY = (int)screenHeight - Gdx.input.getY();
         
-        if (waitingForKey) {
-            for (int keycode = 0; keycode < 256; keycode++) {
-                if (Gdx.input.isKeyJustPressed(keycode)) {
-                    for (KeyButton kb : keyButtons) {
-                        if (kb.getAction().equals(keyToRemap)) {
-                            kb.setKeyName(Input.Keys.toString(keycode));
-                            break;
-                        }
-                    }
-                    waitingForKey = false;
-                    keyToRemap = "";
-                    break;
-                }
-            }
-        }
-        
+        // Retour au menu avec Échap
         if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)) {
             game.setScreen(new MenuScreen(game, audioManager));
             return;
         }
         
+        // Gestion des sliders
         if (Gdx.input.isTouched()) {
             if (musicSlider.isDragging() || musicSlider.getBounds().contains(mouseX, mouseY)) {
                 musicSlider.updateValue(mouseX);
@@ -123,48 +91,39 @@ public class OptionsScreen extends BaseScreen {
             sfxSlider.setDragging(false);
         }
         
-        if (Gdx.input.justTouched() && !waitingForKey) {
+        // Mise à jour hover du bouton
+        backButton.update(mouseX, mouseY);
+        
+        // Gestion du clic sur le bouton
+        if (Gdx.input.justTouched()) {
             if (backButton.isClicked(mouseX, mouseY)) {
                 game.setScreen(new MenuScreen(game, audioManager));
                 return;
             }
-            
-            for (KeyButton kb : keyButtons) {
-                if (kb.isClicked(mouseX, mouseY)) {
-                    waitingForKey = true;
-                    keyToRemap = kb.getAction();
-                }
-            }
         }
         
+        // ═══════════════════════════════════════════════════════════════════════════
+        // RENDU
+        // ═══════════════════════════════════════════════════════════════════════════
+        
+        // Titre
         batch.begin();
-        float titleY = screenHeight * 0.88f;
+        float titleY = screenHeight * 0.80f;
         titleFont.draw(batch, "OPTIONS", 0, titleY, screenWidth, Align.center, false);
         batch.end();
         
+        // Sliders et bouton
         shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
         musicSlider.render(shapeRenderer);
         sfxSlider.render(shapeRenderer);
         backButton.render(shapeRenderer);
-        for (KeyButton kb : keyButtons) {
-            kb.render(shapeRenderer);
-        }
         shapeRenderer.end();
         
+        // Textes
         batch.begin();
         musicSlider.renderText(batch, font);
         sfxSlider.renderText(batch, font);
         backButton.renderText(batch, font);
-        for (KeyButton kb : keyButtons) {
-            kb.renderText(batch, font);
-        }
-        
-        if (waitingForKey) {
-            font.setColor(Color.YELLOW);
-            float msgY = screenHeight * 0.185f;
-            font.draw(batch, "Press a key for: " + keyToRemap, 0, msgY, screenWidth, Align.center, false);
-            font.setColor(Color.WHITE);
-        }
         batch.end();
     }
 }

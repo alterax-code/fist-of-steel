@@ -9,10 +9,13 @@ import com.fistofsteel.items.Item;
 /**
  * Item ramassable dans le monde du jeu.
  * Gère l'affichage et la collecte de l'item.
+ * 
+ * MODIFIÉ : Ajout d'un effet de flottement visuel.
  */
 public class ItemPickup {
 
     private float x, y;
+    private float baseY;  // Position Y de base pour le flottement
     private Texture texture;
     private Item item;
     private boolean collected = false;
@@ -20,6 +23,14 @@ public class ItemPickup {
 
     private float drawWidth;
     private float drawHeight;
+    
+    // ═══════════════════════════════════════════════════════════════════════════
+    // AJOUTÉ : Paramètres de l'effet de flottement
+    // ═══════════════════════════════════════════════════════════════════════════
+    private float floatTimer = 0f;
+    private float floatSpeed = 2.5f;      // Vitesse de l'oscillation
+    private float floatAmplitude = 8f;    // Amplitude du flottement (pixels)
+    private float floatOffset;            // Décalage aléatoire pour désynchroniser les items
 
     /**
      * Constructeur d'un item ramassable.
@@ -32,8 +43,12 @@ public class ItemPickup {
     public ItemPickup(float x, float y, Texture texture, Item item) {
         this.x = x;
         this.y = y;
+        this.baseY = y;  // Sauvegarder la position Y de base
         this.texture = texture;
         this.item = item;
+        
+        // Décalage aléatoire pour que les items ne flottent pas en synchronisation
+        this.floatOffset = (float) (Math.random() * Math.PI * 2);
 
         if (texture != null) {
             float texW = texture.getWidth();
@@ -57,11 +72,24 @@ public class ItemPickup {
     }
 
     /**
-     * Met à jour l'item.
+     * Met à jour l'item (animation de flottement).
      * 
      * @param delta Le temps écoulé
      */
     public void update(float delta) {
+        if (collected) return;
+        
+        // ═══════════════════════════════════════════════════════════════════════════
+        // AJOUTÉ : Animation de flottement sinusoïdale
+        // ═══════════════════════════════════════════════════════════════════════════
+        floatTimer += delta;
+        
+        // Calcul de la nouvelle position Y avec une fonction sinusoïdale
+        float floatY = (float) Math.sin((floatTimer * floatSpeed) + floatOffset) * floatAmplitude;
+        y = baseY + floatY;
+        
+        // Mettre à jour les bounds pour la collision
+        bounds.setY(y);
     }
 
     /**

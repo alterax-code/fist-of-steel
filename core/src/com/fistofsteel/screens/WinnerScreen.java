@@ -51,7 +51,7 @@ public class WinnerScreen extends BaseScreen {
         float centerX = screenWidth / 2f;
         float buttonWidth = 300f;
         float buttonHeight = 80f;
-        float buttonY = screenHeight * 0.3f;
+        float buttonY = screenHeight * 0.55f;
         float spacing = 50f;
         
         returnMenuButton = new SimpleButton("RETURN MENU", centerX - buttonWidth/2f - spacing/2f, buttonY, buttonWidth, buttonHeight);

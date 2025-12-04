@@ -635,6 +635,13 @@ public abstract class Player {
      * @param x La nouvelle position X
      * @param y La nouvelle position Y
      */
+
+    public void setHealth(int health) {
+    this.health = Math.max(0, Math.min(health, maxHealth));
+    System.out.println("PV définis à : " + this.health + "/" + maxHealth);
+}
+
+
     public void setPosition(float x, float y) {
         this.x = x;
         this.y = y;
