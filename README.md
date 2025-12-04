@@ -1,4 +1,4 @@
-# 🎮 Fist of Steel: Marvin's Vengeance
+# Fist of Steel: Marvin's Vengeance
 
 <div align="center">
 
