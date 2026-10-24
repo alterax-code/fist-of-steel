@@ -1,46 +1,30 @@
-package com.fistofsteel.entities.managers;  // ✅ MODIFIÉ (était com.fistofsteel.entities)
+package com.fistofsteel.entities.managers;
 
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.utils.Array;
-import com.fistofsteel.entities.player.Player;  // ✅ AJOUT
-import com.fistofsteel.entities.enemies.Enemy;  // ✅ AJOUT
-import com.fistofsteel.entities.enemies.Knight;  // ✅ AJOUT
-import com.fistofsteel.entities.enemies.Mage;  // ✅ AJOUT
-import com.fistofsteel.entities.enemies.Rogue;  // ✅ AJOUT
+import com.fistofsteel.entities.player.Player;
+import com.fistofsteel.entities.enemies.Enemy;
+import com.fistofsteel.entities.enemies.Knight;
+import com.fistofsteel.entities.enemies.Mage;
+import com.fistofsteel.entities.enemies.Rogue;
+import com.fistofsteel.entities.enemies.Boss;
 import com.fistofsteel.utils.HitboxDebugger;
-
-// ... reste du code inchangé
 
 public class EnemyManager {
 
     private Array<Enemy> enemies;
     private Player player;
     
+    // ⭐ NOUVEAU : Compteur de kills
     private int enemiesKilled = 0;
     private int totalEnemiesSpawned = 0;
-    
-    private ProjectileManager projectileManager;
 
     public EnemyManager(Player player) {
         this.enemies = new Array<>();
         this.player = player;
-    }
-    
-    /**
-     * Définit le gestionnaire de projectiles
-     */
-    public void setProjectileManager(ProjectileManager manager) {
-        this.projectileManager = manager;
-        
-        // Donner la référence à tous les Mages existants
-        for (Enemy enemy : enemies) {
-            if (enemy instanceof Mage) {
-                ((Mage) enemy).setProjectileManager(manager);
-            }
-        }
     }
 
     // ----------- KNIGHT -----------
@@ -65,9 +49,6 @@ public class EnemyManager {
 
     public void addMage(float x, float y) {
         Mage mage = new Mage(x, y, player);
-        if (projectileManager != null) {
-            mage.setProjectileManager(projectileManager);
-        }
         enemies.add(mage);
         totalEnemiesSpawned++;
         System.out.println("🧙 Mage ajouté à (" + (int)x + ", " + (int)y + ")");
@@ -76,9 +57,6 @@ public class EnemyManager {
     public void addMage(float x, float y, float patrolMin, float patrolMax) {
         Mage mage = new Mage(x, y, player);
         mage.setPatrolZone(patrolMin, patrolMax);
-        if (projectileManager != null) {
-            mage.setProjectileManager(projectileManager);
-        }
         enemies.add(mage);
         totalEnemiesSpawned++;
         System.out.println("🧙 Mage ajouté à (" + (int)x + ", " + (int)y + 
@@ -103,6 +81,15 @@ public class EnemyManager {
                 ") | Patrol: [" + (int)patrolMin + " -> " + (int)patrolMax + "]");
     }
 
+    // ----------- BOSS -----------
+
+    public void addBoss(float x, float y) {
+        Boss boss = new Boss(x, y, player);
+        enemies.add(boss);
+        totalEnemiesSpawned++;
+        System.out.println("👑 Boss ajouté à (" + (int)x + ", " + (int)y + ")");
+    }
+
     // ----------- COLLISIONS & UPDATE -----------
 
     public void setCollisionRects(Array<Rectangle> collisions) {
@@ -123,6 +110,9 @@ public class EnemyManager {
         }
     }
     
+    /**
+     * ⭐ NOUVEAU : Rendu des barres de vie des ennemis
+     */
     public void renderHealthBars(ShapeRenderer shapeRenderer, OrthographicCamera camera) {
         for (Enemy enemy : enemies) {
             enemy.renderHealthBar(shapeRenderer, camera);
@@ -132,39 +122,26 @@ public class EnemyManager {
     // ----------- COMBATS -----------
 
     /**
-     * Vérifie les attaques des ennemis sur le joueur
+     * ⭐ CORRIGÉ : Vérifie si les ennemis peuvent infliger des dégâts
+     * Chaque ennemi gère son propre flag "hasDealtDamageThisAttack"
      */
     public void checkEnemyAttacks(Player player) {
         for (Enemy enemy : enemies) {
-            enemy.tryDealDamage();
+            enemy.tryDealDamage(); // ⭐ Nouvelle méthode qui gère le one-hit-per-attack
         }
     }
 
-    /**
-     * ⭐ MODIFIÉ : Vérifie les attaques du joueur (corps-à-corps uniquement)
-     * Les attaques à distance sont gérées par ProjectileManager.checkEnemyCollisions()
-     */
     public void checkPlayerAttack(Player player) {
-        // ⭐ Si le joueur attaque à distance, ignorer le corps-à-corps
-        if (player.isRangedAttacker()) {
-            return; // Hugo n'inflige pas de dégâts directs
-        }
-        
-        // Corps-à-corps pour Alexis (ou autres personnages mêlée)
         if (!player.isAttacking()) return;
-        if (player.hasDealtDamageThisAttack()) return;
 
         Rectangle playerHitbox = player.getHitbox();
         Rectangle attackBox = new Rectangle(player.getX(), player.getY(), 80f, playerHitbox.height);
 
         for (Enemy enemy : enemies) {
             if (!enemy.isDead() && attackBox.overlaps(enemy.getHitbox())) {
-                int damage = player.getTotalAttack();
-                enemy.takeDamage(damage);
-                player.markDamageDealt();
+                enemy.takeDamage(10);
                 System.out.println("💥 " + enemy.getClass().getSimpleName() +
-                        " touché ! (-" + damage + " HP) | HP: " + enemy.getHealth() + "/" + enemy.getMaxHealth());
-                break;
+                        " touché ! HP: " + enemy.getHealth() + "/" + enemy.getMaxHealth());
             }
         }
     }
@@ -176,7 +153,7 @@ public class EnemyManager {
         for (Enemy enemy : enemies) {
             if (enemy.isDead()) {
                 toRemove.add(enemy);
-                enemiesKilled++;
+                enemiesKilled++; // ⭐ Incrémenter le compteur de kills
             }
         }
 
@@ -198,17 +175,22 @@ public class EnemyManager {
         return enemies.size;
     }
     
+    /**
+     * ⭐ NOUVEAU : Récupère le nombre d'ennemis tués
+     */
     public int getEnemiesKilled() {
         return enemiesKilled;
     }
     
+    /**
+     * ⭐ NOUVEAU : Récupère le nombre total d'ennemis spawnés
+     */
     public int getTotalEnemiesSpawned() {
         return totalEnemiesSpawned;
     }
     
     /**
-     * ⭐ NOUVEAU : Getter pour accéder à la liste des ennemis
-     * (nécessaire pour ProjectileManager.checkEnemyCollisions)
+     * ⭐ NOUVEAU : Récupère la liste des ennemis (pour ProjectileManager)
      */
     public Array<Enemy> getEnemies() {
         return enemies;

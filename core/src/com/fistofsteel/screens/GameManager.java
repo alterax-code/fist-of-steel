@@ -1,6 +1,5 @@
 package com.fistofsteel.screens;
 
-// LibGDX imports
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.Screen;
@@ -8,7 +7,6 @@ import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.maps.MapLayer;
 import com.badlogic.gdx.maps.MapObject;
 import com.badlogic.gdx.maps.objects.RectangleMapObject;
@@ -17,29 +15,17 @@ import com.badlogic.gdx.maps.tiled.TmxMapLoader;
 import com.badlogic.gdx.maps.tiled.renderers.OrthogonalTiledMapRenderer;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.utils.Array;
-
-// Core game imports
 import com.fistofsteel.FistOfSteelGame;
 import com.fistofsteel.audio.AudioManager;
-
-// Player imports
-import com.fistofsteel.entities.player.Player;
 import com.fistofsteel.entities.player.Alexis;
 import com.fistofsteel.entities.player.Hugo;
-
-// Manager imports
+import com.fistofsteel.entities.player.Player;
 import com.fistofsteel.entities.managers.EnemyManager;
-import com.fistofsteel.entities.managers.ProjectileManager;
-import com.fistofsteel.entities.managers.WorldItemManager;
 import com.fistofsteel.entities.managers.LevelExitManager;
-
-// Input imports
+import com.fistofsteel.entities.managers.WorldItemManager;
+import com.fistofsteel.entities.managers.ProjectileManager;
 import com.fistofsteel.input.InputHandler;
-
-// UI imports
 import com.fistofsteel.ui.PlayerHUD;
-
-// Utils imports
 import com.fistofsteel.utils.EntityConstants;
 import com.fistofsteel.utils.HitboxDebugger;
 
@@ -47,7 +33,6 @@ public class GameManager implements Screen {
     private FistOfSteelGame game;
     private OrthographicCamera camera;
     private SpriteBatch batch;
-    private ShapeRenderer shapeRenderer;
     private Player player;
     private InputHandler inputHandler;
     private AudioManager audioManager;
@@ -88,10 +73,9 @@ public class GameManager implements Screen {
     public void show() {
         System.out.println("\n========================================");
         System.out.println("🎮 INITIALISATION DE GAMEMANAGER");
-        System.out.println("📁 Niveau: " + currentLevel);
+        System.out.println("📍 Niveau: " + currentLevel);
         System.out.println("========================================\n");
         
-        // 1. CAMÉRA
         camera = new OrthographicCamera();
         float worldHeight = 20 * 64;
         float screenAspectRatio = (float) Gdx.graphics.getWidth() / Gdx.graphics.getHeight();
@@ -99,27 +83,22 @@ public class GameManager implements Screen {
         camera.setToOrtho(false, viewportWidth, worldHeight);
         System.out.println("✅ Caméra initialisée");
         
-        // 2. BATCH ET SHAPE RENDERER
         batch = new SpriteBatch();
-        shapeRenderer = new ShapeRenderer();
-        System.out.println("✅ SpriteBatch et ShapeRenderer créés");
+        System.out.println("✅ SpriteBatch créé");
         
-        // 3. INPUT HANDLER
         inputHandler = new InputHandler(audioManager);
         Gdx.input.setInputProcessor(inputHandler);
         System.out.println("✅ InputHandler créé et connecté à AudioManager");
         
-        // 4. TILED MAP
         loadTiledMap();
         loadBackgroundFromTiled();
         
-        // 5. PLAYER (✅ PASSE MAINTENANT L'AUDIOMANAGER)
         if ("Alexis".equals(selectedCharacter)) {
             player = new Alexis(inputHandler, audioManager);
-            System.out.println("✅ Personnage: Alexis");
+            System.out.println("✅ Personnage: Alexis (Hitbox: 75x110)");
         } else {
             player = new Hugo(inputHandler, audioManager);
-            System.out.println("✅ Personnage: Hugo");
+            System.out.println("✅ Personnage: Hugo (Hitbox: 60x100)");
         }
         
         if (collisionRects != null && collisionRects.size > 0) {
@@ -131,19 +110,7 @@ public class GameManager implements Screen {
         
         loadSpawnFromTiled();
         
-        // 6. PROJECTILE MANAGER
-        projectileManager = new ProjectileManager(mapWidthInPixels);
-        System.out.println("✅ ProjectileManager créé");
-        
-        // ⭐ Si Hugo, connecter le ProjectileManager
-        if (player instanceof Hugo) {
-            ((Hugo) player).setProjectileManager(projectileManager);
-            System.out.println("✅ Hugo connecté au ProjectileManager");
-        }
-        
-        // 7. ENEMY MANAGER
         enemyManager = new EnemyManager(player);
-        enemyManager.setProjectileManager(projectileManager);
         loadEnemiesFromTiled();
         
         if (collisionRects != null) {
@@ -151,27 +118,29 @@ public class GameManager implements Screen {
             System.out.println("✅ Collisions configurées pour " + enemyManager.getTotalCount() + " ennemis");
         }
         
-        // 8. ITEMS
+        projectileManager = new ProjectileManager(mapWidthInPixels);
+        
+        if (player instanceof Hugo) {
+            ((Hugo) player).setProjectileManager(projectileManager);
+            System.out.println("✅ ProjectileManager configuré pour Hugo");
+        }
+        
         worldItemManager = new WorldItemManager();
         loadPotionsFromTiled();
-        loadItemsFromTiled();
+        loadArmorFromTiled();
+        loadWeaponsFromTiled();
         
-        // 9. LEVEL EXIT MANAGER
         levelExitManager = new LevelExitManager();
         loadExitsFromTiled();
         
-        // 10. HUD
         playerHUD = new PlayerHUD();
         System.out.println("✅ HUD du joueur initialisé");
         
-        // 11. MUSIQUE
         audioManager.startLevelMusic();
         System.out.println("🎵 Musique level démarrée");
         
-        // 12. DEBUG
         HitboxDebugger.setDebugEnabled(debugMode);
         
-        // 13. FINALIZE
         updateCamera();
         camera.update();
         batch.setProjectionMatrix(camera.combined);
@@ -306,15 +275,12 @@ public class GameManager implements Screen {
         System.err.println("⚠️ Aucun spawn trouvé dans le layer 'spawn' !");
     }
     
-    /**
-     * Charge les potions depuis la couche Tiled "Potions"
-     */
     private void loadPotionsFromTiled() {
         if (tiledMap == null || worldItemManager == null) return;
         
         MapLayer potionLayer = tiledMap.getLayers().get("Potions");
         if (potionLayer == null) {
-            System.out.println("ℹ️ Layer 'Potions' non trouvé");
+            System.out.println("⚠️ Layer 'Potions' non trouvé");
             return;
         }
         
@@ -333,57 +299,75 @@ public class GameManager implements Screen {
         
         System.out.println("✅ Potions: " + potionCount + " chargées via WorldItemManager");
     }
-    
-    /**
-     * ⭐ NOUVEAU : Charge les items (armures, armes) depuis la couche Tiled "Items"
-     */
-    private void loadItemsFromTiled() {
+
+    private void loadArmorFromTiled() {
         if (tiledMap == null || worldItemManager == null) return;
-        
-        MapLayer itemsLayer = tiledMap.getLayers().get("Items");
-        if (itemsLayer == null) {
-            System.out.println("ℹ️ Layer 'Items' non trouvé - Aucun item d'équipement");
+
+        MapLayer armorLayer = tiledMap.getLayers().get("Armor");
+        if (armorLayer == null) {
+            System.out.println("⚠️ Layer 'Armor' non trouvé");
             return;
         }
-        
-        int itemCount = 0;
-        
-        for (MapObject object : itemsLayer.getObjects()) {
+
+        int armorCount = 0;
+
+        for (MapObject object : armorLayer.getObjects()) {
+            float x = object.getProperties().get("x", Float.class);
+            float y = object.getProperties().get("y", Float.class);
+
+            String type = object.getProperties().get("type", String.class);
+            if (type == null) {
+                type = "light";
+            }
+
+            if ("heavy".equalsIgnoreCase(type)) {
+                worldItemManager.spawnArmorHeavy(x, y);
+            } else {
+                worldItemManager.spawnArmorLight(x, y);
+            }
+
+            armorCount++;
+        }
+
+        System.out.println("✅ Armures: " + armorCount + " chargées via WorldItemManager");
+    }
+
+    private void loadWeaponsFromTiled() {
+        if (tiledMap == null || worldItemManager == null) return;
+
+        MapLayer weaponLayer = tiledMap.getLayers().get("Weapons");
+        if (weaponLayer == null) {
+            System.out.println("⚠️ Layer 'Weapons' non trouvé dans Tiled");
+            return;
+        }
+
+        int weaponCount = 0;
+
+        for (MapObject object : weaponLayer.getObjects()) {
             float tiledX = object.getProperties().get("x", Float.class);
             float tiledY = object.getProperties().get("y", Float.class);
-            
-            float libgdxX = tiledX;
-            float libgdxY = tiledY;
-            
-            String itemType = object.getProperties().get("type", "sword1", String.class);
-            
-            switch (itemType.toLowerCase()) {
-                case "armor_light":
-                    worldItemManager.spawnArmorLight(libgdxX, libgdxY);
-                    itemCount++;
-                    break;
-                case "armor_heavy":
-                    worldItemManager.spawnArmorHeavy(libgdxX, libgdxY);
-                    itemCount++;
-                    break;
-                case "sword1":
-                    worldItemManager.spawnSword1(libgdxX, libgdxY);
-                    itemCount++;
-                    break;
-                case "sword2":
-                    worldItemManager.spawnSword2(libgdxX, libgdxY);
-                    itemCount++;
-                    break;
-                case "sword3":
-                    worldItemManager.spawnSword3(libgdxX, libgdxY);
-                    itemCount++;
-                    break;
-                default:
-                    System.out.println("⚠️ Type d'item non reconnu : " + itemType);
+
+            float x = tiledX;
+            float y = tiledY;
+
+            String weaponType = object.getProperties().get("type", String.class);
+            if (weaponType == null) {
+                weaponType = "sword1";
             }
+
+            System.out.println("🔎 Weapon Tiled: type=" + weaponType + " à (" + x + ", " + y + ")");
+
+            switch (weaponType) {
+                case "sword1" -> worldItemManager.spawnSword1(x, y);
+                case "sword2" -> worldItemManager.spawnSword2(x, y);
+                case "sword3" -> worldItemManager.spawnSword3(x, y);
+                default -> System.out.println("⚠️ weaponType inconnu: " + weaponType);
+            }
+
+            weaponCount++;
         }
-        
-        System.out.println("✅ Items d'équipement: " + itemCount + " chargés");
+
+        System.out.println("✅ Weapons: " + weaponCount + " chargées via WorldItemManager");
     }
     
     private void loadExitsFromTiled() {
@@ -391,7 +375,7 @@ public class GameManager implements Screen {
         
         MapLayer exitsLayer = tiledMap.getLayers().get("Exits");
         if (exitsLayer == null) {
-            System.out.println("ℹ️ Layer 'Exits' non trouvé - Aucune porte de sortie");
+            System.out.println("⚠️ Layer 'Exits' non trouvé - Aucune porte de sortie");
             return;
         }
         
@@ -440,6 +424,11 @@ public class GameManager implements Screen {
             float libgdxY = tiledY;
             
             String enemyType = object.getProperties().get("type", "Knight", String.class);
+
+            System.out.println("🔎 Ennemi trouvé dans Tiled :");
+            System.out.println("   - Nom objet : " + object.getName());
+            System.out.println("   - Propriétés : " + object.getProperties());
+            System.out.println("   - enemyType lu = '" + enemyType + "'");
             
             Float patrolMinObj = object.getProperties().get("patrolMin", Float.class);
             Float patrolMaxObj = object.getProperties().get("patrolMax", Float.class);
@@ -471,6 +460,9 @@ public class GameManager implements Screen {
                     enemyManager.addRogue(libgdxX, libgdxY);
                 }
                 enemyCount++;
+            } else if ("Boss".equalsIgnoreCase(enemyType)) {
+                enemyManager.addBoss(libgdxX, libgdxY);
+                enemyCount++;
             } else {
                 System.out.println("⚠️ Type d'ennemi non reconnu : " + enemyType);
             }
@@ -497,14 +489,12 @@ public class GameManager implements Screen {
         Gdx.gl.glClearColor(0.1f, 0.1f, 0.15f, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
-        // DEBUG TOGGLE (F3)
         if (Gdx.input.isKeyJustPressed(Input.Keys.F3)) {
             debugMode = !debugMode;
             HitboxDebugger.setDebugEnabled(debugMode);
             System.out.println("🔧 Debug mode: " + (debugMode ? "ON" : "OFF"));
         }
 
-        // RETOUR MENU (ESC)
         if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)) {
             audioManager.stopLevelMusic();
             audioManager.startMenuMusic();
@@ -513,11 +503,9 @@ public class GameManager implements Screen {
             return;
         }
 
-        // UPDATE
         player.update(delta);
         enemyManager.update(delta);
         
-        // ⭐ UPDATE PROJECTILES
         if (projectileManager != null) {
             projectileManager.update(delta);
             projectileManager.checkPlayerCollisions(player);
@@ -526,7 +514,7 @@ public class GameManager implements Screen {
         }
         
         if (worldItemManager != null) {
-            worldItemManager.update(delta);       
+            worldItemManager.update(delta);
             worldItemManager.checkPlayerCollisions(player);
         }
         
@@ -534,13 +522,11 @@ public class GameManager implements Screen {
             playerHUD.update(delta);
         }
         
-        // VÉRIFIER GAME OVER
         if (checkGameOver()) {
             game.setScreen(new GameOverScreen(game, audioManager));
             return;
         }
         
-        // UPDATE PORTES
         if (levelExitManager != null) {
             levelExitManager.update(enemyManager.getEnemiesKilled(), enemyManager.getTotalEnemiesSpawned());
             
@@ -552,13 +538,11 @@ public class GameManager implements Screen {
             }
         }
         
-        // VÉRIFIER VICTOIRE
         if (checkVictory()) {
             game.setScreen(new WinnerScreen(game, audioManager));
             return;
         }
         
-        // COMBATS
         enemyManager.checkEnemyAttacks(player);
         enemyManager.checkPlayerAttack(player);
         enemyManager.removeDeadEnemies();
@@ -566,24 +550,20 @@ public class GameManager implements Screen {
         updateCamera();
         camera.update();
 
-        // RENDER BACKGROUND
         batch.setProjectionMatrix(camera.combined);
         batch.begin();
         renderBackground();
         batch.end();
         
-        // RENDER MAP
         if (tiledMapRenderer != null) {
             tiledMapRenderer.setView(camera);
             tiledMapRenderer.render();
         }
         
-        // RENDER ENTITIES
         batch.begin();
         player.render(batch);
         enemyManager.render(batch);
         
-        // ⭐ RENDER PROJECTILES
         if (projectileManager != null) {
             projectileManager.render(batch);
         }
@@ -598,18 +578,13 @@ public class GameManager implements Screen {
         
         batch.end();
         
-        // BARRES DE VIE DES ENNEMIS
-        if (shapeRenderer != null) {
-            enemyManager.renderHealthBars(shapeRenderer, camera);
-        }
+        enemyManager.renderHealthBars(new com.badlogic.gdx.graphics.glutils.ShapeRenderer(), camera);
         
-        // DEBUG HITBOXES
         if (debugMode) {
             HitboxDebugger.renderPlayerHitbox(player, camera);
             enemyManager.renderDebugHitboxes(camera);
         }
         
-        // RENDER HUD
         if (playerHUD != null) {
             playerHUD.render(batch, player, enemyManager.getEnemiesKilled(), enemyManager.getTotalEnemiesSpawned());
         }
@@ -731,16 +706,15 @@ public class GameManager implements Screen {
         System.out.println("\n🧹 Nettoyage GameManager...");
         
         if (batch != null) batch.dispose();
-        if (shapeRenderer != null) shapeRenderer.dispose();
         if (worldItemManager != null) worldItemManager.dispose();
         if (enemyManager != null) enemyManager.dispose();
+        if (projectileManager != null) projectileManager.dispose();
         if (player != null) player.dispose();
         if (tiledMap != null) tiledMap.dispose();
         if (tiledMapRenderer != null) tiledMapRenderer.dispose();
         if (backgroundTexture != null) backgroundTexture.dispose();
         if (playerHUD != null) playerHUD.dispose();
         if (levelExitManager != null) levelExitManager.dispose();
-        if (projectileManager != null) projectileManager.dispose();
         
         HitboxDebugger.dispose();
         
